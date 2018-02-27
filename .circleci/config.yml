@@ -3,6 +3,13 @@ jobs:
   build:
     docker:
       - image: circleci/openjdk:8-jdk
+      - image: steeleye/esdocker:6.2.2
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+        environment:
+          ELASTIC_PASSWORD: SteelEye
+
     working_directory: ~/elastic-common
     environment:
       GRADLE_OPTS: -Xmx3200m
