@@ -1,0 +1,27 @@
+# project dirs
+target/
+classes/
+build/
+do_not_git/
+.idea/
+.gradle/
+docs/html/
+docs/build.log
+
+# project files
+.DS_Store
+DoNotGit*
+*.iml
+*.ipr
+*.iws
+*-execution-hints.log
+*-execution-times.log
+dependency-reduced-pom.xml
+
+# gradle files
+gradle-app.setting
+.gradletasknamecache
+gradle.properties
+
+# Avoid ignoring Gradle wrapper jar file
+!gradle-wrapper.jar

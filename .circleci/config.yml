@@ -1,0 +1,75 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    working_directory: ~/elastic-common
+    environment:
+      GRADLE_OPTS: -Xmx3200m
+      artifact_dir: "artifacts"
+    steps:
+      - checkout
+      - run:
+          name: Setup GPG and Gradle Props
+          command: |
+            sudo apt-get install gettext gnupg2 -y
+            curl ${GPG_OUT} -o private.key && gpg2 --allow-secret-key-import --import private.key
+            gpg2 --export-secret-key ${GPG_KEYID} > secring.gpg
+            envsubst < "gradle.properties.tpl" > "gradle.properties"
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "build.gradle" }}
+          - v1-dependencies-
+      - run:
+          name: Gradle Check
+          command: ./gradlew check
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "build.gradle" }}
+      - run:
+          name: Collect Test Artifacts
+          command: |
+            mkdir -p ${artifact_dir}/reports/ ${artifact_dir}/output/
+            cp -r build/reports ${artifact_dir}/reports/
+          when: always
+      - store_artifacts:
+          path: ${artifact_dir}
+
+  deploy:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    working_directory: ~/elastic-common
+    environment:
+      GRADLE_OPTS: -Xmx3200m
+      artifact_dir: "artifacts"
+    steps:
+      - checkout
+      - run:
+          name: Setup GPG and Gradle Props
+          command: |
+            sudo apt-get install gettext gnupg2 -y
+            curl ${GPG_OUT} -o private.key && gpg2 --allow-secret-key-import --import private.key
+            gpg2 --export-secret-key ${GPG_KEYID} > secring.gpg
+            envsubst < "gradle.properties.tpl" > "gradle.properties"
+      - run:
+          name: Gradle Deploy
+          command: |
+            ./gradlew uploadArchives
+
+workflows:
+  version: 2
+  build-n-deploy:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
+      - deploy:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+).*/
+            branches:
+              ignore: /.*/
