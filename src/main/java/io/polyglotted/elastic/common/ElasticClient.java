@@ -1,10 +1,7 @@
 package io.polyglotted.elastic.common;
 
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
-import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -31,8 +28,6 @@ public interface ElasticClient extends AutoCloseable {
 
     boolean indexExists(String index);
 
-    boolean typeExists(String index, String... types);
-
     Set<String> getIndices(String alias);
 
     String getIndexMeta(String... indices);
@@ -42,12 +37,6 @@ public interface ElasticClient extends AutoCloseable {
     String getMapping(String index, String type);
 
     void createIndex(CreateIndexRequest request);
-
-    void updateAlias(IndicesAliasesRequest request);
-
-    void updateSettings(UpdateSettingsRequest request);
-
-    void putMapping(PutMappingRequest request);
 
     void forceRefresh(String... indices);
 

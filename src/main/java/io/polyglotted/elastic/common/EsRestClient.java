@@ -6,10 +6,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
-import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -35,9 +32,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
+import static io.polyglotted.common.util.BaseSerializer.deserialize;
 import static io.polyglotted.elastic.common.ElasticException.checkState;
 import static io.polyglotted.elastic.common.ElasticException.handleEx;
-import static io.polyglotted.common.util.BaseSerializer.deserialize;
 import static org.apache.http.HttpStatus.SC_MULTIPLE_CHOICES;
 import static org.apache.http.HttpStatus.SC_OK;
 
@@ -51,8 +48,6 @@ public class EsRestClient implements ElasticClient {
     @Override public void close() throws Exception { internalClient.close(); }
 
     @Override public boolean indexExists(String index) { throw new UnsupportedOperationException(); }
-
-    @Override public boolean typeExists(String index, String... types) { throw new UnsupportedOperationException(); }
 
     @Override public Set<String> getIndices(String alias) {
         try {
@@ -80,12 +75,6 @@ public class EsRestClient implements ElasticClient {
     }
 
     @Override public void createIndex(CreateIndexRequest request) { throw new UnsupportedOperationException(); }
-
-    @Override public void updateAlias(IndicesAliasesRequest request) { throw new UnsupportedOperationException(); }
-
-    @Override public void updateSettings(UpdateSettingsRequest request) { throw new UnsupportedOperationException(); }
-
-    @Override public void putMapping(PutMappingRequest request) { throw new UnsupportedOperationException(); }
 
     @Override public void forceRefresh(String... indices) {
         try {
