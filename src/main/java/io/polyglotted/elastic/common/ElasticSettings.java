@@ -15,6 +15,7 @@ public final class ElasticSettings {
     final String password;
     final int retryTimeoutMillis;
 
+
     public static Builder esSettingsBuilder() { return new Builder(); }
 
     @Setter
@@ -28,6 +29,8 @@ public final class ElasticSettings {
         private String password = null;
         private int retryTimeout = 300_000;
 
-        public ElasticSettings build() { return new ElasticSettings(scheme, masterNodes, port, userName, password, retryTimeout); }
+        public ElasticSettings build() {
+           return new ElasticSettings(scheme, masterNodes, port, userName, password, retryTimeout);
+        }
     }
 }

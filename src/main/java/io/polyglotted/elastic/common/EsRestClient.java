@@ -17,11 +17,7 @@ import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.ClearScrollRequest;
-import org.elasticsearch.action.search.ClearScrollResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Response;
@@ -37,6 +33,8 @@ import static io.polyglotted.elastic.common.ElasticException.checkState;
 import static io.polyglotted.elastic.common.ElasticException.handleEx;
 import static org.apache.http.HttpStatus.SC_MULTIPLE_CHOICES;
 import static org.apache.http.HttpStatus.SC_OK;
+
+
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class EsRestClient implements ElasticClient {
@@ -74,7 +72,12 @@ public class EsRestClient implements ElasticClient {
         } catch (Exception e) { throw handleEx("getSettings failed", e); }
     }
 
-    @Override public void createIndex(CreateIndexRequest request) { throw new UnsupportedOperationException(); }
+    @Override public String createIndex(CreateIndexRequest request) {
+        try {
+            return performCliRequest("PUT","/"+request.index());
+
+        } catch (Exception e) { throw handleEx("createIndex failed", e);}
+    }
 
     @Override public void forceRefresh(String... indices) {
         try {
@@ -82,7 +85,12 @@ public class EsRestClient implements ElasticClient {
         } catch (Exception ioe) { throw handleEx("forceRefresh failed", ioe); }
     }
 
-    @Override public void dropIndex(String... indices) { throw new UnsupportedOperationException(); }
+    @Override public String dropIndex(String... indices) {
+        try{
+            return performCliRequest("DELETE", "/" + COMMA.join(indices));
+        } catch (Exception ioe) { throw handleEx("dropIndex failed", ioe);
+        }
+    }
 
     @Override public void waitForStatus(String status) { throw new UnsupportedOperationException(); }
 

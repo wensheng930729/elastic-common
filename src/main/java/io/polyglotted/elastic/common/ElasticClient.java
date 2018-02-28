@@ -36,11 +36,11 @@ public interface ElasticClient extends AutoCloseable {
 
     String getMapping(String index, String type);
 
-    void createIndex(CreateIndexRequest request);
+    String createIndex(CreateIndexRequest request);
 
     void forceRefresh(String... indices);
 
-    void dropIndex(String... indices);
+    String dropIndex(String... indices);
 
     void waitForStatus(String status);
 

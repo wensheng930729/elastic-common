@@ -1,6 +1,7 @@
 package io.polyglotted.elastic.common.test;
 
 import io.polyglotted.elastic.common.ElasticClient;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.junit.Test;
 
 import java.util.Map;
@@ -8,16 +9,23 @@ import java.util.Map;
 import static io.polyglotted.elastic.common.ElasticSettings.esSettingsBuilder;
 import static io.polyglotted.elastic.common.HighLevelConnector.highLevelClient;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class ElasticClientIntegTest {
 
     @Test
     public void testHighLevelClient() throws Exception {
+        String response = null;
         try (ElasticClient elasticClient = highLevelClient(esSettingsBuilder().userName("elastic").password("SteelEye").build())) {
             checkClusterHealth(elasticClient);
+            assertThat(elasticClient.createIndex(new CreateIndexRequest("customer")), containsString("acknowledged"));
+            assertThat(elasticClient.dropIndex("customer"), containsString("acknowledged"));
         }
     }
+
 
     private static void checkClusterHealth(ElasticClient client) {
         Map<String, Object> health = client.clusterHealth();
