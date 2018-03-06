@@ -2,6 +2,8 @@ package io.polyglotted.elastic.common;
 
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -36,11 +38,11 @@ public interface ElasticClient extends AutoCloseable {
 
     String getMapping(String index, String type);
 
-    String createIndex(CreateIndexRequest request);
+    CreateIndexResponse createIndex(CreateIndexRequest request);
 
     void forceRefresh(String... indices);
 
-    String dropIndex(String... indices);
+    DeleteIndexResponse dropIndex(String... indices);
 
     void waitForStatus(String status);
 
