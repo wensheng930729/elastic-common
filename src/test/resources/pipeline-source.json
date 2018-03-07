@@ -1,0 +1,11 @@
+{
+  "description" : "my pipeline",
+  "processors" : [
+    {
+      "set" : {
+        "field": "foo",
+        "value": "bar"
+      }
+    }
+  ]
+}

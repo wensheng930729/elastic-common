@@ -1,9 +1,12 @@
 package io.polyglotted.elastic.common;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
+import io.polyglotted.common.model.MapResult;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
@@ -28,131 +31,160 @@ import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
 
 import static io.polyglotted.common.util.BaseSerializer.deserialize;
 import static io.polyglotted.elastic.common.ElasticException.checkState;
-import static io.polyglotted.elastic.common.ElasticException.handleEx;
+import static io.polyglotted.elastic.common.ElasticException.throwEx;
+import static java.util.Collections.emptyMap;
+import static org.apache.http.HttpHeaders.AUTHORIZATION;
+import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.HttpStatus.SC_MULTIPLE_CHOICES;
 import static org.apache.http.HttpStatus.SC_OK;
+import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class EsRestClient implements ElasticClient {
-    private static final Joiner COMMA = Joiner.on(",");
     private final RestHighLevelClient internalClient;
 
     EsRestClient(RestClientBuilder builder) { this(new RestHighLevelClient(builder)); }
 
     @Override public void close() throws Exception { internalClient.close(); }
 
-    @Override public boolean indexExists(String index) { throw new UnsupportedOperationException(); }
-
-    @Override public Set<String> getIndices(String alias) {
+    @Override public boolean indexExists(String index, Header... headers) {
         try {
-            Map<String, Object> responseObject = deserialize(performCliRequest("GET", "/" + alias + "/_aliases"));
-            return ImmutableSet.copyOf(responseObject.keySet());
-        } catch (Exception ioe) { throw handleEx("getIndices failed", ioe); }
+            return internalClient.getLowLevelClient().performRequest("HEAD", "/" + index, headers).getStatusLine().getStatusCode() == SC_OK;
+        } catch (Exception ioe) { throw throwEx("indexExists failed", ioe); }
     }
 
-    @Override public String getIndexMeta(String... indices) {
+    @Override public String getSettings(String index, Header... headers) {
         try {
-            return performCliRequest("GET", "/" + COMMA.join(indices) + "/");
-        } catch (Exception ioe) { throw handleEx("getIndexMeta failed", ioe); }
+            return performCliRequest("GET", "/" + index + "/_settings", headers);
+        } catch (Exception e) { throw throwEx("getSettings failed", e); }
     }
 
-    @Override public String getSettings(String... indices) {
+    @Override public String getMapping(String index, Header... headers) {
         try {
-            return performCliRequest("GET", "/" + COMMA.join(indices) + "/_settings");
-        } catch (Exception e) { throw handleEx("getSettings failed", e); }
+            return performCliRequest("GET", "/" + index + "/_mapping/_doc", headers);
+        } catch (Exception e) { throw throwEx("getMapping failed", e); }
     }
 
-    @Override public String getMapping(String index, String type) {
+    @Override public void createIndex(CreateIndexRequest request, Header... headers) {
         try {
-            return performCliRequest("GET", "/" + index + "/" + type + "/_mapping");
-        } catch (Exception e) { throw handleEx("getSettings failed", e); }
+            CreateIndexResponse response = internalClient.indices().create(request, headers);
+            checkState(response.isAcknowledged() && response.isShardsAcknowledged(), "unable to create index");
+        } catch (Exception e) { throw throwEx("createIndex failed", e); }
     }
 
-    @Override public CreateIndexResponse createIndex(CreateIndexRequest request) {
+    @Override public void forceRefresh(String index, Header... headers) {
         try {
-            return internalClient.indices().create(request);
-        } catch (Exception e) {
-            throw handleEx("createIndex failed", e);
-        }
+            performCliRequest("POST", "/" + index + "/_refresh", headers);
+        } catch (Exception ioe) { throw throwEx("forceRefresh failed", ioe); }
     }
 
-    @Override public void forceRefresh(String... indices) {
+    @Override public void dropIndex(String index, Header... headers) {
         try {
-            performCliRequest("POST", "/" + COMMA.join(indices) + "/_refresh");
-        } catch (Exception ioe) { throw handleEx("forceRefresh failed", ioe); }
+            DeleteIndexResponse response = internalClient.indices().delete(new DeleteIndexRequest(index), headers);
+            checkState(response.isAcknowledged(), "unable to drop index");
+        } catch (Exception ioe) { throw throwEx("dropIndex failed", ioe); }
     }
 
-    @Override public DeleteIndexResponse dropIndex(String... indices) {
+    @Override public void waitForStatus(String status, Header... headers) {
         try {
-            return internalClient.indices().delete(new DeleteIndexRequest(indices));
-        } catch (Exception ioe) {
-            throw handleEx("dropIndex failed", ioe);
-        }
+            performCliRequest("GET", "/_cluster/health?timeout=60s&wait_for_status=" + status, headers);
+        } catch (Exception ioe) { throw throwEx("waitForStatus failed", ioe); }
     }
 
-    @Override public void waitForStatus(String status) { throw new UnsupportedOperationException(); }
-
-    @Override public Map<String, Object> clusterHealth() {
+    @Override public MapResult clusterHealth(Header... headers) {
         try {
-            return deserialize(performCliRequest("GET", "/_cluster/health"));
-        } catch (Exception ioe) { throw handleEx("clusterHealth failed", ioe); }
+            return deserialize(performCliRequest("GET", "/_cluster/health", headers));
+        } catch (Exception ioe) { throw throwEx("clusterHealth failed", ioe); }
     }
 
-    @Override public void buildPipeline(String id, String resource) { throw new UnsupportedOperationException(); }
-
-    @Override public boolean pipelineExists(String id) { throw new UnsupportedOperationException(); }
-
-    @Override public IndexResponse index(IndexRequest request) {
-        try { return internalClient.index(request); } catch (IOException ioe) { throw new ElasticException("index failed", ioe); }
+    @Override public void buildPipeline(String id, String resource, Header... headers) {
+        try {
+            performCliRequest("PUT", "_ingest/pipeline/" + id, new StringEntity(resource), headers);
+        } catch (Exception ioe) { throw throwEx("buildPipeline failed", ioe); }
     }
 
-    @Override public UpdateResponse update(UpdateRequest request) {
-        try { return internalClient.update(request); } catch (IOException ioe) { throw new ElasticException("update failed", ioe); }
+    @Override public boolean pipelineExists(String id, Header... headers) {
+        Exception throwable;
+        try {
+            performCliRequest("GET", "_ingest/pipeline/" + id, headers); return true;
+
+        } catch (ResponseException re) {
+            if (re.getResponse().getStatusLine().getStatusCode() == 404) { return false; }
+            throwable = re;
+
+        } catch (Exception ioe) { throwable = ioe; }
+        throw throwEx("pipelineExists failed", throwable);
     }
 
-    @Override public DeleteResponse delete(DeleteRequest request) {
-        try { return internalClient.delete(request); } catch (IOException ioe) { throw new ElasticException("delete failed", ioe); }
+    @Override public void deletePipeline(String id, Header... headers) {
+        try {
+            performCliRequest("DELETE", "_ingest/pipeline/" + id, headers);
+        } catch (Exception ioe) { throw throwEx("deletePipeline failed", ioe); }
     }
 
-    @Override public BulkResponse bulk(BulkRequest request) {
-        try { return internalClient.bulk(request); } catch (IOException ioe) { throw new ElasticException("bulk failed", ioe); }
+    @Override public IndexResponse index(IndexRequest request, Header... headers) {
+        try { return internalClient.index(request, headers); } catch (IOException ioe) { throw throwEx("index failed", ioe); }
     }
 
-    @Override public void bulkAsync(BulkRequest request, ActionListener<BulkResponse> listener) {
-        try { internalClient.bulkAsync(request, listener); } catch (Exception ioe) { throw new ElasticException("bulkAsync failed", ioe); }
+    @Override public UpdateResponse update(UpdateRequest request, Header... headers) {
+        try { return internalClient.update(request, headers); } catch (IOException ioe) { throw throwEx("update failed", ioe); }
     }
 
-    @Override public GetResponse get(GetRequest request) {
-        try { return internalClient.get(request); } catch (IOException ioe) { throw new ElasticException("get failed", ioe); }
+    @Override public DeleteResponse delete(DeleteRequest request, Header... headers) {
+        try { return internalClient.delete(request, headers); } catch (IOException ioe) { throw throwEx("delete failed", ioe); }
     }
 
-    @Override public MultiGetResponse multiGet(MultiGetRequest request) { throw new UnsupportedOperationException(); }
-
-    @Override public SearchResponse search(SearchRequest request) {
-        try { return internalClient.search(request); } catch (IOException ioe) { throw new ElasticException("search failed", ioe); }
+    @Override public BulkResponse bulk(BulkRequest request, Header... headers) {
+        try { return internalClient.bulk(request, headers); } catch (IOException ioe) { throw throwEx("bulk failed", ioe); }
     }
 
-    @Override public SearchResponse searchScroll(SearchScrollRequest request) {
-        try { return internalClient.searchScroll(request); } catch (IOException ioe) { throw new ElasticException("searchScroll failed", ioe); }
+    @Override public void bulkAsync(BulkRequest request, ActionListener<BulkResponse> listener, Header... headers) {
+        try { internalClient.bulkAsync(request, listener, headers); } catch (Exception ioe) { throw throwEx("bulkAsync failed", ioe); }
     }
 
-    @Override public ClearScrollResponse clearScroll(ClearScrollRequest request) {
-        try { return internalClient.clearScroll(request); } catch (IOException ioe) { throw new ElasticException("clearScroll failed", ioe); }
+    @Override public boolean exists(GetRequest request, Header... headers) {
+        try { return internalClient.exists(request, headers); } catch (IOException ioe) { throw throwEx("exists failed", ioe); }
     }
 
-    private String performCliRequest(String method, String endpoint) throws IOException {
-        Response response = internalClient.getLowLevelClient().performRequest(method, endpoint);
+    @Override public GetResponse get(GetRequest request, Header... headers) {
+        try { return internalClient.get(request, headers); } catch (IOException ioe) { throw throwEx("get failed", ioe); }
+    }
+
+    @Override public MultiGetResponse multiGet(MultiGetRequest request, Header... headers) {
+        try { return internalClient.multiGet(request, headers); } catch (IOException ioe) { throw throwEx("multiGet failed", ioe); }
+    }
+
+    @Override public SearchResponse search(SearchRequest request, Header... headers) {
+        try { return internalClient.search(request, headers); } catch (IOException ioe) { throw throwEx("search failed", ioe); }
+    }
+
+    @Override public SearchResponse searchScroll(SearchScrollRequest request, Header... headers) {
+        try { return internalClient.searchScroll(request, headers); } catch (IOException ioe) { throw throwEx("searchScroll failed", ioe); }
+    }
+
+    @Override public ClearScrollResponse clearScroll(ClearScrollRequest request, Header... headers) {
+        try { return internalClient.clearScroll(request, headers); } catch (IOException ioe) { throw throwEx("clearScroll failed", ioe); }
+    }
+
+    private String performCliRequest(String method, String endpoint, Header... headers) throws IOException {
+        return performCliRequest(method, endpoint, null, headers);
+    }
+
+    private String performCliRequest(String method, String endpoint, HttpEntity entity, Header... headers) throws IOException {
+        Response response = internalClient.getLowLevelClient().performRequest(method, endpoint, emptyMap(), entity, headers);
         int statusCode = response.getStatusLine().getStatusCode();
         checkState(statusCode >= SC_OK && statusCode < SC_MULTIPLE_CHOICES, response.getStatusLine().getReasonPhrase());
         return EntityUtils.toString(response.getEntity());
     }
+
+    static Header authHeader(String authorization) { return new BasicHeader(AUTHORIZATION, authorization); }
+    static Header ctypeHeader() { return new BasicHeader(CONTENT_TYPE, APPLICATION_JSON.getMimeType()); }
 }
