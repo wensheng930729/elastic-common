@@ -20,7 +20,6 @@ repositories {
 }
 
 ext {
-    commonUtilsVersion = '1.0.0'
     commonsCodecVersion = '1.11'
     elasticSearchVersion = '6.2.1'
     guavaVersion = '23.6-jre'
@@ -39,72 +38,12 @@ ext {
     slf4jVersion = '1.7.25'
     snakeyamlVersion = '1.19'
     spatial4jVersion = '0.6'
+    utilsCommonVersion='1.0.3'
 }
 
 dependencies {
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
-    compileOnly "commons-codec:commons-codec:${commonsCodecVersion}"
-    compileOnly "joda-time:joda-time:${jodaVersion}"
-    compileOnly "com.google.guava:guava:${guavaVersion}"
-    compileOnly "org.hdrhistogram:HdrHistogram:${hdrHistoVersion}"
-
-    compileOnly "org.slf4j:slf4j-api:${slf4jVersion}"
-    compileOnly "org.apache.logging.log4j:log4j-api:${log4jVersion}"
-    compileOnly("org.apache.logging.log4j:log4j-core:${log4jVersion}") {
-        exclude group: "org.apache.logging.log4j", module: "log4j-api"
-    }
-    compileOnly("org.apache.logging.log4j:log4j-jcl:${log4jVersion}") {
-        exclude group: "org.apache.logging.log4j", module: "log4j-api"
-    }
-    compileOnly("org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}") {
-        exclude group: "org.slf4j", module: "slf4j-api"
-        exclude group: "org.apache.logging.log4j", module: "log4j-api"
-        exclude group: "org.apache.logging.log4j", module: "log4j-core"
-    }
-    compileOnly "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
-    compileOnly "com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}"
-    compileOnly("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}") {
-        exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
-        exclude group: "com.fasterxml.jackson.core", module: "jackson-annotations"
-    }
-    compileOnly("com.fasterxml.jackson.datatype:jackson-datatype-guava:${jacksonVersion}") {
-        exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
-        exclude group: "com.fasterxml.jackson.core", module: "jackson-annotations"
-        exclude group: "com.fasterxml.jackson.core", module: "jackson-databind"
-        exclude group: "com.google.guava", module: "guava"
-    }
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-smile:${jacksonVersion}") {
-        exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
-        exclude group: "com.fasterxml.jackson.core", module: "jackson-annotations"
-        exclude group: "com.fasterxml.jackson.core", module: "jackson-databind"
-    }
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}") {
-        exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
-        exclude group: "com.fasterxml.jackson.core", module: "jackson-annotations"
-        exclude group: "com.fasterxml.jackson.core", module: "jackson-databind"
-        exclude group: "org.yaml", module: "snakeyaml"
-    }
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:${jacksonVersion}") {
-        exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
-        exclude group: "com.fasterxml.jackson.core", module: "jackson-annotations"
-        exclude group: "com.fasterxml.jackson.core", module: "jackson-databind"
-    }
-    compileOnly "org.apache.httpcomponents:httpcore:${httpCoreVersion}"
-    compileOnly("org.apache.httpcomponents:httpcore-nio:${httpCoreVersion}") {
-        exclude group: "org.apache.httpcomponents", module: "httpcore"
-    }
-    compileOnly("org.apache.httpcomponents:httpclient:${httpClientVersion}") {
-        exclude group: "commons-logging", module: "commons-logging"
-        exclude group: "commons-codec", module: "commons-codec"
-        exclude group: "org.apache.httpcomponents", module: "httpcore"
-    }
-    compileOnly("org.apache.httpcomponents:httpasyncclient:${httpClientAsyncVersion}") {
-        exclude group: "commons-logging", module: "commons-logging"
-        exclude group: "org.apache.httpcomponents", module: "httpcore"
-        exclude group: "org.apache.httpcomponents", module: "httpcore-nio"
-        exclude group: "org.apache.httpcomponents", module: "httpclient"
-    }
-    compileOnly "io.polyglotted:common-utils:${commonUtilsVersion}"
+    compileOnly "io.polyglotted:utils-common:${utilsCommonVersion}"
 
     compile "org.locationtech.spatial4j:spatial4j:${spatial4jVersion}"
     compile "com.vividsolutions:jts:${jtsVersion}"
@@ -144,6 +83,9 @@ dependencies {
         exclude group: "org.elasticsearch.client", module: "elasticsearch-rest-client"
     }
 
+    testCompile("org.apache.logging.log4j:log4j-jcl:${log4jVersion}") {
+        exclude group: "org.apache.logging.log4j", module: "log4j-api"
+    }
     testCompile "org.hamcrest:hamcrest-all:${hamcrestVersion}"
     testCompile("junit:junit:${junitVersion}") {
         exclude group: "org.hamcrest", module: "hamcrest-core"

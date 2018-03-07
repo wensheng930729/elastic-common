@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -74,7 +77,13 @@ public class EsRestClient implements ElasticClient {
         } catch (Exception e) { throw handleEx("getSettings failed", e); }
     }
 
-    @Override public void createIndex(CreateIndexRequest request) { throw new UnsupportedOperationException(); }
+    @Override public CreateIndexResponse createIndex(CreateIndexRequest request) {
+        try {
+            return internalClient.indices().create(request);
+        } catch (Exception e) {
+            throw handleEx("createIndex failed", e);
+        }
+    }
 
     @Override public void forceRefresh(String... indices) {
         try {
@@ -82,7 +91,13 @@ public class EsRestClient implements ElasticClient {
         } catch (Exception ioe) { throw handleEx("forceRefresh failed", ioe); }
     }
 
-    @Override public void dropIndex(String... indices) { throw new UnsupportedOperationException(); }
+    @Override public DeleteIndexResponse dropIndex(String... indices) {
+        try {
+            return internalClient.indices().delete(new DeleteIndexRequest(indices));
+        } catch (Exception ioe) {
+            throw handleEx("dropIndex failed", ioe);
+        }
+    }
 
     @Override public void waitForStatus(String status) { throw new UnsupportedOperationException(); }
 
