@@ -3,6 +3,7 @@ package io.polyglotted.elastic.common;
 import io.polyglotted.common.model.MapResult;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.apache.http.ConnectionClosedException;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.StringEntity;
@@ -36,8 +37,10 @@ import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 
 import java.io.IOException;
+import java.net.ConnectException;
 
 import static io.polyglotted.common.util.BaseSerializer.deserialize;
+import static io.polyglotted.common.util.ThreadUtil.safeSleep;
 import static io.polyglotted.elastic.common.ElasticException.checkState;
 import static io.polyglotted.elastic.common.ElasticException.throwEx;
 import static java.util.Collections.emptyMap;
@@ -54,6 +57,22 @@ public class EsRestClient implements ElasticClient {
     EsRestClient(RestClientBuilder builder) { this(new RestHighLevelClient(builder)); }
 
     @Override public void close() throws Exception { internalClient.close(); }
+
+    @SuppressWarnings("ALL")
+    @Override public void waitForStatus(String status, Header... headers) {
+        try {
+            for (int i = 0; i <= 300; i++) { performCliRequest("GET", "/_cluster/health?wait_for_status=" + status, headers); break; }
+
+        } catch (ConnectException | ConnectionClosedException retry) {
+            safeSleep(1000); waitForStatus(status, headers);
+        } catch (Exception ioe) { throw throwEx("waitForStatus failed", ioe); }
+    }
+
+    @Override public MapResult clusterHealth(Header... headers) {
+        try {
+            return deserialize(performCliRequest("GET", "/_cluster/health", headers));
+        } catch (Exception ioe) { throw throwEx("clusterHealth failed", ioe); }
+    }
 
     @Override public boolean indexExists(String index, Header... headers) {
         try {
@@ -91,18 +110,6 @@ public class EsRestClient implements ElasticClient {
             DeleteIndexResponse response = internalClient.indices().delete(new DeleteIndexRequest(index), headers);
             checkState(response.isAcknowledged(), "unable to drop index");
         } catch (Exception ioe) { throw throwEx("dropIndex failed", ioe); }
-    }
-
-    @Override public void waitForStatus(String status, Header... headers) {
-        try {
-            performCliRequest("GET", "/_cluster/health?timeout=60s&wait_for_status=" + status, headers);
-        } catch (Exception ioe) { throw throwEx("waitForStatus failed", ioe); }
-    }
-
-    @Override public MapResult clusterHealth(Header... headers) {
-        try {
-            return deserialize(performCliRequest("GET", "/_cluster/health", headers));
-        } catch (Exception ioe) { throw throwEx("clusterHealth failed", ioe); }
     }
 
     @Override public void buildPipeline(String id, String resource, Header... headers) {
@@ -186,5 +193,6 @@ public class EsRestClient implements ElasticClient {
     }
 
     static Header authHeader(String authorization) { return new BasicHeader(AUTHORIZATION, authorization); }
+
     static Header ctypeHeader() { return new BasicHeader(CONTENT_TYPE, APPLICATION_JSON.getMimeType()); }
 }

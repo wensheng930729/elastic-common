@@ -25,8 +25,15 @@ import org.elasticsearch.action.update.UpdateResponse;
 import static io.polyglotted.elastic.common.EsRestClient.authHeader;
 import static io.polyglotted.elastic.common.EsRestClient.ctypeHeader;
 
-@SuppressWarnings("unused")
 public interface ElasticClient extends AutoCloseable {
+
+    void waitForStatus(String status, Header... headers);
+
+    default void waitForStatus(String status, String auth) { waitForStatus(status, authHeader(auth)); }
+
+    MapResult clusterHealth(Header... headers);
+
+    default MapResult clusterHealth(String auth) { return clusterHealth(authHeader(auth)); }
 
     default boolean indexExists(String index, String auth) { return indexExists(index, authHeader(auth)); }
 
@@ -51,14 +58,6 @@ public interface ElasticClient extends AutoCloseable {
     default void dropIndex(String index, String auth) { dropIndex(index, authHeader(auth)); }
 
     void dropIndex(String index, Header... headers);
-
-    default void waitForStatus(String status, String auth) { waitForStatus(status, authHeader(auth)); }
-
-    void waitForStatus(String status, Header... headers);
-
-    default MapResult clusterHealth(String auth) { return clusterHealth(authHeader(auth)); }
-
-    MapResult clusterHealth(Header... headers);
 
     default void buildPipeline(String id, String resource, String auth) { buildPipeline(id, resource, authHeader(auth), ctypeHeader()); }
 
