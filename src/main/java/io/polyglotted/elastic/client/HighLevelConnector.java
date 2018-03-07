@@ -1,4 +1,4 @@
-package io.polyglotted.elastic.common;
+package io.polyglotted.elastic.client;
 
 import com.google.common.base.Splitter;
 import lombok.SneakyThrows;

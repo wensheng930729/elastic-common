@@ -1,4 +1,4 @@
-package io.polyglotted.elastic.common;
+package io.polyglotted.elastic.client;
 
 import io.polyglotted.common.model.MapResult;
 import lombok.AccessLevel;
@@ -41,8 +41,8 @@ import java.net.ConnectException;
 
 import static io.polyglotted.common.util.BaseSerializer.deserialize;
 import static io.polyglotted.common.util.ThreadUtil.safeSleep;
-import static io.polyglotted.elastic.common.ElasticException.checkState;
-import static io.polyglotted.elastic.common.ElasticException.throwEx;
+import static io.polyglotted.elastic.client.ElasticException.checkState;
+import static io.polyglotted.elastic.client.ElasticException.throwEx;
 import static java.util.Collections.emptyMap;
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
@@ -80,6 +80,26 @@ public class EsRestClient implements ElasticClient {
         } catch (Exception ioe) { throw throwEx("indexExists failed", ioe); }
     }
 
+    @Override public void createIndex(CreateIndexRequest request, Header... headers) {
+        try {
+            CreateIndexResponse response = internalClient.indices().create(request, headers);
+            checkState(response.isAcknowledged() && response.isShardsAcknowledged(), "unable to create index");
+        } catch (Exception e) { throw throwEx("createIndex failed", e); }
+    }
+
+    @Override public void dropIndex(String index, Header... headers) {
+        try {
+            DeleteIndexResponse response = internalClient.indices().delete(new DeleteIndexRequest(index), headers);
+            checkState(response.isAcknowledged(), "unable to drop index");
+        } catch (Exception ioe) { throw throwEx("dropIndex failed", ioe); }
+    }
+
+    @Override public void forceRefresh(String index, Header... headers) {
+        try {
+            performCliRequest("POST", "/" + index + "/_refresh", headers);
+        } catch (Exception ioe) { throw throwEx("forceRefresh failed", ioe); }
+    }
+
     @Override public String getSettings(String index, Header... headers) {
         try {
             return performCliRequest("GET", "/" + index + "/_settings", headers);
@@ -90,26 +110,6 @@ public class EsRestClient implements ElasticClient {
         try {
             return performCliRequest("GET", "/" + index + "/_mapping/_doc", headers);
         } catch (Exception e) { throw throwEx("getMapping failed", e); }
-    }
-
-    @Override public void createIndex(CreateIndexRequest request, Header... headers) {
-        try {
-            CreateIndexResponse response = internalClient.indices().create(request, headers);
-            checkState(response.isAcknowledged() && response.isShardsAcknowledged(), "unable to create index");
-        } catch (Exception e) { throw throwEx("createIndex failed", e); }
-    }
-
-    @Override public void forceRefresh(String index, Header... headers) {
-        try {
-            performCliRequest("POST", "/" + index + "/_refresh", headers);
-        } catch (Exception ioe) { throw throwEx("forceRefresh failed", ioe); }
-    }
-
-    @Override public void dropIndex(String index, Header... headers) {
-        try {
-            DeleteIndexResponse response = internalClient.indices().delete(new DeleteIndexRequest(index), headers);
-            checkState(response.isAcknowledged(), "unable to drop index");
-        } catch (Exception ioe) { throw throwEx("dropIndex failed", ioe); }
     }
 
     @Override public void buildPipeline(String id, String resource, Header... headers) {

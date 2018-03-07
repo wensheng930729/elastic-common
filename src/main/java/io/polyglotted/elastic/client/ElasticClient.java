@@ -1,4 +1,4 @@
-package io.polyglotted.elastic.common;
+package io.polyglotted.elastic.client;
 
 import io.polyglotted.common.model.MapResult;
 import org.apache.http.Header;
@@ -22,8 +22,8 @@ import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 
-import static io.polyglotted.elastic.common.EsRestClient.authHeader;
-import static io.polyglotted.elastic.common.EsRestClient.ctypeHeader;
+import static io.polyglotted.elastic.client.EsRestClient.authHeader;
+import static io.polyglotted.elastic.client.EsRestClient.ctypeHeader;
 
 public interface ElasticClient extends AutoCloseable {
 
@@ -39,6 +39,18 @@ public interface ElasticClient extends AutoCloseable {
 
     boolean indexExists(String index, Header... headers);
 
+    default void createIndex(CreateIndexRequest request, String auth) { createIndex(request, authHeader(auth)); }
+
+    void createIndex(CreateIndexRequest request, Header... headers);
+
+    default void dropIndex(String index, String auth) { dropIndex(index, authHeader(auth)); }
+
+    void dropIndex(String index, Header... headers);
+
+    default void forceRefresh(String index, String auth) { forceRefresh(index, authHeader(auth)); }
+
+    void forceRefresh(String index, Header... headers);
+
     default String getSettings(String index, String auth) { return getSettings(index, authHeader(auth)); }
 
     String getSettings(String index, Header... headers);
@@ -46,18 +58,6 @@ public interface ElasticClient extends AutoCloseable {
     default String getMapping(String index, String auth) { return getMapping(index, authHeader(auth)); }
 
     String getMapping(String index, Header... headers);
-
-    default void createIndex(CreateIndexRequest request, String auth) { createIndex(request, authHeader(auth)); }
-
-    void createIndex(CreateIndexRequest request, Header... headers);
-
-    default void forceRefresh(String index, String auth) { forceRefresh(index, authHeader(auth)); }
-
-    void forceRefresh(String index, Header... headers);
-
-    default void dropIndex(String index, String auth) { dropIndex(index, authHeader(auth)); }
-
-    void dropIndex(String index, Header... headers);
 
     default void buildPipeline(String id, String resource, String auth) { buildPipeline(id, resource, authHeader(auth), ctypeHeader()); }
 
