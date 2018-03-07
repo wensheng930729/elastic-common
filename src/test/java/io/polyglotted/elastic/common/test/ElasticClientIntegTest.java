@@ -15,11 +15,7 @@ import java.util.Map;
 import static com.google.common.base.Charsets.UTF_8;
 import static io.polyglotted.elastic.common.ElasticSettings.esSettingsBuilder;
 import static io.polyglotted.elastic.common.HighLevelConnector.highLevelClient;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 

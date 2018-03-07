@@ -4,9 +4,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.apache.http.HttpEntity;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.ContentType;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
@@ -33,11 +30,8 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.bytes.BytesReference;
-import org.elasticsearch.common.io.stream.BytesStreamOutput;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -52,59 +46,38 @@ public class EsRestClient implements ElasticClient {
     private static final Joiner COMMA = Joiner.on(",");
     private final RestHighLevelClient internalClient;
 
-    EsRestClient(RestClientBuilder builder) {
-        this(new RestHighLevelClient(builder));
-    }
+    EsRestClient(RestClientBuilder builder) { this(new RestHighLevelClient(builder)); }
 
-    @Override
-    public void close() throws Exception {
-        internalClient.close();
-    }
+    @Override public void close() throws Exception { internalClient.close(); }
 
-    @Override
-    public boolean indexExists(String index) {
-        throw new UnsupportedOperationException();
-    }
+    @Override public boolean indexExists(String index) { throw new UnsupportedOperationException(); }
 
-    @Override
-    public Set<String> getIndices(String alias) {
+    @Override public Set<String> getIndices(String alias) {
         try {
             Map<String, Object> responseObject = deserialize(performCliRequest("GET", "/" + alias + "/_aliases"));
             return ImmutableSet.copyOf(responseObject.keySet());
-        } catch (Exception ioe) {
-            throw handleEx("getIndices failed", ioe);
-        }
+        } catch (Exception ioe) { throw handleEx("getIndices failed", ioe); }
     }
 
-    @Override
-    public String getIndexMeta(String... indices) {
+    @Override public String getIndexMeta(String... indices) {
         try {
             return performCliRequest("GET", "/" + COMMA.join(indices) + "/");
-        } catch (Exception ioe) {
-            throw handleEx("getIndexMeta failed", ioe);
-        }
+        } catch (Exception ioe) { throw handleEx("getIndexMeta failed", ioe); }
     }
 
-    @Override
-    public String getSettings(String... indices) {
+    @Override public String getSettings(String... indices) {
         try {
             return performCliRequest("GET", "/" + COMMA.join(indices) + "/_settings");
-        } catch (Exception e) {
-            throw handleEx("getSettings failed", e);
-        }
+        } catch (Exception e) { throw handleEx("getSettings failed", e); }
     }
 
-    @Override
-    public String getMapping(String index, String type) {
+    @Override public String getMapping(String index, String type) {
         try {
             return performCliRequest("GET", "/" + index + "/" + type + "/_mapping");
-        } catch (Exception e) {
-            throw handleEx("getSettings failed", e);
-        }
+        } catch (Exception e) { throw handleEx("getSettings failed", e); }
     }
 
-    @Override
-    public CreateIndexResponse createIndex(CreateIndexRequest request) {
+    @Override public CreateIndexResponse createIndex(CreateIndexRequest request) {
         try {
             return internalClient.indices().create(request);
         } catch (Exception e) {
@@ -112,17 +85,13 @@ public class EsRestClient implements ElasticClient {
         }
     }
 
-    @Override
-    public void forceRefresh(String... indices) {
+    @Override public void forceRefresh(String... indices) {
         try {
             performCliRequest("POST", "/" + COMMA.join(indices) + "/_refresh");
-        } catch (Exception ioe) {
-            throw handleEx("forceRefresh failed", ioe);
-        }
+        } catch (Exception ioe) { throw handleEx("forceRefresh failed", ioe); }
     }
 
-    @Override
-    public DeleteIndexResponse dropIndex(String... indices) {
+    @Override public DeleteIndexResponse dropIndex(String... indices) {
         try {
             return internalClient.indices().delete(new DeleteIndexRequest(indices));
         } catch (Exception ioe) {
@@ -130,130 +99,60 @@ public class EsRestClient implements ElasticClient {
         }
     }
 
-    @Override
-    public void waitForStatus(String status) {
-        throw new UnsupportedOperationException();
-    }
+    @Override public void waitForStatus(String status) { throw new UnsupportedOperationException(); }
 
-    @Override
-    public Map<String, Object> clusterHealth() {
+    @Override public Map<String, Object> clusterHealth() {
         try {
             return deserialize(performCliRequest("GET", "/_cluster/health"));
-        } catch (Exception ioe) {
-            throw handleEx("clusterHealth failed", ioe);
-        }
+        } catch (Exception ioe) { throw handleEx("clusterHealth failed", ioe); }
     }
 
-    @Override
-    public void buildPipeline(String id, String resource) {
-        throw new UnsupportedOperationException();
+    @Override public void buildPipeline(String id, String resource) { throw new UnsupportedOperationException(); }
+
+    @Override public boolean pipelineExists(String id) { throw new UnsupportedOperationException(); }
+
+    @Override public IndexResponse index(IndexRequest request) {
+        try { return internalClient.index(request); } catch (IOException ioe) { throw new ElasticException("index failed", ioe); }
     }
 
-    @Override
-    public boolean pipelineExists(String id) {
-        throw new UnsupportedOperationException();
+    @Override public UpdateResponse update(UpdateRequest request) {
+        try { return internalClient.update(request); } catch (IOException ioe) { throw new ElasticException("update failed", ioe); }
     }
 
-    @Override
-    public IndexResponse index(IndexRequest request) {
-        try {
-            return internalClient.index(request);
-        } catch (IOException ioe) {
-            throw new ElasticException("index failed", ioe);
-        }
+    @Override public DeleteResponse delete(DeleteRequest request) {
+        try { return internalClient.delete(request); } catch (IOException ioe) { throw new ElasticException("delete failed", ioe); }
     }
 
-    @Override
-    public UpdateResponse update(UpdateRequest request) {
-        try {
-            return internalClient.update(request);
-        } catch (IOException ioe) {
-            throw new ElasticException("update failed", ioe);
-        }
+    @Override public BulkResponse bulk(BulkRequest request) {
+        try { return internalClient.bulk(request); } catch (IOException ioe) { throw new ElasticException("bulk failed", ioe); }
     }
 
-    @Override
-    public DeleteResponse delete(DeleteRequest request) {
-        try {
-            return internalClient.delete(request);
-        } catch (IOException ioe) {
-            throw new ElasticException("delete failed", ioe);
-        }
+    @Override public void bulkAsync(BulkRequest request, ActionListener<BulkResponse> listener) {
+        try { internalClient.bulkAsync(request, listener); } catch (Exception ioe) { throw new ElasticException("bulkAsync failed", ioe); }
     }
 
-    @Override
-    public BulkResponse bulk(BulkRequest request) {
-        try {
-            return internalClient.bulk(request);
-        } catch (IOException ioe) {
-            throw new ElasticException("bulk failed", ioe);
-        }
+    @Override public GetResponse get(GetRequest request) {
+        try { return internalClient.get(request); } catch (IOException ioe) { throw new ElasticException("get failed", ioe); }
     }
 
-    @Override
-    public void bulkAsync(BulkRequest request, ActionListener<BulkResponse> listener) {
-        try {
-            internalClient.bulkAsync(request, listener);
-        } catch (Exception ioe) {
-            throw new ElasticException("bulkAsync failed", ioe);
-        }
+    @Override public MultiGetResponse multiGet(MultiGetRequest request) { throw new UnsupportedOperationException(); }
+
+    @Override public SearchResponse search(SearchRequest request) {
+        try { return internalClient.search(request); } catch (IOException ioe) { throw new ElasticException("search failed", ioe); }
     }
 
-    @Override
-    public GetResponse get(GetRequest request) {
-        try {
-            return internalClient.get(request);
-        } catch (IOException ioe) {
-            throw new ElasticException("get failed", ioe);
-        }
+    @Override public SearchResponse searchScroll(SearchScrollRequest request) {
+        try { return internalClient.searchScroll(request); } catch (IOException ioe) { throw new ElasticException("searchScroll failed", ioe); }
     }
 
-    @Override
-    public MultiGetResponse multiGet(MultiGetRequest request) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public SearchResponse search(SearchRequest request) {
-        try {
-            return internalClient.search(request);
-        } catch (IOException ioe) {
-            throw new ElasticException("search failed", ioe);
-        }
-    }
-
-    @Override
-    public SearchResponse searchScroll(SearchScrollRequest request) {
-        try {
-            return internalClient.searchScroll(request);
-        } catch (IOException ioe) {
-            throw new ElasticException("searchScroll failed", ioe);
-        }
-    }
-
-    @Override
-    public ClearScrollResponse clearScroll(ClearScrollRequest request) {
-        try {
-            return internalClient.clearScroll(request);
-        } catch (IOException ioe) {
-            throw new ElasticException("clearScroll failed", ioe);
-        }
+    @Override public ClearScrollResponse clearScroll(ClearScrollRequest request) {
+        try { return internalClient.clearScroll(request); } catch (IOException ioe) { throw new ElasticException("clearScroll failed", ioe); }
     }
 
     private String performCliRequest(String method, String endpoint) throws IOException {
         Response response = internalClient.getLowLevelClient().performRequest(method, endpoint);
-        return getResponseString(response);
-    }
-
-    private String performCliRequest(String method, String endpoint, HttpEntity entity) throws IOException {
-        Response response = internalClient.getLowLevelClient().performRequest(method, endpoint, Collections.emptyMap(), entity);
-        return getResponseString(response);
-    }
-
-    private String getResponseString(Response response) throws IOException {
         int statusCode = response.getStatusLine().getStatusCode();
         checkState(statusCode >= SC_OK && statusCode < SC_MULTIPLE_CHOICES, response.getStatusLine().getReasonPhrase());
         return EntityUtils.toString(response.getEntity());
     }
-
 }
