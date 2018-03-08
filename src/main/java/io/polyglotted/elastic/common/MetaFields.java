@@ -23,6 +23,7 @@ import static io.polyglotted.common.util.UrnUtil.safeUrnOf;
 import static io.polyglotted.common.util.UrnUtil.urnOf;
 import static io.polyglotted.common.util.UuidUtil.genUuidStr;
 
+@SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class MetaFields {
     public static final String ALL_FIELD = "&all";
     public static final String ANCESTOR_FIELD = "&ancestor";
@@ -70,8 +71,6 @@ public abstract class MetaFields {
     public static String reqdMeta(Object object, String field) { return reqdStr(mapValue(object), field); }
 
     public static boolean isNotMeta(String field) { return field.indexOf('&') != 0; }
-
-    public static boolean isMeta(String field) { return field.indexOf('&') == 0; }
 
     public static String index(Object object) { return reqdMeta(object, INDEX_FIELD); }
 
@@ -148,7 +147,7 @@ public abstract class MetaFields {
         checkArgument(map.containsKey(property), property + " is missing in the map"); return property;
     }
 
-    @SuppressWarnings("unchecked") public static MapResult mapValue(Object item) {
+    private static MapResult mapValue(Object item) {
         return (item instanceof MapResult) ? (MapResult) item : nonNull(safeFieldValue(item, "_meta"), simpleResult());
     }
 }

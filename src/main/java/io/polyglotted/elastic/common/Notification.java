@@ -16,7 +16,7 @@ import java.util.Map;
 import static io.polyglotted.common.util.StrUtil.safePrefix;
 import static io.polyglotted.common.util.StrUtil.safeSuffix;
 
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue"})
 @RequiredArgsConstructor @EqualsAndHashCode
 public class Notification {
     public final String realm;
@@ -28,8 +28,7 @@ public class Notification {
 
     public static Builder notificationBuilder() { return new Builder(); }
 
-    @Accessors(fluent = true)
-    @EqualsAndHashCode
+    @Accessors(fluent = true) @EqualsAndHashCode
     @RequiredArgsConstructor
     public static class KeyAction {
         public final String id;

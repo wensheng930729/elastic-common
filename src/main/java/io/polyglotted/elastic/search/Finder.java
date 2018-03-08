@@ -4,6 +4,7 @@ import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.util.MapBuilder;
 import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
 import io.polyglotted.elastic.client.ElasticClient;
+import io.polyglotted.elastic.common.EsAuth;
 import io.polyglotted.elastic.index.IndexRecord;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ import static io.polyglotted.elastic.common.MetaFields.keyString;
 @Slf4j
 public abstract class Finder {
 
-    static Map<String, MapResult> findAll(ElasticClient client, List<IndexRecord.Builder> builders) {
+    static Map<String, MapResult> findAll(ElasticClient client, EsAuth auth, List<IndexRecord.Builder> builders) {
         MultiGetRequest multiGetRequest = new MultiGetRequest();
         for (IndexRecord.Builder rec : builders) {
             if (isNullOrEmpty(rec.id)) continue;
@@ -35,7 +36,7 @@ public abstract class Finder {
 
         if (multiGetRequest.getItems().size() == 0) return immutableMap();
         ImmutableMapBuilder<String, MapResult> result = MapBuilder.immutableMapBuilder();
-        MultiGetResponse multiGetItemResponses = client.multiGet(multiGetRequest);
+        MultiGetResponse multiGetItemResponses = client.multiGet(auth, multiGetRequest);
         for (MultiGetItemResponse item : multiGetItemResponses.getResponses()) {
 
             GetResponse get = checkMultiGet(item).getResponse();
@@ -47,12 +48,15 @@ public abstract class Finder {
         return result.build();
     }
 
-    public static MapResult findBy(ElasticClient client, IndexRecord rec) { return findBy(client, rec.index, rec.id, rec.parent); }
+    public static MapResult findBy(ElasticClient client, EsAuth auth, IndexRecord rec) {
+        return findBy(client, auth, rec.index, rec.id, rec.parent);
+    }
 
-    public static MapResult findBy(ElasticClient client, String repo, String id) { return findBy(client, repo, id, null); }
+    public static MapResult findBy(ElasticClient client, EsAuth auth, String repo, String id) {
+        return findBy(client, auth, repo, id, null); }
 
-    @SneakyThrows public static MapResult findBy(ElasticClient client, String repo, String id, String parent) {
-        GetResponse response = client.get(new GetRequest(repo).id(urlEncode(id)).parent(parent));
+    @SneakyThrows public static MapResult findBy(ElasticClient client, EsAuth auth, String repo, String id, String parent) {
+        GetResponse response = client.get(auth, new GetRequest(repo).id(urlEncode(id)).parent(parent));
         return response.isExists() && !response.isSourceEmpty() ? simpleResult(response.getSource()) : null;
     }
 

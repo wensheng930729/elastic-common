@@ -2,6 +2,7 @@ package io.polyglotted.elastic.index;
 
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.elastic.client.ElasticClient;
+import io.polyglotted.elastic.common.EsAuth;
 import io.polyglotted.elastic.common.MetaFields;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.index.IndexRequest;
@@ -23,7 +24,7 @@ public interface Validator {
     Validator STRICT = new StrictValidator();
     Validator OVERRIDE = new OverwriteValidator();
 
-    IndexRequest validate(ElasticClient client, IndexRecord record);
+    IndexRequest validate(ElasticClient client, EsAuth auth, IndexRecord record);
 
     @Slf4j class StrictValidator extends OverwriteValidator {
         @Override protected void validateCurrent(IndexRecord record, MapResult current) {
@@ -39,9 +40,9 @@ public interface Validator {
 
     @Slf4j @SuppressWarnings({"unused", "WeakerAccess"})
     class OverwriteValidator implements Validator {
-        @Override public final IndexRequest validate(ElasticClient client, IndexRecord record) {
+        @Override public final IndexRequest validate(ElasticClient client, EsAuth auth, IndexRecord record) {
             preValidate(client, record);
-            MapResult current = findBy(client, record);
+            MapResult current = findBy(client, auth, record);
             if (isIdempotent(record, current)) { throw new NoopException(serialize(readKey(current).put(RESULT_FIELD, "noop").build())); }
             validateCurrent(record, current);
             postValidate(record);

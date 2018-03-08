@@ -1,7 +1,7 @@
 package io.polyglotted.elastic.client;
 
 import io.polyglotted.common.model.MapResult;
-import org.apache.http.Header;
+import io.polyglotted.elastic.common.EsAuth;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -22,96 +22,49 @@ import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 
-import static io.polyglotted.elastic.client.EsRestClient.authHeader;
-import static io.polyglotted.elastic.client.EsRestClient.ctypeHeader;
-
 public interface ElasticClient extends AutoCloseable {
 
-    void waitForStatus(String status, Header... headers);
+    void waitForStatus(EsAuth auth, String status);
 
-    default void waitForStatus(String status, String auth) { waitForStatus(status, authHeader(auth)); }
+    MapResult clusterHealth(EsAuth auth);
 
-    MapResult clusterHealth(Header... headers);
+    boolean indexExists(EsAuth auth, String index);
 
-    default MapResult clusterHealth(String auth) { return clusterHealth(authHeader(auth)); }
+    void createIndex(EsAuth auth, CreateIndexRequest request);
 
-    default boolean indexExists(String index, String auth) { return indexExists(index, authHeader(auth)); }
+    void dropIndex(EsAuth auth, String index);
 
-    boolean indexExists(String index, Header... headers);
+    void forceRefresh(EsAuth auth, String index);
 
-    default void createIndex(CreateIndexRequest request, String auth) { createIndex(request, authHeader(auth)); }
+    String getSettings(EsAuth auth, String index);
 
-    void createIndex(CreateIndexRequest request, Header... headers);
+    String getMapping(EsAuth auth, String index);
 
-    default void dropIndex(String index, String auth) { dropIndex(index, authHeader(auth)); }
+    void buildPipeline(EsAuth auth, String id, String resource);
 
-    void dropIndex(String index, Header... headers);
+    boolean pipelineExists(EsAuth auth, String id);
 
-    default void forceRefresh(String index, String auth) { forceRefresh(index, authHeader(auth)); }
+    void deletePipeline(EsAuth auth, String id);
 
-    void forceRefresh(String index, Header... headers);
+    IndexResponse index(EsAuth auth, IndexRequest request);
 
-    default String getSettings(String index, String auth) { return getSettings(index, authHeader(auth)); }
+    UpdateResponse update(EsAuth auth, UpdateRequest request);
 
-    String getSettings(String index, Header... headers);
+    DeleteResponse delete(EsAuth auth, DeleteRequest request);
 
-    default String getMapping(String index, String auth) { return getMapping(index, authHeader(auth)); }
+    BulkResponse bulk(EsAuth auth, BulkRequest bulk);
 
-    String getMapping(String index, Header... headers);
+    void bulkAsync(EsAuth auth, BulkRequest bulkRequest, ActionListener<BulkResponse> listener);
 
-    default void buildPipeline(String id, String resource, String auth) { buildPipeline(id, resource, authHeader(auth), ctypeHeader()); }
+    boolean exists(EsAuth auth, GetRequest request);
 
-    void buildPipeline(String id, String resource, Header... headers);
+    GetResponse get(EsAuth auth, GetRequest request);
 
-    default boolean pipelineExists(String id, String auth) { return pipelineExists(id, authHeader(auth)); }
+    MultiGetResponse multiGet(EsAuth auth, MultiGetRequest request);
 
-    boolean pipelineExists(String id, Header... headers);
+    SearchResponse search(EsAuth auth, SearchRequest request);
 
-    default void deletePipeline(String id, String auth) { deletePipeline(id, authHeader(auth)); }
+    SearchResponse searchScroll(EsAuth auth, SearchScrollRequest request);
 
-    void deletePipeline(String id, Header... headers);
-
-    default IndexResponse index(IndexRequest request, String auth) { return index(request, authHeader(auth)); }
-
-    IndexResponse index(IndexRequest request, Header... headers);
-
-    default UpdateResponse update(UpdateRequest request, String auth) { return update(request, authHeader(auth)); }
-
-    UpdateResponse update(UpdateRequest request, Header... headers);
-
-    default DeleteResponse delete(DeleteRequest request, String auth) { return delete(request, authHeader(auth)); }
-
-    DeleteResponse delete(DeleteRequest request, Header... headers);
-
-    default BulkResponse bulk(BulkRequest bulk, String auth) { return bulk(bulk, authHeader(auth)); }
-
-    BulkResponse bulk(BulkRequest bulk, Header... headers);
-
-    default void bulkAsync(BulkRequest bulk, ActionListener<BulkResponse> listener, String auth) { bulkAsync(bulk, listener, authHeader(auth)); }
-
-    void bulkAsync(BulkRequest bulkRequest, ActionListener<BulkResponse> listener, Header... headers);
-
-    default boolean exists(GetRequest request, String auth) { return exists(request, authHeader(auth)); }
-
-    boolean exists(GetRequest request, Header... headers);
-
-    default GetResponse get(GetRequest request, String auth) { return get(request, authHeader(auth)); }
-
-    GetResponse get(GetRequest request, Header... headers);
-
-    default MultiGetResponse multiGet(MultiGetRequest request, String auth) { return multiGet(request, authHeader(auth)); }
-
-    MultiGetResponse multiGet(MultiGetRequest request, Header... headers);
-
-    default SearchResponse search(SearchRequest request, String auth) { return search(request, authHeader(auth)); }
-
-    SearchResponse search(SearchRequest request, Header... headers);
-
-    default SearchResponse searchScroll(SearchScrollRequest request, String auth) { return searchScroll(request, authHeader(auth)); }
-
-    SearchResponse searchScroll(SearchScrollRequest request, Header... headers);
-
-    default ClearScrollResponse clearScroll(ClearScrollRequest request, String auth) { return clearScroll(request, authHeader(auth)); }
-
-    ClearScrollResponse clearScroll(ClearScrollRequest request, Header... headers);
+    ClearScrollResponse clearScroll(EsAuth auth, ClearScrollRequest request);
 }
