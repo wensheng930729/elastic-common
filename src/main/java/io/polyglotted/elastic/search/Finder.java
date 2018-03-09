@@ -48,9 +48,7 @@ public abstract class Finder {
         return result.build();
     }
 
-    public static MapResult findBy(ElasticClient client, EsAuth auth, IndexRecord rec) {
-        return findBy(client, auth, rec.index, rec.id, rec.parent);
-    }
+    public static MapResult findBy(ElasticClient client, EsAuth auth, IndexRecord rec) { return findBy(client, auth, rec.index, rec.id, rec.parent); }
 
     public static MapResult findBy(ElasticClient client, EsAuth auth, String repo, String id) {
         return findBy(client, auth, repo, id, null); }

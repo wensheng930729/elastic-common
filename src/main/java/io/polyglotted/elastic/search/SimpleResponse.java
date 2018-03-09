@@ -16,7 +16,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.transform;
 import static io.polyglotted.common.util.ListBuilder.immutableList;
 
-@SuppressWarnings({"unused"})
+@SuppressWarnings({"unused", "WeakerAccess"})
 @ToString(includeFieldNames = false, doNotUseGetters = true)
 @EqualsAndHashCode @RequiredArgsConstructor
 public final class SimpleResponse {
@@ -33,18 +33,18 @@ public final class SimpleResponse {
     @Setter
     @Accessors(fluent = true, chain = true)
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-    static class Builder {
+    public static class Builder {
         private ResponseHeader header = null;
         private final List<Object> results = new ArrayList<>();
         private List<Aggregation> aggregations = new ArrayList<>();
 
-        Builder result(Object object) { this.results.add(object); return this; }
+        public Builder result(Object object) { this.results.add(object); return this; }
 
-        Builder results(Iterable<?> objects) { Iterables.addAll(results, objects); return this; }
+        public Builder results(Iterable<?> objects) { Iterables.addAll(results, objects); return this; }
 
-        void aggregation(Aggregation.Builder builder) { this.aggregations.add(builder.build()); }
+        public void aggregation(Aggregation.Builder builder) { this.aggregations.add(builder.build()); }
 
-        SimpleResponse build() {
+        public SimpleResponse build() {
             return new SimpleResponse(checkNotNull(header, "header is required"), immutableList(results), immutableList(aggregations));
         }
     }

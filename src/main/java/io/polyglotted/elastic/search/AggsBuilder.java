@@ -13,9 +13,7 @@ import static io.polyglotted.elastic.search.AggsConverter.detectAgg;
 import static io.polyglotted.elastic.search.AggsFlattener.flattenAggs;
 import static org.elasticsearch.common.xcontent.ToXContent.EMPTY_PARAMS;
 
-public abstract class AggsBuilder {
-    public static final String POLICY_AGG = "&policyFilterAgg";
-
+abstract class AggsBuilder {
     static void buildAggs(SearchResponse response, boolean flattenAgg, XContentBuilder result) throws IOException {
         Aggregations aggregations = response.getAggregations();
         if (aggregations != null) {
