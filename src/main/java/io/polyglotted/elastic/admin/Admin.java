@@ -25,11 +25,10 @@ public final class Admin implements AutoCloseable {
 
     @Delegate(types = AdminClient.class) private final ElasticClient client;
 
-    public String createIndex(EsAuth auth, IndexSetting setting, Type type, String... aliases) {
-        String index = nonNull(optStr(setting.mapResult, "index_name"), Admin::uniqueIndexName);
-        CreateIndexRequest request = createIndexRequest(index).updateAllTypes(true).settings(setting.createJson(), JSON);
-        for (String alias : aliases) { request.alias(new Alias(alias)); }
-        request.mapping(type.type, type.mappingJson(), JSON);
+    public String createIndex(EsAuth auth, IndexSetting setting, Type type, String alias) {
+        CreateIndexRequest request = createIndexRequest(nonNull(optStr(setting.mapResult, "index_name"), Admin::uniqueIndexName))
+            .updateAllTypes(true).settings(setting.createJson(), JSON).mapping(type.type, type.mappingJson(), JSON);
+        if (alias != null) { request.alias(new Alias(alias)); }
         return createIndex(auth, request);
     }
 

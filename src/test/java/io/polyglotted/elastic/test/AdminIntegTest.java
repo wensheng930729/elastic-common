@@ -59,7 +59,7 @@ public class AdminIntegTest {
 
             IndexSetting setting = settingBuilder(5, 1).all(immutableResult("mapping.total_fields.limit", 5000)).build();
             Type completeType = completeTypeMapping().build();
-            String index = admin.createIndex(ES_AUTH, setting, completeType);
+            String index = admin.createIndex(ES_AUTH, setting, completeType, "MyBigIndex");
             try {
                 MapResult deserialized = deserialize(admin.getSettings(ES_AUTH, index));
 
