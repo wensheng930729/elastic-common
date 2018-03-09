@@ -1,6 +1,5 @@
 package io.polyglotted.elastic.search;
 
-import com.google.common.collect.ImmutableMap;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -9,6 +8,7 @@ import java.util.List;
 
 import static com.google.common.collect.ImmutableList.copyOf;
 import static com.google.common.collect.ImmutableList.of;
+import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.elastic.common.MetaFields.EXPIRY_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.STATUS_FIELD;
@@ -34,7 +34,7 @@ public abstract class Expressions {
 
     public static Expression notEquals(String field, Object value) { return value == null ? exists(field) : withValue("Ne", field, value); }
 
-    public static Expression text(String field, Object value) { return withMap("Text", nonNull(field, ""), ImmutableMap.of(ValueKey, value)); }
+    public static Expression text(String field, Object value) { return withMap("Text", nonNull(field, ""), immutableResult(ValueKey, value)); }
 
     public static <E extends Comparable<E>> Expression in(String field, Iterable<E> values) { return withArray("In", field, copyOf(values)); }
 
@@ -70,7 +70,7 @@ public abstract class Expressions {
         public BoolBuilder nots(Expression... exprs) { for (Expression expr : exprs) { not(expr); } return this; }
 
         public Expression build() {
-            return withMap("Bool", "Bool", ImmutableMap.of("must", musts, "filter", filters, "should", shoulds, "must_not", mustNots));
+            return withMap("Bool", "Bool", immutableResult("must", musts, "filter", filters, "should", shoulds, "must_not", mustNots));
         }
     }
 }

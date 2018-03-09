@@ -1,0 +1,80 @@
+{
+  "filter": {
+    "autocomplete": {
+      "type": "edge_ngram",
+      "min_gram": "1",
+      "max_gram": "20"
+    }
+  },
+  "char_filter": {
+    "alphaonly": {
+      "type": "pattern_replace",
+      "pattern": "[^\\pL]",
+      "replacement": ""
+    },
+    "digitonly": {
+      "type": "pattern_replace",
+      "pattern": "[^\\d]",
+      "replacement": ""
+    },
+    "zeroremove": {
+      "type": "pattern_replace",
+      "pattern": "\\b0+",
+      "replacement": ""
+    }
+  },
+  "analyzer": {
+    "default": {
+      "type": "standard"
+    },
+    "allAnalyzer": {
+      "type": "custom",
+      "tokenizer": "whitespace",
+      "filter": [
+        "lowercase",
+        "asciifolding"
+      ]
+    },
+    "pathAnalyzer": {
+      "tokenizer": "path_hierarchy",
+      "filter": [
+        "lowercase"
+      ]
+    },
+    "normAnalyzer": {
+      "type": "custom",
+      "tokenizer": "keyword",
+      "filter": [
+        "lowercase",
+        "asciifolding"
+      ]
+    },
+    "alphaAnalyzer": {
+      "type": "custom",
+      "tokenizer": "keyword",
+      "char_filter": [
+        "alphaonly"
+      ],
+      "filter": [
+        "lowercase",
+        "asciifolding"
+      ]
+    },
+    "numAnalyzer": {
+      "type": "custom",
+      "tokenizer": "keyword",
+      "char_filter": [
+        "digitonly",
+        "zeroremove"
+      ]
+    },
+    "autoAnalyzer": {
+      "type": "custom",
+      "tokenizer": "whitespace",
+      "filter": [
+        "lowercase",
+        "autocomplete"
+      ]
+    }
+  }
+}

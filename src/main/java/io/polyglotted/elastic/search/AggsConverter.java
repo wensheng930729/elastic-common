@@ -19,8 +19,8 @@ import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStat
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static io.polyglotted.elastic.search.Aggregation.aggregationBuilder;
+import static java.util.Objects.requireNonNull;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public enum AggsConverter {
@@ -143,7 +143,7 @@ public enum AggsConverter {
         else if (agg instanceof Children) { converter = AggChildren; }
         else if (agg instanceof Nested) { converter = AggNested; }
         else if (agg instanceof ReverseNested) { converter = AggReverseNested; }
-        return checkNotNull(converter, "unable to detect " + agg.getName() + ":" + agg.getClass()).getWith(agg.getName(), agg);
+        return requireNonNull(converter, "unable to detect " + agg.getName() + ":" + agg.getClass()).getWith(agg.getName(), agg);
     }
 
     private static Aggregation.Builder addSingleBucketChildren(String label, Aggregation.Builder builder, SingleBucketAggregation single) {

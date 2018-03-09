@@ -87,10 +87,11 @@ public class ElasticRestClient implements ElasticClient {
         } catch (Exception ioe) { throw throwEx("indexExists failed", ioe); }
     }
 
-    @Override public void createIndex(EsAuth auth, CreateIndexRequest request) {
+    @Override public String createIndex(EsAuth auth, CreateIndexRequest request) {
         try {
             CreateIndexResponse response = internalClient.indices().create(request, auth.header());
             checkState(response.isAcknowledged() && response.isShardsAcknowledged(), "unable to create index");
+            return request.index();
         } catch (Exception e) { throw throwEx("createIndex failed", e); }
     }
 

@@ -16,12 +16,12 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import java.util.List;
 import java.util.Map;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Maps.filterKeys;
 import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.model.MapResult.simpleResult;
 import static io.polyglotted.elastic.common.MetaFields.HIGHLTGHT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.ID_FIELD;
+import static java.util.Objects.requireNonNull;
 
 @SuppressWarnings("unused")
 public interface ResultBuilder<T> extends ResponseBuilder<T> {
@@ -33,7 +33,7 @@ public interface ResultBuilder<T> extends ResponseBuilder<T> {
     }
 
     default T buildFromHit(SearchHit hit, Verbose verbose) {
-        T result = buildVerbose(checkNotNull(hit).hasSource() ? immutableResult(hit.getSourceAsMap()) : immutableResult(), verbose);
+        T result = buildVerbose(requireNonNull(hit).hasSource() ? immutableResult(hit.getSourceAsMap()) : immutableResult(), verbose);
         Map<String, HighlightField> highlightFields = hit.getHighlightFields();
         if (result instanceof MapResult && !highlightFields.isEmpty()) {
 

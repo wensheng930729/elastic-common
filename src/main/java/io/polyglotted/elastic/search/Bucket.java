@@ -1,6 +1,8 @@
 package io.polyglotted.elastic.search;
 
 import com.google.common.collect.ImmutableList;
+import io.polyglotted.common.model.MapResult;
+import io.polyglotted.common.util.MapRetriever;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -9,12 +11,10 @@ import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static com.google.common.collect.ImmutableList.copyOf;
 import static com.google.common.collect.Iterables.transform;
 import static io.polyglotted.common.util.ConversionUtil.asLong;
-import static io.polyglotted.common.util.MapRetriever.listVal;
 import static io.polyglotted.common.util.MapRetriever.optValue;
 import static io.polyglotted.common.util.MapRetriever.reqdStr;
 import static io.polyglotted.common.util.MapRetriever.reqdValue;
@@ -31,10 +31,9 @@ public final class Bucket {
 
     public boolean hasAggregations() { return aggregations.size() > 0; }
 
-    public static Bucket.Builder deserializeBucket(Map<String, Object> map) {
+    public static Bucket.Builder deserializeBucket(MapResult map) {
         Bucket.Builder builder = bucketBuilder().key(reqdStr(map, "key")).value(reqdValue(map, "value")).count(asLong(optValue(map, "count", 0L)));
-        List<Map<String, Object>> aggs = listVal(map, "aggregations");
-        for (Map<String, Object> agg : aggs) { builder.aggregation(deserializeAgg(agg)); }
+        for (MapResult agg : MapRetriever.<MapResult>listVal(map, "aggregations")) { builder.aggregation(deserializeAgg(agg)); }
         return builder;
     }
 

@@ -30,7 +30,7 @@ public interface ElasticClient extends AutoCloseable {
 
     boolean indexExists(EsAuth auth, String index);
 
-    void createIndex(EsAuth auth, CreateIndexRequest request);
+    String createIndex(EsAuth auth, CreateIndexRequest request);
 
     void dropIndex(EsAuth auth, String index);
 

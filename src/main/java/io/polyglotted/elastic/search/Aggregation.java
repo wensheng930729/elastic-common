@@ -1,8 +1,8 @@
 package io.polyglotted.elastic.search;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import io.polyglotted.common.model.MapResult;
+import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -12,22 +12,23 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import java.util.AbstractMap.SimpleEntry;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Iterables.transform;
 import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.model.SortedMapResult.treeResult;
+import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.common.util.ListBuilder.simpleList;
+import static io.polyglotted.common.util.MapBuilder.immutableMapBuilder;
 import static io.polyglotted.common.util.MapRetriever.listVal;
 import static io.polyglotted.common.util.MapRetriever.mapVal;
 import static io.polyglotted.common.util.MapRetriever.reqdStr;
 import static io.polyglotted.common.util.MapRetriever.reqdValue;
 import static io.polyglotted.elastic.search.Bucket.deserializeBucket;
+import static java.util.Objects.requireNonNull;
 
 @ToString(includeFieldNames = false, doNotUseGetters = true, of = {"label", "type", "value"})
 @EqualsAndHashCode
@@ -45,7 +46,7 @@ public final class Aggregation {
     public List<Bucket> buckets() { checkArgument(hasBuckets(), type + " does not support buckets"); return (List<Bucket>) value; }
 
     public Map<String, Long> bucketCounts() {
-        ImmutableMap.Builder<String, Long> bucketCounts = ImmutableMap.builder();
+        ImmutableMapBuilder<String, Long> bucketCounts = immutableMapBuilder();
         for (Bucket bucket : buckets()) bucketCounts.put(String.valueOf(bucket.value), bucket.count);
         return bucketCounts.build();
     }
@@ -56,21 +57,18 @@ public final class Aggregation {
 
     public double doubleValue(String name) { return value(name, Double.class); }
 
-    @SuppressWarnings("unchecked")
-    public <T> T value(String name, Class<T> tClass) {
+    @SuppressWarnings("unchecked") public <T> T value(String name, Class<T> tClass) {
         return (value instanceof Map) ? tClass.cast(((Map) value).get(name)) : tClass.cast(value);
     }
 
-    @SuppressWarnings("unchecked")
-    public Iterable<Entry<String, Object>> valueIterable() {
-        return (value instanceof Map) ? ((Map<String, Object>) value).entrySet()
-            : Collections.singletonList(new SimpleEntry("value", value));
+    @SuppressWarnings("unchecked") public Iterable<Entry<String, Object>> valueIterable() {
+        return (value instanceof Map) ? ((Map<String, Object>) value).entrySet() : immutableList(new SimpleEntry("value", value));
     }
 
-    public static Aggregation.Builder deserializeAgg(Map<String, Object> map) {
-        AggregationType aggType = AggregationType.valueOf(reqdStr(map, "type"));
-        Aggregation.Builder builder = aggregationBuilder().label(reqdStr(map, "label")).type(aggType).params(mapVal(map, "parameters"));
-        aggType.deserValue(map, builder);
+    public static Aggregation.Builder deserializeAgg(MapResult result) {
+        AggregationType aggType = AggregationType.valueOf(reqdStr(result, "type"));
+        Aggregation.Builder builder = aggregationBuilder().label(reqdStr(result, "label")).type(aggType).params(mapVal(result, "parameters"));
+        aggType.deserValue(result, builder);
         return builder;
     }
 
@@ -100,7 +98,7 @@ public final class Aggregation {
 
         public Aggregation build() {
             Iterable<Bucket> buckets = transform(builders, Bucket.Builder::build);
-            return new Aggregation(checkNotNull(label, "label is required"), checkNotNull(type, "type is required").name(),
+            return new Aggregation(requireNonNull(label, "label is required"), requireNonNull(type, "type is required").name(),
                 type.valueFrom(valueMap, buckets), immutableResult(paramsMap));
         }
     }
@@ -115,17 +113,17 @@ public final class Aggregation {
         public final boolean hasBuckets;
         public final boolean isMultiValue;
 
-        @SuppressWarnings("unchecked") final <T> T valueFrom(Map<String, Object> valueMap, Iterable<Bucket> buckets) {
-            return hasBuckets ? (T) ImmutableList.copyOf(buckets) : (isMultiValue ? (T) ImmutableMap.copyOf(valueMap) : (T) valueMap.get(name()));
+        @SuppressWarnings("unchecked") final <T> T valueFrom(MapResult valueMap, Iterable<Bucket> buckets) {
+            return hasBuckets ? (T) ImmutableList.copyOf(buckets) : (isMultiValue ? (T) immutableResult(valueMap) : (T) valueMap.get(name()));
         }
 
-        void deserValue(Map<String, Object> map, Builder builder) {
+        void deserValue(MapResult result, Builder builder) {
             if (hasBuckets) {
-                List<Map<String, Object>> buckets = listVal(map, "value");
-                for (Map<String, Object> bucket : buckets) { builder.bucket(deserializeBucket(bucket)); }
+                List<MapResult> buckets = listVal(result, "value");
+                for (MapResult bucket : buckets) { builder.bucket(deserializeBucket(bucket)); }
             }
-            else if (isMultiValue) { builder.values(mapVal(map, "value")); }
-            else { builder.value(name(), reqdValue(map, "value")); }
+            else if (isMultiValue) { builder.values(mapVal(result, "value")); }
+            else { builder.value(name(), reqdValue(result, "value")); }
         }
     }
 }

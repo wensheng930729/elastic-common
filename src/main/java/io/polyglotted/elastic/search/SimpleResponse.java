@@ -12,9 +12,9 @@ import lombok.experimental.Accessors;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.transform;
 import static io.polyglotted.common.util.ListBuilder.immutableList;
+import static java.util.Objects.requireNonNull;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 @ToString(includeFieldNames = false, doNotUseGetters = true)
@@ -26,7 +26,7 @@ public final class SimpleResponse {
 
     public <T> List<T> resultsAs(Class<? extends T> tClass) { return transform(results, tClass::cast); }
 
-    public String scrollId() { return checkNotNull(header, "cannot find header in query response").scrollId; }
+    public String scrollId() { return requireNonNull(header, "cannot find header in query response").scrollId; }
 
     public static Builder responseBuilder() { return new Builder(); }
 
@@ -45,7 +45,7 @@ public final class SimpleResponse {
         public void aggregation(Aggregation.Builder builder) { this.aggregations.add(builder.build()); }
 
         public SimpleResponse build() {
-            return new SimpleResponse(checkNotNull(header, "header is required"), immutableList(results), immutableList(aggregations));
+            return new SimpleResponse(requireNonNull(header, "header is required"), immutableList(results), immutableList(aggregations));
         }
     }
 }

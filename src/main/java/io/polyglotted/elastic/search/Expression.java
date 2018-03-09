@@ -1,17 +1,16 @@
 package io.polyglotted.elastic.search;
 
-import com.google.common.collect.ImmutableList;
 import io.polyglotted.common.model.MapResult;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.util.BaseSerializer.serialize;
+import static io.polyglotted.common.util.ListBuilder.immutableList;
+import static java.util.Objects.requireNonNull;
 
 @RequiredArgsConstructor
 public final class Expression {
@@ -21,29 +20,29 @@ public final class Expression {
     public final String label;
     public final MapResult args;
 
-    static Expression withMap(String operation, String label, Map<String, Object> args) {
-        return new Expression(checkNotNull(operation), checkNotNull(label), immutableResult(args));
+    static Expression withMap(String operation, String label, MapResult args) {
+        return new Expression(requireNonNull(operation), requireNonNull(label), args);
     }
 
     static Expression withValue(String expressionType, String label, Object valueArg) {
-        return new Expression(expressionType, checkNotNull(label), immutableResult(ValueKey, valueArg));
+        return new Expression(expressionType, requireNonNull(label), immutableResult(ValueKey, valueArg));
     }
 
     static <E extends Comparable<E>> Expression withArray(String expressionType, String label, List<E> valueArg) {
-        return new Expression(expressionType, checkNotNull(label), immutableResult(ValueKey, valueArg));
+        return new Expression(expressionType, requireNonNull(label), immutableResult(ValueKey, valueArg));
     }
 
     static Expression withLabel(String expressionType, String label) {
-        return new Expression(expressionType, checkNotNull(label), immutableResult());
+        return new Expression(expressionType, requireNonNull(label), immutableResult());
     }
 
     <T> T valueArg() { return argFor(ValueKey, null); }
 
-    List<Object> arrayArg() { return argFor(ValueKey, ImmutableList.of()); }
+    List<Object> arrayArg() { return argFor(ValueKey, immutableList()); }
 
     String stringArg(String key) { return argFor(key, null); }
 
-    <T> T argFor(String key) { return checkNotNull(argFor(key, null)); }
+    <T> T argFor(String key) { return requireNonNull(argFor(key, null)); }
 
     @SuppressWarnings("unchecked") private <T> T argFor(String key, T defValue) { return args.containsKey(key) ? (T) args.get(key) : defValue; }
 

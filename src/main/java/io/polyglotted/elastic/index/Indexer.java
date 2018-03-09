@@ -22,6 +22,7 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 import java.util.function.Consumer;
 
 import static io.polyglotted.common.model.Pair.pair;
+import static io.polyglotted.common.util.MapBuilder.immutableMap;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.elastic.index.IndexUtil.checkResponse;
 import static io.polyglotted.elastic.index.IndexUtil.failOnIndex;
@@ -43,7 +44,7 @@ public final class Indexer {
     public void lockTheIndexOrFail(EsAuth auth, String index, String keyString) { lockTheIndexOrFail(auth, index, keyString, false); }
 
     public void lockTheIndexOrFail(EsAuth auth, String index, String keyString, boolean refresh) {
-        IndexResponse response = clienta.index(auth, new IndexRequest(index).id(keyString).opType(CREATE).source(ImmutableMap.of("i", 1)));
+        IndexResponse response = clienta.index(auth, new IndexRequest(index).id(keyString).opType(CREATE).source(immutableMap("i", 1)));
         if (response.status() != CREATED) { throw serverException("response failed while locking the keyString " + keyString); }
         if (refresh) { clienta.forceRefresh(auth, index); }
     }

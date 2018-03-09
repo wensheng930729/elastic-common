@@ -17,7 +17,6 @@ import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Set;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Maps.filterKeys;
 import static io.polyglotted.common.model.SortedMapResult.treeResult;
 import static io.polyglotted.common.util.BaseSerializer.serializeBytes;
@@ -35,7 +34,7 @@ import static io.polyglotted.elastic.common.MetaFields.KEY_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.MODEL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.PARENT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.SCHEMA_FIELD;
-import static io.polyglotted.elastic.common.MetaFields.SERIES_REFFQN_FIELD;
+import static io.polyglotted.elastic.common.MetaFields.SIZE_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.STATUS_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TIMESTAMP_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TRAITFQN_FIELD;
@@ -49,6 +48,7 @@ import static io.polyglotted.elastic.common.MetaFields.timestampStr;
 import static io.polyglotted.elastic.index.RecordAction.CREATE;
 import static io.polyglotted.elastic.index.RecordAction.DELETE;
 import static io.polyglotted.elastic.index.RecordAction.UPDATE;
+import static java.util.Objects.requireNonNull;
 
 @ToString(includeFieldNames = false, doNotUseGetters = true)
 @SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue"})
@@ -114,14 +114,15 @@ public final class IndexRecord {
         @Setter private String pipeline = null;
 
         private Builder(RecordAction action, String index, String modelName, String idStr, String parent, Object object) {
-            this.index = checkNotNull(index);
-            this.model = checkNotNull(modelName);
-            this.id = nonNull(idStr, genUuid(object));
+            this.index = requireNonNull(index);
+            this.model = requireNonNull(modelName);
+            byte[] bytes = getBytes(object);
+            this.id = nonNull(idStr, () -> generateUuid(bytes).toString().toLowerCase());
             this.parent = parent; // can be null
-            this.action = checkNotNull(action);
+            this.action = requireNonNull(action);
             this.keyString = urnOf(model, id);
             this.source = object;
-            addMeta(source, MODEL_FIELD, model); addMeta(source, ID_FIELD, id);
+            addMeta(source, MODEL_FIELD, model); addMeta(source, ID_FIELD, id); addMeta(source, SIZE_FIELD, bytes.length);
             if (notNullOrEmpty(parent)) { addMeta(source, PARENT_FIELD, parent); }
         }
 
@@ -134,23 +135,25 @@ public final class IndexRecord {
         public int hashCode() { return Objects.hash(keyString, action); }
 
         public Builder timestamp(Long timestamp) {
-            addMeta(source, TIMESTAMP_FIELD, checkNotNull(timestamp).toString()); ancillary.put(EXPIRY_FIELD, timestamp.toString()); return this;
+            addMeta(source, TIMESTAMP_FIELD, requireNonNull(timestamp).toString());
+            ancillary.put(EXPIRY_FIELD, timestamp.toString()); return this;
         }
 
-        public Builder user(String user) { addMeta(source, USER_FIELD, checkNotNull(user)); ancillary.put(UPDATER_FIELD, user); return this; }
+        public Builder user(String user) {
+            addMeta(source, USER_FIELD, requireNonNull(user));
+            ancillary.put(UPDATER_FIELD, user); return this;
+        }
 
         public Builder comment(String comment, boolean meta) {
-            if (meta) { addMeta(source, COMMENT_FIELD, checkNotNull(comment)); }
-            else { ancillary.put(COMMENT_FIELD, checkNotNull(comment)); } return this;
+            if (meta) { addMeta(source, COMMENT_FIELD, requireNonNull(comment)); }
+            else { ancillary.put(COMMENT_FIELD, requireNonNull(comment)); } return this;
         }
 
         public Builder traitFqn(String traitFqn) { addMeta(source, TRAITFQN_FIELD, traitFqn); return this; }
 
-        public Builder traitId(String traitId) { addMeta(source, TRAITID_FIELD, checkNotNull(traitId)); return this; }
+        public Builder traitId(String traitId) { addMeta(source, TRAITID_FIELD, requireNonNull(traitId)); return this; }
 
         public Builder schema(String schema) { addMeta(source, SCHEMA_FIELD, schema); return this; }
-
-        public Builder seriesRefFqn(String refFqn) { if (refFqn != null) { addMeta(source, SERIES_REFFQN_FIELD, refFqn); } return this; }
 
         public Builder baseVersion(Long baseVersion) { this.baseVersion = baseVersion; return this; }
 
@@ -167,9 +170,8 @@ public final class IndexRecord {
         public IndexRecord build() { return new IndexRecord(index, model, id, parent, action, keyString, baseVersion, source, ancillary, pipeline); }
     }
 
-    private static String genUuid(Object v) {
-        byte[] nameBytes = (v instanceof MapResult) ? serializeBytes(filterKeys((MapResult) v, MetaFields::isNotMeta)) : serializeBytes(v);
-        return generateUuid(nameBytes).toString().toLowerCase();
+    private static byte[] getBytes(Object v) {
+        return (v instanceof MapResult) ? serializeBytes(filterKeys((MapResult) v, MetaFields::isNotMeta)) : serializeBytes(v);
     }
 
     private static <T> boolean notEmpty(Collection<T> nullable) { return nullable != null && !nullable.isEmpty(); }
