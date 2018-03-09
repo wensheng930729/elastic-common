@@ -1,10 +1,12 @@
 package io.polyglotted.elastic.client;
 
 import io.polyglotted.common.model.MapResult;
+import io.polyglotted.common.model.MapResult.ImmutableResult;
 import io.polyglotted.common.util.HttpRequestBuilder.HttpReqType;
 import io.polyglotted.elastic.common.EsAuth;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.apache.http.ConnectionClosedException;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -41,11 +43,14 @@ import org.elasticsearch.client.RestHighLevelClient;
 import java.io.IOException;
 import java.net.ConnectException;
 
+import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.util.BaseSerializer.deserialize;
 import static io.polyglotted.common.util.HttpRequestBuilder.HttpReqType.DELETE;
 import static io.polyglotted.common.util.HttpRequestBuilder.HttpReqType.GET;
 import static io.polyglotted.common.util.HttpRequestBuilder.HttpReqType.POST;
 import static io.polyglotted.common.util.HttpRequestBuilder.HttpReqType.PUT;
+import static io.polyglotted.common.util.MapRetriever.asMap;
+import static io.polyglotted.common.util.MapRetriever.mapVal;
 import static io.polyglotted.common.util.ThreadUtil.safeSleep;
 import static io.polyglotted.elastic.client.ElasticException.checkState;
 import static io.polyglotted.elastic.client.ElasticException.throwEx;
@@ -61,7 +66,7 @@ public class ElasticRestClient implements ElasticClient {
 
     ElasticRestClient(RestClientBuilder builder) { this(new RestHighLevelClient(builder)); }
 
-    @Override public void close() throws Exception { internalClient.close(); }
+    @Override @SneakyThrows public void close() { internalClient.close(); }
 
     @SuppressWarnings("ALL")
     @Override public void waitForStatus(EsAuth auth, String status) {
@@ -114,9 +119,10 @@ public class ElasticRestClient implements ElasticClient {
         } catch (Exception e) { throw throwEx("getSettings failed", e); }
     }
 
-    @Override public String getMapping(EsAuth auth, String index) {
+    @Override public ImmutableResult getMapping(EsAuth auth, String index) {
         try {
-            return performCliRequest(auth, GET, "/" + index + "/_mapping/_doc");
+            MapResult result = deserialize(performCliRequest(auth, GET, "/" + index + "/_mapping/_doc"));
+            return immutableResult(mapVal(asMap(result.first()), "mappings"));
         } catch (Exception e) { throw throwEx("getMapping failed", e); }
     }
 

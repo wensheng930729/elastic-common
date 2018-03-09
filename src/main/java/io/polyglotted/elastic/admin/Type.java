@@ -6,7 +6,6 @@ import io.polyglotted.common.util.ListBuilder;
 import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
 import io.polyglotted.elastic.admin.Field.FieldBuilder;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -29,10 +28,10 @@ import static io.polyglotted.elastic.common.MetaFields.UNIQUE_FIELD;
 import static java.util.Collections.singleton;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-@Accessors(fluent = true) @ToString(includeFieldNames = false, doNotUseGetters = true)
+@ToString(includeFieldNames = false, doNotUseGetters = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Type {
-    @Getter public final String type = "_doc";
+    public final String type = "_doc";
     public final String parent;
     public final boolean strict;
     public final boolean enabled;

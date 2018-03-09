@@ -1,6 +1,7 @@
 package io.polyglotted.elastic.client;
 
 import io.polyglotted.common.model.MapResult;
+import io.polyglotted.common.model.MapResult.ImmutableResult;
 import io.polyglotted.elastic.common.EsAuth;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
@@ -22,7 +23,10 @@ import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 
-public interface ElasticClient extends AutoCloseable {
+import java.io.Closeable;
+
+public interface ElasticClient extends Closeable {
+    void close();
 
     void waitForStatus(EsAuth auth, String status);
 
@@ -38,7 +42,7 @@ public interface ElasticClient extends AutoCloseable {
 
     String getSettings(EsAuth auth, String index);
 
-    String getMapping(EsAuth auth, String index);
+    ImmutableResult getMapping(EsAuth auth, String index);
 
     void buildPipeline(EsAuth auth, String id, String resource);
 
