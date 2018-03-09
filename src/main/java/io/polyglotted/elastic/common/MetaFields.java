@@ -32,6 +32,7 @@ public abstract class MetaFields {
     public static final String BASE_TS_FIELD = "&baseTimestamp";
     public static final String COMMENT_FIELD = "&comment";
     public static final String EXPIRY_FIELD = "&expiry";
+    public static final String HIGHLTGHT_FIELD = "&highlight";
     public static final String INDEX_FIELD = "&index";
     public static final String ID_FIELD = "&id";
     public static final String KEY_FIELD = "&key";
@@ -92,9 +93,7 @@ public abstract class MetaFields {
 
     public static String keyString(MapResult map) { return urnOf(model(map), id(map)); }
 
-    public static String uniqueId(MapResult map) {
-        return safeUrnOf(model(map), parent(map), nullToEmpty(id(map)), String.valueOf(timestamp(map)));
-    }
+    public static String uniqueId(MapResult map) { return safeUrnOf(model(map), parent(map), nullToEmpty(id(map)), String.valueOf(timestamp(map))); }
 
     public static String traitId(String model, String id, long timestamp) { return genUuidStr(safeUrnOf(model, id, String.valueOf(timestamp))); }
 
@@ -107,6 +106,8 @@ public abstract class MetaFields {
         putTs(map, reqdProp(map, TIMESTAMP_FIELD), builder);
         return builder;
     }
+
+    public static MapResult readHeader(MapResult map) { return readHeader(map, true); }
 
     public static MapResult readHeader(MapResult map, boolean mandatory) {
         ImmutableMapBuilder<String, Object> builder = immutableResultBuilder();

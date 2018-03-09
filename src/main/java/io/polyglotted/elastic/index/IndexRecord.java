@@ -2,7 +2,6 @@ package io.polyglotted.elastic.index;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.polyglotted.common.model.MapResult;
-import io.polyglotted.common.model.MapResult.TreeMapResult;
 import io.polyglotted.elastic.common.DocStatus;
 import io.polyglotted.elastic.common.MetaFields;
 import lombok.AccessLevel;
@@ -20,6 +19,7 @@ import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Maps.filterKeys;
+import static io.polyglotted.common.model.SortedMapResult.treeResult;
 import static io.polyglotted.common.util.BaseSerializer.serializeBytes;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.common.util.StrUtil.notNullOrEmpty;
@@ -109,7 +109,7 @@ public final class IndexRecord {
         private final RecordAction action;
         @Getter final String keyString;
         @Getter private final Object source;
-        private final MapResult ancillary = new TreeMapResult();
+        private final MapResult ancillary = treeResult();
         private Long baseVersion = null;
         @Setter private String pipeline = null;
 

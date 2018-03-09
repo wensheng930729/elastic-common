@@ -12,6 +12,7 @@ import static io.polyglotted.elastic.common.MetaFields.LINK_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.MODEL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.PARENT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TIMESTAMP_FIELD;
+import static io.polyglotted.elastic.common.MetaFields.readHeader;
 import static io.polyglotted.elastic.common.MetaFields.readKey;
 
 @SuppressWarnings("unused")
@@ -69,6 +70,4 @@ public enum Verbose {
     private static MapResult readUnique(MapResult map) {
         return immutableResult(ID_FIELD, reqdStr(map, ID_FIELD), KEY_FIELD, reqdStr(map, KEY_FIELD));
     }
-
-    private static MapResult readHeader(MapResult map) { return MetaFields.readHeader(map, true); }
 }

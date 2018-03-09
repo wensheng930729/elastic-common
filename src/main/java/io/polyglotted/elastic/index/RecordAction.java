@@ -1,8 +1,8 @@
 package io.polyglotted.elastic.index;
 
+import io.polyglotted.common.model.HasMeta;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.elastic.common.DocStatus;
-import io.polyglotted.elastic.common.HasMeta;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +13,7 @@ import org.elasticsearch.common.xcontent.XContentType;
 
 import java.util.Map;
 
-import static io.polyglotted.elastic.common.HasMeta.serializeMeta;
+import static io.polyglotted.common.util.BaseSerializer.serializeMeta;
 
 @Slf4j @SuppressWarnings("unused")
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
