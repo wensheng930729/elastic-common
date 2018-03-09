@@ -1,7 +1,7 @@
 package io.polyglotted.elastic.admin;
 
 import com.google.common.collect.ImmutableSet;
-import io.polyglotted.common.model.MapResult;
+import io.polyglotted.common.model.MapResult.ImmutableResult;
 import io.polyglotted.common.util.ListBuilder;
 import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
 import io.polyglotted.elastic.admin.Field.FieldBuilder;
@@ -40,7 +40,7 @@ public final class Type {
     public final boolean includeMeta;
     public final boolean excludeUniqueProps;
     public final ImmutableSet<Field> fields;
-    public final MapResult meta;
+    public final ImmutableResult meta;
 
     @Override public boolean equals(Object o) {
         return this == o || (!(o == null || getClass() != o.getClass()) && mappingJson().equals(((Type) o).mappingJson()));
@@ -82,7 +82,7 @@ public final class Type {
         public Builder metaData(String name, Object value) { if (value != null) { metaData.put(name, value); } return this; }
 
         public Type build() {
-            return new Type(parent, strict, enabled, enableSource, includeMeta, excludeUniqueProps, copyOf(fields), metaData.result());
+            return new Type(parent, strict, enabled, enableSource, includeMeta, excludeUniqueProps, copyOf(fields), metaData.immutable());
         }
     }
 }

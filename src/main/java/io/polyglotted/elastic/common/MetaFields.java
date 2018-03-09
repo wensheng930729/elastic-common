@@ -6,10 +6,10 @@ import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
 import java.util.List;
 import java.util.Map.Entry;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.nullToEmpty;
 import static io.polyglotted.common.model.MapResult.immutableResultBuilder;
 import static io.polyglotted.common.model.MapResult.simpleResult;
+import static io.polyglotted.common.util.Assertions.checkContains;
 import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.common.util.MapBuilder.immutableMapBuilder;
 import static io.polyglotted.common.util.MapRetriever.listVal;
@@ -101,10 +101,10 @@ public abstract class MetaFields {
     public static ImmutableMapBuilder<String, Object> readKey(MapResult map) {
         ImmutableMapBuilder<String, Object> builder = immutableMapBuilder();
         putVal(map, LINK_FIELD, builder);
-        putVal(map, reqdProp(map, MODEL_FIELD), builder);
+        putVal(map, checkContains(map, MODEL_FIELD), builder);
         putVal(map, PARENT_FIELD, builder);
-        putVal(map, reqdProp(map, ID_FIELD), builder);
-        putTs(map, reqdProp(map, TIMESTAMP_FIELD), builder);
+        putVal(map, checkContains(map, ID_FIELD), builder);
+        putTs(map, checkContains(map, TIMESTAMP_FIELD), builder);
         return builder;
     }
 
@@ -118,20 +118,20 @@ public abstract class MetaFields {
         putVal(map, COMMENT_FIELD, builder);
         putTs(map, EXPIRY_FIELD, builder);
         putVal(map, INDEX_FIELD, builder);
-        putVal(map, mandatory ? reqdProp(map, ID_FIELD) : ID_FIELD, builder);
-        putVal(map, mandatory ? reqdProp(map, KEY_FIELD) : KEY_FIELD, builder);
+        putVal(map, mandatory ? checkContains(map, ID_FIELD) : ID_FIELD, builder);
+        putVal(map, mandatory ? checkContains(map, KEY_FIELD) : KEY_FIELD, builder);
         putVal(map, LINK_FIELD, builder);
-        putVal(map, mandatory ? reqdProp(map, MODEL_FIELD) : MODEL_FIELD, builder);
+        putVal(map, mandatory ? checkContains(map, MODEL_FIELD) : MODEL_FIELD, builder);
         putVal(map, PARENT_FIELD, builder);
         putVal(map, SCHEMA_FIELD, builder);
         putVal(map, SIZE_FIELD, builder);
         if (map.containsKey(STATUS_FIELD)) { builder.put(STATUS_FIELD, fromStatus(map.get(STATUS_FIELD).toString()));}
         putVal(map, TRAITFQN_FIELD, builder);
         putVal(map, TRAITID_FIELD, builder);
-        putTs(map, mandatory ? reqdProp(map, TIMESTAMP_FIELD) : TIMESTAMP_FIELD, builder);
+        putTs(map, mandatory ? checkContains(map, TIMESTAMP_FIELD) : TIMESTAMP_FIELD, builder);
         putVal(map, TTL_FIELD, builder);
         putVal(map, UPDATER_FIELD, builder);
-        putVal(map, mandatory ? reqdProp(map, USER_FIELD) : USER_FIELD, builder);
+        putVal(map, mandatory ? checkContains(map, USER_FIELD) : USER_FIELD, builder);
         return builder.result();
     }
 
@@ -141,10 +141,6 @@ public abstract class MetaFields {
 
     private static void putVal(MapResult map, String property, ImmutableMapBuilder<String, Object> builder) {
         if (map.containsKey(property)) builder.put(property, map.get(property));
-    }
-
-    private static String reqdProp(MapResult map, String property) {
-        checkArgument(map.containsKey(property), property + " is missing in the map"); return property;
     }
 
     private static MapResult mapValue(Object item) {

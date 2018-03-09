@@ -28,7 +28,7 @@ ext {
     log4jVersion = '2.10.0'
     lombokVersion = '1.16.20'
     spatial4jVersion = '0.6'
-    utilsCommonVersion='1.0.7'
+    utilsCommonVersion='1.0.8-SNAPSHOT'
 }
 dependencies {
     compileOnly "org.projectlombok:lombok:${lombokVersion}"

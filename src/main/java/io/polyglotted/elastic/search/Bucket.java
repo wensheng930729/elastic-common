@@ -1,6 +1,5 @@
 package io.polyglotted.elastic.search;
 
-import com.google.common.collect.ImmutableList;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.util.MapRetriever;
 import lombok.EqualsAndHashCode;
@@ -12,8 +11,7 @@ import lombok.experimental.Accessors;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.common.collect.ImmutableList.copyOf;
-import static com.google.common.collect.Iterables.transform;
+import static com.google.common.collect.Lists.transform;
 import static io.polyglotted.common.util.ConversionUtil.asLong;
 import static io.polyglotted.common.util.MapRetriever.optValue;
 import static io.polyglotted.common.util.MapRetriever.reqdStr;
@@ -27,7 +25,7 @@ public final class Bucket {
     public final String key;
     public final Object value;
     public final long count;
-    public final ImmutableList<Aggregation> aggregations;
+    public final List<Aggregation> aggregations;
 
     public boolean hasAggregations() { return aggregations.size() > 0; }
 
@@ -48,6 +46,6 @@ public final class Bucket {
 
         public void aggregation(Aggregation.Builder builder) { this.builders.add(builder); }
 
-        public Bucket build() { return new Bucket(key, value, count, copyOf(transform(builders, Aggregation.Builder::build))); }
+        public Bucket build() { return new Bucket(key, value, count, transform(builders, Aggregation.Builder::build)); }
     }
 }

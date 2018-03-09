@@ -6,9 +6,8 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.common.collect.ImmutableList.copyOf;
-import static com.google.common.collect.ImmutableList.of;
 import static io.polyglotted.common.model.MapResult.immutableResult;
+import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.elastic.common.MetaFields.EXPIRY_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.STATUS_FIELD;
@@ -36,7 +35,7 @@ public abstract class Expressions {
 
     public static Expression text(String field, Object value) { return withMap("Text", nonNull(field, ""), immutableResult(ValueKey, value)); }
 
-    public static <E extends Comparable<E>> Expression in(String field, Iterable<E> values) { return withArray("In", field, copyOf(values)); }
+    public static <E extends Comparable<E>> Expression in(String field, Iterable<E> values) { return withArray("In", field, immutableList(values)); }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class BoolBuilder {
@@ -45,13 +44,13 @@ public abstract class Expressions {
         private final List<Expression> shoulds = new ArrayList<>();
         private final List<Expression> mustNots = new ArrayList<>();
 
-        public BoolBuilder approvalRejected() { return filter(in(STATUS_FIELD, of("REJECTED"))).not(exists(EXPIRY_FIELD)); }
+        public BoolBuilder approvalRejected() { return filter(in(STATUS_FIELD, immutableList("REJECTED"))).not(exists(EXPIRY_FIELD)); }
 
         public BoolBuilder archiveIndex() { return filters(exists(STATUS_FIELD), exists(EXPIRY_FIELD)); }
 
         public BoolBuilder liveIndex() { return filter(exists(TIMESTAMP_FIELD)).nots(exists(STATUS_FIELD), exists(EXPIRY_FIELD)); }
 
-        public BoolBuilder pendingApproval() { return filter(in(STATUS_FIELD, of("PENDING", "PENDING_DELETE"))).not(exists(EXPIRY_FIELD)); }
+        public BoolBuilder pendingApproval() { return filter(in(STATUS_FIELD, immutableList("PENDING", "PENDING_DELETE"))).not(exists(EXPIRY_FIELD)); }
 
         public BoolBuilder must(Expression expr) { if (expr != null) { this.musts.add(expr); } return this; }
 

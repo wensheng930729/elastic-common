@@ -1,6 +1,5 @@
 package io.polyglotted.elastic.search;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -10,12 +9,13 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.Iterables.transform;
+import static io.polyglotted.common.util.ListBuilder.immutableList;
 
 abstract class AggsFlattener {
 
-    static Iterator<ImmutableList<Object>> flattenAggs(Aggregation aggs) { return flattenAggs(new String[0], aggs).iterator(); }
+    static Iterator<List<Object>> flattenAggs(Aggregation aggs) { return flattenAggs(new String[0], aggs).iterator(); }
 
-    private static Stream<ImmutableList<Object>> flattenAggs(final String[] strings, Aggregation aggs) {
+    private static Stream<List<Object>> flattenAggs(final String[] strings, Aggregation aggs) {
         if (!aggs.hasBuckets()) {
             return Stream.of(build(strings, aggs.valueIterable()));
         }
@@ -37,15 +37,15 @@ abstract class AggsFlattener {
         return result;
     }
 
-    private static ImmutableList<Object> build(String[] strings, long docCount) {
+    private static List<Object> build(String[] strings, long docCount) {
         final List<Object> values = Lists.newArrayList((Object[]) strings);
         values.add(docCount);
-        return ImmutableList.copyOf(values);
+        return immutableList(values);
     }
 
-    private static ImmutableList<Object> build(String[] strings, Iterable<Map.Entry<String, Object>> aggs) {
+    private static List<Object> build(String[] strings, Iterable<Map.Entry<String, Object>> aggs) {
         final List<Object> values = Lists.newArrayList((Object[]) strings);
         Iterables.addAll(values, transform(aggs, Map.Entry::getValue));
-        return ImmutableList.copyOf(values);
+        return immutableList(values);
     }
 }

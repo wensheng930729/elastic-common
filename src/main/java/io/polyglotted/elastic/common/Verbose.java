@@ -1,6 +1,7 @@
 package io.polyglotted.elastic.common;
 
 import io.polyglotted.common.model.MapResult;
+import io.polyglotted.common.model.MapResult.ImmutableResult;
 
 import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.util.MapRetriever.reqdStr;
@@ -63,11 +64,11 @@ public enum Verbose {
         return result;
     }
 
-    private static MapResult readParent(MapResult map) { return immutableResult(PARENT_FIELD, reqdStr(map, PARENT_FIELD)); }
+    private static ImmutableResult readParent(MapResult map) { return immutableResult(PARENT_FIELD, reqdStr(map, PARENT_FIELD)); }
 
-    private static MapResult readPlainKey(MapResult map) { return immutableResult(KEY_FIELD, reqdStr(map, KEY_FIELD)); }
+    private static ImmutableResult readPlainKey(MapResult map) { return immutableResult(KEY_FIELD, reqdStr(map, KEY_FIELD)); }
 
-    private static MapResult readUnique(MapResult map) {
+    private static ImmutableResult readUnique(MapResult map) {
         return immutableResult(ID_FIELD, reqdStr(map, ID_FIELD), KEY_FIELD, reqdStr(map, KEY_FIELD));
     }
 }

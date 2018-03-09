@@ -1,6 +1,5 @@
 package io.polyglotted.elastic.common;
 
-import com.google.common.collect.ImmutableList;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -13,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.common.util.StrUtil.safePrefix;
 import static io.polyglotted.common.util.StrUtil.safeSuffix;
 
@@ -20,10 +20,10 @@ import static io.polyglotted.common.util.StrUtil.safeSuffix;
 @RequiredArgsConstructor @EqualsAndHashCode
 public class Notification {
     public final String realm;
-    public final ImmutableList<KeyAction> keyActions;
+    public final List<KeyAction> keyActions;
 
     public static Notification notification(String realm, String id, String key, String singleResult) {
-        return new Notification(realm, ImmutableList.of(new KeyAction(id, key, safePrefix(safeSuffix(singleResult, "&result\":\""), "\""))));
+        return new Notification(realm, immutableList(new KeyAction(id, key, safePrefix(safeSuffix(singleResult, "&result\":\""), "\""))));
     }
 
     public static Builder notificationBuilder() { return new Builder(); }
@@ -52,6 +52,6 @@ public class Notification {
             if (simpleKeys.containsKey(key)) { keyActions.add(new KeyAction(id, simpleKeys.get(key), action)); } return this;
         }
 
-        public Notification build() { return new Notification(realm, ImmutableList.copyOf(keyActions)); }
+        public Notification build() { return new Notification(realm, immutableList(keyActions)); }
     }
 }

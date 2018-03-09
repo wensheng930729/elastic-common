@@ -1,9 +1,7 @@
 package io.polyglotted.elastic.admin;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import io.polyglotted.common.model.MapResult;
-import io.polyglotted.common.model.MapResult.ImmutableMapResult;
+import io.polyglotted.common.model.MapResult.ImmutableResult;
+import io.polyglotted.common.model.SortedMapResult;
 import io.polyglotted.common.util.ListBuilder.ImmutableListBuilder;
 import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
 import lombok.AccessLevel;
@@ -15,11 +13,11 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import static com.google.common.collect.Collections2.transform;
 import static com.google.common.collect.Maps.uniqueIndex;
-import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.model.SortedMapResult.treeResult;
 import static io.polyglotted.common.util.BaseSerializer.serialize;
 import static io.polyglotted.common.util.ListBuilder.immutableListBuilder;
@@ -42,9 +40,9 @@ public final class Field implements Comparable<Field> {
     public final Boolean indexed;
     public final Boolean stored;
     public final Boolean hasFields;
-    public final ImmutableMapResult argsMap;
-    public final ImmutableList<String> copyToFields;
-    public final ImmutableMap<String, Field> properties;
+    public final ImmutableResult argsMap;
+    public final List<String> copyToFields;
+    public final Map<String, Field> properties;
     @Getter public final boolean excludeFromSrc;
 
     @Override
@@ -82,7 +80,7 @@ public final class Field implements Comparable<Field> {
         @Setter private Boolean indexed = null;
         @Setter private Boolean stored = null;
         @Setter(AccessLevel.PRIVATE) private Boolean hasFields = null;
-        private final MapResult args = treeResult();
+        private final SortedMapResult args = treeResult();
         private final ImmutableListBuilder<String> copyToFields = immutableListBuilder();
         private final ImmutableMapBuilder<String, FieldBuilder> properties = immutableMapBuilder();
         @Setter private boolean excludeFromSrc = false;
@@ -134,8 +132,8 @@ public final class Field implements Comparable<Field> {
         }
 
         public Field build() {
-            return new Field(field, type, analyzer, docValues, indexed, stored, hasFields, (ImmutableMapResult) immutableResult(args),
-                copyToFields.build(), uniqueIndex(transform(properties.build().values(), FieldBuilder::build), Field::field), excludeFromSrc);
+            return new Field(field, type, analyzer, docValues, indexed, stored, hasFields, args.immutable(), copyToFields.build(),
+                uniqueIndex(transform(properties.build().values(), FieldBuilder::build), Field::field), excludeFromSrc);
         }
     }
 }

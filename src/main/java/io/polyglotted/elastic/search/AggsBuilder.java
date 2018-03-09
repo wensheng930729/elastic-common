@@ -1,6 +1,5 @@
 package io.polyglotted.elastic.search;
 
-import com.google.common.collect.ImmutableList;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.search.aggregations.Aggregations;
@@ -8,6 +7,7 @@ import org.elasticsearch.search.aggregations.InternalAggregation;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
 import static io.polyglotted.elastic.search.AggsConverter.detectAgg;
 import static io.polyglotted.elastic.search.AggsFlattener.flattenAggs;
@@ -26,7 +26,7 @@ abstract class AggsBuilder {
         result.startObject("flattened");
         for (org.elasticsearch.search.aggregations.Aggregation agg : aggregations) {
             Aggregation aggregation = detectAgg(agg).build();
-            Iterator<ImmutableList<Object>> flattened = flattenAggs(aggregation);
+            Iterator<List<Object>> flattened = flattenAggs(aggregation);
 
             result.startArray(aggregation.label);
             while (flattened.hasNext()) { result.value(flattened.next()); }

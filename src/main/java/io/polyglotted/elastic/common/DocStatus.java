@@ -1,8 +1,10 @@
 package io.polyglotted.elastic.common;
 
-import com.google.common.collect.ImmutableMap;
+import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
 
 import java.util.Map;
+
+import static io.polyglotted.common.util.MapBuilder.immutableMapBuilder;
 
 public enum DocStatus {
     LIVE, UPDATED, DELETED, PENDING, PENDING_DELETE, REJECTED, DISCARDED;
@@ -12,7 +14,7 @@ public enum DocStatus {
     public static DocStatus fromStatus(String status) { return STATUS_MAP.get(status); }
 
     private static Map<String, DocStatus> buildStatusMap() {
-        ImmutableMap.Builder<String, DocStatus> builder = ImmutableMap.builder();
+        ImmutableMapBuilder<String, DocStatus> builder = immutableMapBuilder();
         for (DocStatus status : values()) {
             builder.put(status.name(), status);
             builder.put(status.name().toLowerCase(), status);

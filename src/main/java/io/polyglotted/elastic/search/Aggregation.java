@@ -1,6 +1,5 @@
 package io.polyglotted.elastic.search;
 
-import com.google.common.collect.ImmutableList;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
 import lombok.AccessLevel;
@@ -16,10 +15,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.transform;
 import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.model.SortedMapResult.treeResult;
+import static io.polyglotted.common.util.Assertions.checkBool;
 import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.common.util.ListBuilder.simpleList;
 import static io.polyglotted.common.util.MapBuilder.immutableMapBuilder;
@@ -43,7 +42,7 @@ public final class Aggregation {
     public boolean hasBuckets() { return AggregationType.valueOf(type).hasBuckets; }
 
     @SuppressWarnings("unchecked")
-    public List<Bucket> buckets() { checkArgument(hasBuckets(), type + " does not support buckets"); return (List<Bucket>) value; }
+    public List<Bucket> buckets() { checkBool(hasBuckets(), type + " does not support buckets"); return (List<Bucket>) value; }
 
     public Map<String, Long> bucketCounts() {
         ImmutableMapBuilder<String, Long> bucketCounts = immutableMapBuilder();
@@ -114,7 +113,7 @@ public final class Aggregation {
         public final boolean isMultiValue;
 
         @SuppressWarnings("unchecked") final <T> T valueFrom(MapResult valueMap, Iterable<Bucket> buckets) {
-            return hasBuckets ? (T) ImmutableList.copyOf(buckets) : (isMultiValue ? (T) immutableResult(valueMap) : (T) valueMap.get(name()));
+            return hasBuckets ? (T) immutableList(buckets) : (isMultiValue ? (T) immutableResult(valueMap) : (T) valueMap.get(name()));
         }
 
         void deserValue(MapResult result, Builder builder) {

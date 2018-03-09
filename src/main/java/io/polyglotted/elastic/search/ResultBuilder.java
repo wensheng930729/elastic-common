@@ -1,10 +1,10 @@
 package io.polyglotted.elastic.search;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import io.polyglotted.common.model.MapResult;
+import io.polyglotted.common.util.ListBuilder.ImmutableListBuilder;
+import io.polyglotted.common.util.MapBuilder;
 import io.polyglotted.common.util.MapRetriever;
 import io.polyglotted.elastic.common.MetaFields;
 import io.polyglotted.elastic.common.Verbose;
@@ -19,6 +19,7 @@ import java.util.Map;
 import static com.google.common.collect.Maps.filterKeys;
 import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.model.MapResult.simpleResult;
+import static io.polyglotted.common.util.ListBuilder.immutableListBuilder;
 import static io.polyglotted.elastic.common.MetaFields.HIGHLTGHT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.ID_FIELD;
 import static java.util.Objects.requireNonNull;
@@ -27,7 +28,7 @@ import static java.util.Objects.requireNonNull;
 public interface ResultBuilder<T> extends ResponseBuilder<T> {
 
     default List<T> buildFrom(SearchResponse response, Verbose verbose) {
-        ImmutableList.Builder<T> builder = ImmutableList.builder();
+        ImmutableListBuilder<T> builder = immutableListBuilder();
         for (SearchHit hit : response.getHits()) { builder.add(buildFromHit(hit, verbose)); }
         return builder.build();
     }
@@ -54,9 +55,9 @@ public interface ResultBuilder<T> extends ResponseBuilder<T> {
 
     T buildResult(MapResult source);
 
-    ResultBuilder<?> NullBuilder = (source) -> ImmutableMap.of();
+    ResultBuilder<?> NullBuilder = MapBuilder::immutableMap;
     ResultBuilder<MapResult> HeaderBuilder = MetaFields::readHeader;
     ResultBuilder<String> IdBuilder = (source) -> MapRetriever.reqdStr(source, ID_FIELD);
-    ResultBuilder<MapResult> EmptyBuilder = (source) -> simpleResult();
+    ResultBuilder<MapResult> EmptyBuilder = MapResult::simpleResult;
     ResultBuilder<MapResult> SourceBuilder = (source) -> simpleResult(filterKeys(source, MetaFields::isNotMeta));
 }

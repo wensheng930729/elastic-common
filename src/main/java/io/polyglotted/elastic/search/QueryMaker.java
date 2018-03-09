@@ -16,7 +16,7 @@ import org.elasticsearch.search.sort.SortBuilder;
 
 import java.util.List;
 
-import static com.google.common.collect.ImmutableList.of;
+import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.elastic.search.ExprConverter.buildFilter;
 import static org.elasticsearch.action.support.IndicesOptions.lenientExpandOpen;
@@ -61,7 +61,7 @@ public abstract class QueryMaker {
     }
 
     public static SearchRequest filterToScroller(Expression filter, int size, String repo, String... models) {
-        return filterToRequest(filter, of(), size, repo).types(models).scroll(DEFAULT_KEEP_ALIVE);
+        return filterToRequest(filter, immutableList(), size, repo).types(models).scroll(DEFAULT_KEEP_ALIVE);
     }
 
     public static SearchRequest filterToRequest(Expression filter, List<SortBuilder<?>> sorts, int size, String... repos) {

@@ -1,6 +1,5 @@
 package io.polyglotted.elastic.search;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -21,8 +20,8 @@ import static java.util.Objects.requireNonNull;
 @EqualsAndHashCode @RequiredArgsConstructor
 public final class SimpleResponse {
     public final ResponseHeader header;
-    public final ImmutableList<Object> results;
-    public final ImmutableList<Aggregation> aggregations;
+    public final List<Object> results;
+    public final List<Aggregation> aggregations;
 
     public <T> List<T> resultsAs(Class<? extends T> tClass) { return transform(results, tClass::cast); }
 

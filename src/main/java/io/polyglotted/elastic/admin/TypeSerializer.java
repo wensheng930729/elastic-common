@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 
-import static com.google.common.collect.ImmutableList.of;
 import static com.google.common.collect.Iterables.concat;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static com.google.common.collect.Sets.newTreeSet;
+import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.elastic.admin.Field.keywordField;
 import static io.polyglotted.elastic.admin.Field.simpleField;
 import static io.polyglotted.elastic.admin.Field.textField;
@@ -91,7 +91,7 @@ public abstract class TypeSerializer {
     }
 
     private static List<Field> metaFields() {
-        return of(
+        return immutableList(
             textField(ALL_FIELD, "allAnalyzer").build(),
             keywordField(ANCESTOR_FIELD).build(),
             textField(AUTO_COMPLETE_FIELD, "autoAnalyzer").build(),

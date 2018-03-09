@@ -5,7 +5,8 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.EnumSet;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static io.polyglotted.common.util.Assertions.checkBool;
+import static io.polyglotted.common.util.Assertions.checkContains;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -36,12 +37,12 @@ public enum FieldType {
     private static final EnumSet<FieldType> SIMPLE_FIELDS = EnumSet.of(BINARY, BOOLEAN, DATE, GEO_POINT, GEO_SHAPE, IP,
         DOUBLE, FLOAT, HALF_FLOAT, SCALED_FLOAT, BYTE, SHORT, INTEGER, LONG);
 
-    FieldType simpleField() { checkArgument(SIMPLE_FIELDS.contains(this), name() + " not a simple type"); return this; }
+    FieldType simpleField() { return checkContains(SIMPLE_FIELDS, this, name() + " not a simple type"); }
 
     String validate(Field field) {
-        checkArgument(docValues || field.docValues == null, "field " + field.field + " with type " + name() + " cannot contain docValues");
-        checkArgument(storable || field.stored == null, "field " + field.field + " with type " + name() + " cannot be stored");
-        checkArgument(indexable || field.indexed == null, "field " + field.field + " with type " + name() + " cannot be indexed");
+        checkBool(docValues || field.docValues == null, "field " + field.field + " with type " + name() + " cannot contain docValues");
+        checkBool(storable || field.stored == null, "field " + field.field + " with type " + name() + " cannot be stored");
+        checkBool(indexable || field.indexed == null, "field " + field.field + " with type " + name() + " cannot be indexed");
         return name().toLowerCase();
     }
 }

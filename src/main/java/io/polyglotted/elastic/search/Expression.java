@@ -1,6 +1,6 @@
 package io.polyglotted.elastic.search;
 
-import io.polyglotted.common.model.MapResult;
+import io.polyglotted.common.model.MapResult.ImmutableResult;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -18,9 +18,9 @@ public final class Expression {
     static final String ValueKey = "_val";
     public final String operation;
     public final String label;
-    public final MapResult args;
+    public final ImmutableResult args;
 
-    static Expression withMap(String operation, String label, MapResult args) {
+    static Expression withMap(String operation, String label, ImmutableResult args) {
         return new Expression(requireNonNull(operation), requireNonNull(label), args);
     }
 

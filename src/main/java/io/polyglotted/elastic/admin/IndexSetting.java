@@ -2,6 +2,8 @@ package io.polyglotted.elastic.admin;
 
 import com.google.common.base.Predicate;
 import io.polyglotted.common.model.MapResult;
+import io.polyglotted.common.model.MapResult.ImmutableResult;
+import io.polyglotted.common.model.SortedMapResult;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +23,7 @@ import static io.polyglotted.common.util.ResourceUtil.readResource;
 public final class IndexSetting {
     private static final String DEF_ANALYSIS = readResource(IndexSetting.class, "def-analysis.json");
     private static final Predicate<String> NAME_PREDICATE = "index_name"::equals;
-    public final MapResult mapResult;
+    public final ImmutableResult mapResult;
 
     public String createJson() { return serialize(filterKeys(mapResult, not(NAME_PREDICATE))); }
 
@@ -41,7 +43,7 @@ public final class IndexSetting {
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Builder {
-        private final MapResult treeResult = treeResult();
+        private final SortedMapResult treeResult = treeResult();
 
         public Builder numberOfShards(int numberOfShards) { treeResult.put("number_of_shards", numberOfShards); return this; }
 
@@ -61,6 +63,6 @@ public final class IndexSetting {
 
         public Builder analysis(String analysis) { treeResult.put("analysis", deserialize(analysis)); return this; }
 
-        public IndexSetting build() { return new IndexSetting(treeResult); }
+        public IndexSetting build() { return new IndexSetting(treeResult.immutable()); }
     }
 }

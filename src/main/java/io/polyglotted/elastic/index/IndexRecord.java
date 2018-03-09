@@ -2,6 +2,8 @@ package io.polyglotted.elastic.index;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.polyglotted.common.model.MapResult;
+import io.polyglotted.common.model.MapResult.ImmutableResult;
+import io.polyglotted.common.model.SortedMapResult;
 import io.polyglotted.elastic.common.DocStatus;
 import io.polyglotted.elastic.common.MetaFields;
 import lombok.AccessLevel;
@@ -62,7 +64,7 @@ public final class IndexRecord {
     public final String keyString;
     public final Long baseVersion;
     public final Object source;
-    private final MapResult ancillary;
+    private final ImmutableResult ancillary;
     public final String pipeline;
 
     public long timestamp() { return MetaFields.timestamp(source); }
@@ -109,7 +111,7 @@ public final class IndexRecord {
         private final RecordAction action;
         @Getter final String keyString;
         @Getter private final Object source;
-        private final MapResult ancillary = treeResult();
+        private final SortedMapResult ancillary = treeResult();
         private Long baseVersion = null;
         @Setter private String pipeline = null;
 
@@ -167,7 +169,9 @@ public final class IndexRecord {
 
         public Builder ttlExpiry(long ttl) { addMeta(source, TTL_FIELD, ttl); return this; }
 
-        public IndexRecord build() { return new IndexRecord(index, model, id, parent, action, keyString, baseVersion, source, ancillary, pipeline); }
+        public IndexRecord build() {
+            return new IndexRecord(index, model, id, parent, action, keyString, baseVersion, source, ancillary.immutable(), pipeline);
+        }
     }
 
     private static byte[] getBytes(Object v) {

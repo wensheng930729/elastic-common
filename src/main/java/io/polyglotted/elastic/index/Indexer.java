@@ -1,6 +1,5 @@
 package io.polyglotted.elastic.index;
 
-import com.google.common.collect.ImmutableMap;
 import io.polyglotted.common.model.Pair;
 import io.polyglotted.elastic.client.ElasticClient;
 import io.polyglotted.elastic.common.EsAuth;
@@ -58,7 +57,7 @@ public final class Indexer {
     }
 
     public long generateSequence(EsAuth auth, String index, String unique) {
-        return clienta.index(auth, new IndexRequest(index).id(unique).source(ImmutableMap.of())).getVersion();
+        return clienta.index(auth, new IndexRequest(index).id(unique).source(immutableMap())).getVersion();
     }
 
     public void index(EsAuth auth, BulkRequest bulkRequest, IgnoreErrors ignoreErrors) {
