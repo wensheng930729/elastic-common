@@ -87,6 +87,13 @@ sourceSets {
     test.compileClasspath += configurations.compileOnly
     test.runtimeClasspath += configurations.compileOnly
 }
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled false
+    }
+}
+check.dependsOn jacocoTestReport
 
 task javadocJar(type: Jar) {
     classifier = 'javadoc'
