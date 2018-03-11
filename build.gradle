@@ -1,10 +1,13 @@
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: 'jacoco'
 apply plugin: 'maven'
 apply plugin: 'signing'
 
 group = 'io.polyglotted'
 version = '6.2.2'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 idea {
     module {
