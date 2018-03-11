@@ -23,7 +23,7 @@ import static io.polyglotted.common.util.EncodingUtil.urlEncode;
 import static io.polyglotted.common.util.MapBuilder.immutableMap;
 import static io.polyglotted.elastic.common.MetaFields.keyString;
 
-@Slf4j
+@Slf4j @SuppressWarnings("unused")
 public abstract class Finder {
 
     static Map<String, MapResult> findAll(ElasticClient client, EsAuth auth, List<IndexRecord.Builder> builders) {
@@ -31,7 +31,7 @@ public abstract class Finder {
         for (IndexRecord.Builder rec : builders) {
             if (isNullOrEmpty(rec.id)) continue;
             log.debug("multi get " + rec.index + " " + rec.id + " " + rec.parent);
-            multiGetRequest.add(new MultiGetRequest.Item(rec.index, null, rec.id).routing(rec.parent).parent(rec.parent));
+            multiGetRequest.add(new MultiGetRequest.Item(rec.index, "_doc", rec.id).routing(rec.parent).parent(rec.parent));
         }
 
         if (multiGetRequest.getItems().size() == 0) return immutableMap();
@@ -48,13 +48,16 @@ public abstract class Finder {
         return result.build();
     }
 
-    public static MapResult findBy(ElasticClient client, EsAuth auth, IndexRecord rec) { return findBy(client, auth, rec.index, rec.id, rec.parent); }
+    public static MapResult findBy(ElasticClient client, EsAuth auth, IndexRecord rec) {
+        return findBy(client, auth, rec.index, rec.model, rec.id, rec.parent);
+    }
 
-    public static MapResult findBy(ElasticClient client, EsAuth auth, String repo, String id) {
-        return findBy(client, auth, repo, id, null); }
+    public static MapResult findBy(ElasticClient client, EsAuth auth, String repo, String model, String id) {
+        return findBy(client, auth, repo, model, id, null);
+    }
 
-    @SneakyThrows public static MapResult findBy(ElasticClient client, EsAuth auth, String repo, String id, String parent) {
-        GetResponse response = client.get(auth, new GetRequest(repo).id(urlEncode(id)).parent(parent));
+    @SneakyThrows public static MapResult findBy(ElasticClient client, EsAuth auth, String repo, String model, String id, String parent) {
+        GetResponse response = client.get(auth, new GetRequest(repo, "_doc", urlEncode(id)).routing(parent));
         return response.isExists() && !response.isSourceEmpty() ? simpleResult(response.getSource()) : null;
     }
 

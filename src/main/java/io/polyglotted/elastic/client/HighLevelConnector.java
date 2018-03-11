@@ -1,6 +1,7 @@
 package io.polyglotted.elastic.client;
 
 import com.google.common.base.Splitter;
+import io.polyglotted.elastic.common.EsAuth;
 import lombok.SneakyThrows;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
@@ -11,6 +12,11 @@ import static java.util.Objects.requireNonNull;
 
 @SuppressWarnings("unused")
 public class HighLevelConnector {
+
+    @SneakyThrows
+    public static ElasticClient highLevelClient(ElasticSettings settings, EsAuth auth) {
+        return highLevelClient(settings).waitForStatus(auth, "yellow");
+    }
 
     @SneakyThrows
     public static ElasticClient highLevelClient(ElasticSettings settings) {

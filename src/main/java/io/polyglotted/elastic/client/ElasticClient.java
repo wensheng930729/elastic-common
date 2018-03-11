@@ -28,7 +28,7 @@ import java.io.Closeable;
 public interface ElasticClient extends Closeable {
     void close();
 
-    void waitForStatus(EsAuth auth, String status);
+    ElasticClient waitForStatus(EsAuth auth, String status);
 
     MapResult clusterHealth(EsAuth auth);
 

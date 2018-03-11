@@ -46,7 +46,6 @@ import static io.polyglotted.elastic.common.MetaFields.UPDATER_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.USER_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.addMeta;
 import static io.polyglotted.elastic.common.MetaFields.removeMeta;
-import static io.polyglotted.elastic.common.MetaFields.timestampStr;
 import static io.polyglotted.elastic.index.RecordAction.CREATE;
 import static io.polyglotted.elastic.index.RecordAction.DELETE;
 import static io.polyglotted.elastic.index.RecordAction.UPDATE;
@@ -60,22 +59,20 @@ public final class IndexRecord {
     public final String model;
     public final String id;
     public final String parent;
+    public final long timestamp;
     public final RecordAction action;
-    public final String keyString;
     public final Long baseVersion;
     public final Object source;
     private final ImmutableResult ancillary;
     public final String pipeline;
 
-    public long timestamp() { return MetaFields.timestamp(source); }
+    public String keyString() { return urnOf(model, id); }
 
-    public String key() { return safeUrnOf(model, parent, id, timestampStr(source)); }
-
-    public String simpleKey() { return safeUrnOf(model, id, timestampStr(source)); }
+    public String simpleKey() { return safeUrnOf(model, id, timestamp); }
 
     MapResult update(MapResult current) { current.putAll(ancillary); current.put(STATUS_FIELD, action.status); return current; }
 
-    public DocWriteRequest<?> request() { addMeta(source, KEY_FIELD, key()); return action.request(this); }
+    public DocWriteRequest<?> request() { addMeta(source, KEY_FIELD, safeUrnOf(model, parent, id, timestamp)); return action.request(this); }
 
     public static Builder createRecord(String repo, String model, String id, Object source) { return createRecord(repo, model, id, null, source); }
 
@@ -112,6 +109,7 @@ public final class IndexRecord {
         @Getter final String keyString;
         @Getter private final Object source;
         private final SortedMapResult ancillary = treeResult();
+        private Long timestamp = null;
         private Long baseVersion = null;
         @Setter private String pipeline = null;
 
@@ -136,9 +134,9 @@ public final class IndexRecord {
         @Override
         public int hashCode() { return Objects.hash(keyString, action); }
 
-        public Builder timestamp(Long timestamp) {
-            addMeta(source, TIMESTAMP_FIELD, requireNonNull(timestamp).toString());
-            ancillary.put(EXPIRY_FIELD, timestamp.toString()); return this;
+        public Builder timestamp(long timestampVal) {
+            this.timestamp = timestampVal; addMeta(source, TIMESTAMP_FIELD, String.valueOf(timestamp));
+            ancillary.put(EXPIRY_FIELD, String.valueOf(timestamp)); return this;
         }
 
         public Builder user(String user) {
@@ -170,7 +168,7 @@ public final class IndexRecord {
         public Builder ttlExpiry(long ttl) { addMeta(source, TTL_FIELD, ttl); return this; }
 
         public IndexRecord build() {
-            return new IndexRecord(index, model, id, parent, action, keyString, baseVersion, source, ancillary.immutable(), pipeline);
+            return new IndexRecord(index, model, id, parent, requireNonNull(timestamp), action, baseVersion, source, ancillary.immutable(), pipeline);
         }
     }
 

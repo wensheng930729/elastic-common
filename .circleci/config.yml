@@ -38,10 +38,13 @@ jobs:
           name: Collect Test Artifacts
           command: |
             mkdir -p ${artifact_dir}/reports/ ${artifact_dir}/output/
-            cp -r build/reports ${artifact_dir}/reports/
+            cp -r build/reports ${artifact_dir}/
           when: always
       - store_artifacts:
-          path: ${artifact_dir}
+          path: artifacts
+      - run:
+          name: Upload Code Coverage
+          command: 'bash <(curl -s https://codecov.io/bash) -t 32bb439d-df60-4d26-8211-c9deadca3758'
 
   deploy:
     docker:

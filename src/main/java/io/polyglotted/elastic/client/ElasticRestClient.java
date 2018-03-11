@@ -69,7 +69,7 @@ public class ElasticRestClient implements ElasticClient {
     @Override @SneakyThrows public void close() { internalClient.close(); }
 
     @SuppressWarnings("ALL")
-    @Override public void waitForStatus(EsAuth auth, String status) {
+    @Override public ElasticClient waitForStatus(EsAuth auth, String status) {
         try {
             for (int i = 0; i <= 300; i++) {
                 performCliRequest(auth, GET, "/_cluster/health?wait_for_status=" + status); break;
@@ -77,6 +77,7 @@ public class ElasticRestClient implements ElasticClient {
         } catch (ConnectException | ConnectionClosedException retry) {
             safeSleep(1000); waitForStatus(auth, status);
         } catch (Exception ioe) { throw throwEx("waitForStatus failed", ioe); }
+        return this;
     }
 
     @Override public MapResult clusterHealth(EsAuth auth) {

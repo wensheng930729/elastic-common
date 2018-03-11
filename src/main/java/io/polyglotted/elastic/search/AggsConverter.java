@@ -4,6 +4,7 @@ import io.polyglotted.elastic.search.Aggregation.AggregationType;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.elasticsearch.join.aggregations.Children;
+import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
 import org.elasticsearch.search.aggregations.bucket.SingleBucketAggregation;
 import org.elasticsearch.search.aggregations.bucket.filter.Filter;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
@@ -18,6 +19,8 @@ import org.elasticsearch.search.aggregations.metrics.stats.Stats;
 import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStats;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
+
+import java.util.List;
 
 import static io.polyglotted.elastic.search.Aggregation.aggregationBuilder;
 import static java.util.Objects.requireNonNull;
@@ -56,17 +59,12 @@ public enum AggsConverter {
     },
     AggExtStatistics {
         @Override Aggregation.Builder getWith(String label, org.elasticsearch.search.aggregations.Aggregation agg) {
-            ExtendedStats stats = (ExtendedStats) agg;
-            return aggregationBuilder().label(label).type(AggregationType.ExtStatistics).value("Count", stats.getCount())
-                .value("Max", stats.getMax()).value("Min", stats.getMin()).value("Avg", stats.getAvg()).value("Sum", stats.getSum())
-                .value("SumOfSquares", stats.getSumOfSquares()).value("StdDeviation", stats.getStdDeviation()).value("Variance", stats.getVariance());
+            return getStats(label, AggregationType.ExtStatistics, (ExtendedStats) agg);
         }
     },
     AggStatistics {
         @Override Aggregation.Builder getWith(String label, org.elasticsearch.search.aggregations.Aggregation agg) {
-            Stats stats = (Stats) agg;
-            return aggregationBuilder().label(label).type(AggregationType.Statistics).value("Count", stats.getCount()).value("Max",
-                stats.getMax()).value("Min", stats.getMin()).value("Avg", stats.getAvg()).value("Sum", stats.getSum());
+            return getStats(label, AggregationType.Statistics, (Stats) agg);
         }
     },
     AggTerm {
@@ -74,14 +72,7 @@ public enum AggsConverter {
             Terms terms = (Terms) agg;
             Aggregation.Builder builder = aggregationBuilder().label(label).type(AggregationType.Term)
                 .param("docCountError", terms.getDocCountError()).param("sumOfOtherDocs", terms.getSumOfOtherDocCounts());
-
-            for (Terms.Bucket bucket : terms.getBuckets()) {
-                Bucket.Builder buckBldr = builder.bucketBuilder().key(bucket.getKeyAsString())
-                    .value(bucket.getKey()).count(bucket.getDocCount());
-
-                if (bucket.getAggregations() == null) continue;
-                for (org.elasticsearch.search.aggregations.Aggregation child : bucket.getAggregations()) { buckBldr.aggregation(detectAgg(child)); }
-            }
+            addMultiBucketAgg(builder, terms.getBuckets());
             return builder;
         }
     },
@@ -89,14 +80,7 @@ public enum AggsConverter {
         @Override Aggregation.Builder getWith(String label, org.elasticsearch.search.aggregations.Aggregation agg) {
             Histogram histogram = (Histogram) agg;
             Aggregation.Builder builder = aggregationBuilder().label(label).type(AggregationType.DateHistogram);
-
-            for (Histogram.Bucket bucket : histogram.getBuckets()) {
-                Bucket.Builder buckBldr = builder.bucketBuilder().key(bucket.getKeyAsString())
-                    .value(bucket.getKey()).count(bucket.getDocCount());
-
-                if (bucket.getAggregations() == null) continue;
-                for (org.elasticsearch.search.aggregations.Aggregation child : bucket.getAggregations()) { buckBldr.aggregation(detectAgg(child)); }
-            }
+            addMultiBucketAgg(builder, histogram.getBuckets());
             return builder;
         }
     },
@@ -149,6 +133,27 @@ public enum AggsConverter {
     private static Aggregation.Builder addSingleBucketChildren(String label, Aggregation.Builder builder, SingleBucketAggregation single) {
         Bucket.Builder bucket = builder.bucketBuilder().key(label).count(single.getDocCount());
         for (org.elasticsearch.search.aggregations.Aggregation child : single.getAggregations()) { bucket.aggregation(detectAgg(child));}
+        return builder;
+    }
+
+    private static void addMultiBucketAgg(Aggregation.Builder builder, List<? extends MultiBucketsAggregation.Bucket> buckets) {
+        for (MultiBucketsAggregation.Bucket bucket : buckets) {
+            Bucket.Builder buckBldr = builder.bucketBuilder().key(bucket.getKeyAsString())
+                .value(bucket.getKey()).count(bucket.getDocCount());
+
+            if (bucket.getAggregations() == null) continue;
+            for (org.elasticsearch.search.aggregations.Aggregation child : bucket.getAggregations()) { buckBldr.aggregation(detectAgg(child)); }
+        }
+    }
+
+    private static Aggregation.Builder getStats(String label, AggregationType aggregationType, Stats stats) {
+        Aggregation.Builder builder = aggregationBuilder().label(label).type(aggregationType).value("Count", stats.getCount())
+            .value("Max", stats.getMax()).value("Min", stats.getMin()).value("Avg", stats.getAvg()).value("Sum", stats.getSum());
+        if(stats instanceof ExtendedStats) {
+            ExtendedStats estats = (ExtendedStats) stats;
+            builder.value("SumOfSquares", estats.getSumOfSquares()).value("StdDeviation", estats.getStdDeviation())
+                .value("Variance", estats.getVariance());
+        }
         return builder;
     }
 }

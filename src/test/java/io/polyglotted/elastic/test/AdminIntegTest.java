@@ -9,12 +9,12 @@ import org.junit.Test;
 
 import java.util.Map;
 
-import static com.google.common.collect.ImmutableList.of;
 import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Maps.filterKeys;
 import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.util.BaseSerializer.deserialize;
 import static io.polyglotted.common.util.BaseSerializer.serialize;
+import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.common.util.MapBuilder.immutableMap;
 import static io.polyglotted.common.util.MapRetriever.deepRetrieve;
 import static io.polyglotted.common.util.ResourceUtil.readResourceAsMap;
@@ -54,9 +54,7 @@ public class AdminIntegTest {
 
     @Test
     public void createIndexSuccess() throws Exception {
-        try (Admin admin = new Admin(highLevelClient(elasticSettings()))) {
-            admin.waitForStatus(ES_AUTH, "yellow");
-
+        try (Admin admin = new Admin(highLevelClient(elasticSettings(), ES_AUTH))) {
             IndexSetting setting = settingBuilder(5, 1).all(immutableResult("mapping.total_fields.limit", 5000)).build();
             Type completeType = completeTypeMapping().build();
             String index = admin.createIndex(ES_AUTH, setting, completeType, "MyBigIndex");
@@ -64,7 +62,8 @@ public class AdminIntegTest {
                 MapResult deserialized = deserialize(admin.getSettings(ES_AUTH, index));
 
                 Map<String, Object> settings = deepRetrieve(getFirst(deserialized.values(), immutableMap()), "settings.index");
-                String serSetting = serialize(filterKeys(settings, of("number_of_shards", "number_of_replicas", "mapping", "analysis")::contains));
+                String serSetting = serialize(filterKeys(settings,
+                    immutableList("number_of_shards", "number_of_replicas", "mapping", "analysis")::contains));
                 assertThat(serSetting, serSetting, is(MESSAGES.get("completeSetting")));
 
                 String serMapping = serialize(admin.getMapping(ES_AUTH, index));

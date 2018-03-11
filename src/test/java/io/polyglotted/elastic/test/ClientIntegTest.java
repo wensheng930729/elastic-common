@@ -15,7 +15,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-public class ElasticClientIntegTest {
+public class ClientIntegTest {
     private static final EsAuth ES_AUTH = new EsAuth("elastic", "SteelEye", BASIC);
 
     @Test
@@ -27,7 +27,6 @@ public class ElasticClientIntegTest {
 
     private static void checkClusterHealth() throws Exception {
         try (ElasticClient client = highLevelClient(elasticSettings())) {
-            client.waitForStatus(ES_AUTH, "yellow");
             MapResult health = client.clusterHealth(ES_AUTH);
             assertThat(health.keySet(), containsInAnyOrder("cluster_name", "status", "timed_out", "number_of_nodes", "number_of_data_nodes",
                 "active_primary_shards", "active_shards", "relocating_shards", "initializing_shards", "unassigned_shards", "delayed_unassigned_shards",
@@ -40,7 +39,7 @@ public class ElasticClientIntegTest {
         try (ElasticClient client = highLevelClient(elasticSettings())) {
             assertThat(client.indexExists(ES_AUTH, index), is(false));
             client.createIndex(ES_AUTH, new CreateIndexRequest(index)
-                .source(readResource(ElasticClientIntegTest.class, "index-source.json"), XContentType.JSON));
+                .source(readResource(ClientIntegTest.class, "index-source.json"), XContentType.JSON));
             assertThat(client.indexExists(ES_AUTH, index), is(true));
             client.dropIndex(ES_AUTH, index);
             assertThat(client.indexExists(ES_AUTH, index), is(false));
@@ -51,7 +50,7 @@ public class ElasticClientIntegTest {
         String pipeline = "mypipe";
         try (ElasticClient client = highLevelClient(elasticSettings())) {
             assertThat(client.pipelineExists(ES_AUTH, pipeline), is(false));
-            client.buildPipeline(ES_AUTH, pipeline, readResource(ElasticClientIntegTest.class, "pipeline-source.json"));
+            client.buildPipeline(ES_AUTH, pipeline, readResource(ClientIntegTest.class, "pipeline-source.json"));
             assertThat(client.pipelineExists(ES_AUTH, pipeline), is(true));
             client.deletePipeline(ES_AUTH, pipeline);
             assertThat(client.pipelineExists(ES_AUTH, pipeline), is(false));

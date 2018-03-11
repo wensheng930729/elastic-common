@@ -1,7 +1,6 @@
 package io.polyglotted.elastic.index;
 
 import io.polyglotted.common.model.HasMeta;
-import io.polyglotted.common.model.MapResult;
 import io.polyglotted.elastic.common.DocStatus;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +17,7 @@ import static io.polyglotted.common.util.BaseSerializer.serializeMeta;
 @Slf4j @SuppressWarnings("unused")
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public enum RecordAction {
-    CREATE(DocStatus.LIVE, "creating", false),
+    CREATE(DocStatus.UPDATED, "creating", false),
     UPDATE(DocStatus.UPDATED, "updating", false),
     DELETE(DocStatus.DELETED, "deleting", true),
     APPROVE(DocStatus.LIVE, "deleting", true),
@@ -33,13 +32,12 @@ public enum RecordAction {
 
     public DocWriteRequest<?> request(IndexRecord record) {
         if (log.isTraceEnabled()) { log.trace(message + " record " + record.id + " for " + record.model + " at " + record.index); }
-        return isDelete ? new DeleteRequest(record.index).id(record.id).parent(record.parent)
-            : detectSource(new IndexRequest(record.index).id(record.id), record.pipeline, record.source).parent(record.parent);
+        return isDelete ? new DeleteRequest(record.index, "_doc", record.id).routing(record.parent)
+            : detectSource(new IndexRequest(record.index, "_doc", record.id), record.pipeline, record.source).routing(record.parent);
     }
 
-    @SuppressWarnings("unchecked")
-    private static IndexRequest detectSource(IndexRequest request, String pipeline, Object source) {
-        if (source instanceof MapResult) { request.source((Map) source, (pipeline == null ? XContentType.JSON : XContentType.CBOR)); }
+    @SuppressWarnings("unchecked") private static IndexRequest detectSource(IndexRequest request, String pipeline, Object source) {
+        if (source instanceof Map) { request.source((Map) source, (pipeline == null ? XContentType.JSON : XContentType.CBOR)); }
         else if (source instanceof HasMeta) { request.source(serializeMeta((HasMeta) source), XContentType.JSON); }
         else { throw new IllegalArgumentException("unknown source for indexing"); }
         return request.setPipeline(pipeline);

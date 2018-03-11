@@ -64,7 +64,7 @@ public abstract class MetaFields {
 
     public static void addMeta(Object item, String field, Object value) { addMetaField(mapValue(item), field, value); }
 
-    public static void addMetaField(MapResult mapValue, String field, Object value) { if (value != null) { mapValue.put(field, value); } }
+    public static void addMetaField(MapResult mapValue, String field, Object value) { mapValue.put(field, value); }
 
     public static void removeMeta(Object item, String field) { mapValue(item).remove(field); }
 

@@ -10,11 +10,8 @@ import org.elasticsearch.action.index.IndexRequest;
 import java.util.Map;
 
 import static com.google.common.collect.Maps.filterKeys;
-import static io.polyglotted.common.util.BaseSerializer.serialize;
 import static io.polyglotted.elastic.common.MetaFields.ANCESTOR_FIELD;
-import static io.polyglotted.elastic.common.MetaFields.RESULT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.addMeta;
-import static io.polyglotted.elastic.common.MetaFields.readKey;
 import static io.polyglotted.elastic.common.MetaFields.timestamp;
 import static io.polyglotted.elastic.common.MetaFields.uniqueId;
 import static io.polyglotted.elastic.index.RecordAction.CREATE;
@@ -28,7 +25,7 @@ public interface Validator {
 
     @Slf4j class StrictValidator extends OverwriteValidator {
         @Override protected void validateCurrent(IndexRecord record, MapResult current) {
-            String keyString = record.keyString;
+            String keyString = record.keyString();
             if (record.action != CREATE) {
                 if (current == null) { throw new IndexerException(keyString + " - record not found for update"); }
                 else if (record.baseVersion == null) { throw new IndexerException(keyString + " - baseVersion not found for update"); }
@@ -38,12 +35,11 @@ public interface Validator {
         }
     }
 
-    @Slf4j @SuppressWarnings({"unused", "WeakerAccess"})
-    class OverwriteValidator implements Validator {
+    @Slf4j @SuppressWarnings({"unused", "WeakerAccess"}) class OverwriteValidator implements Validator {
         @Override public final IndexRequest validate(ElasticClient client, EsAuth auth, IndexRecord record) {
             preValidate(client, record);
             MapResult current = findBy(client, auth, record);
-            if (isIdempotent(record, current)) { throw new NoopException(serialize(readKey(current).put(RESULT_FIELD, "noop").build())); }
+            if (isIdempotent(record, current)) { throw new NoopException(current); }
             validateCurrent(record, current);
             postValidate(record);
             return current == null ? null : createParentRequest(record, current);
@@ -57,9 +53,9 @@ public interface Validator {
 
         public static IndexRequest createParentRequest(IndexRecord record, MapResult current) {
             String uniqueId = uniqueId(current);
-            log.debug("creating archive record " + uniqueId + " for " + record.keyString);
             addMeta(record.source, ANCESTOR_FIELD, uniqueId);
-            return new IndexRequest(record.index, record.model, uniqueId).create(true).source(record.update(current)).parent(record.parent);
+            if (log.isTraceEnabled()) { log.trace("creating archive record " + uniqueId + " for " + record.simpleKey()); }
+            return new IndexRequest(record.index, "_doc", uniqueId).create(true).source(record.update(current)).parent(record.parent);
         }
     }
 
