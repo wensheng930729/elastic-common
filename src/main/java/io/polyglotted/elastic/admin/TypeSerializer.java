@@ -18,6 +18,7 @@ import static io.polyglotted.elastic.admin.Field.keywordField;
 import static io.polyglotted.elastic.admin.Field.simpleField;
 import static io.polyglotted.elastic.admin.Field.textField;
 import static io.polyglotted.elastic.admin.FieldType.DATE;
+import static io.polyglotted.elastic.admin.FieldType.LONG;
 import static io.polyglotted.elastic.admin.FieldType.OBJECT;
 import static io.polyglotted.elastic.common.MetaFields.ALL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.ANCESTOR_FIELD;
@@ -37,7 +38,7 @@ import static io.polyglotted.elastic.common.MetaFields.UNIQUE_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.UPDATER_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.USER_FIELD;
 
-public abstract class TypeSerializer {
+abstract class TypeSerializer {
 
     @SneakyThrows static String serializeType(Type type) { return writeType(type, XContentFactory.jsonBuilder()).string(); }
 
@@ -47,11 +48,6 @@ public abstract class TypeSerializer {
         if (!type.enabled) { gen.field("enabled", false); }
         else {
             if (!type.meta.isEmpty()) { gen.field("_meta", type.meta); }
-            gen.field("_all").startObject().field("enabled", false).endObject();
-            if (type.parent != null) {
-                gen.field("_parent").startObject().field("type", type.parent).endObject();
-                gen.field("_routing").startObject().field("required", true).endObject();
-            }
             if (!type.enableSource) { gen.field("_source").startObject().field("enabled", false).endObject(); }
             else {
                 if (type.includeMeta) { gen.field("_source").startObject().field("excludes", type.sourceExcludes()).endObject(); }
@@ -101,7 +97,7 @@ public abstract class TypeSerializer {
             keywordField(LINK_FIELD).build(),
             keywordField(MODEL_FIELD).normalise().build(),
             keywordField(PARENT_FIELD).build(),
-            keywordField(SIZE_FIELD).build(),
+            simpleField(SIZE_FIELD, LONG).build(),
             keywordField(STATUS_FIELD).build(),
             simpleField(TIMESTAMP_FIELD, DATE).build(),
             keywordField(TRAITFQN_FIELD).build(),

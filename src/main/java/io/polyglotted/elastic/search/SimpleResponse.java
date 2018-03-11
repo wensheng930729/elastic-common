@@ -1,11 +1,10 @@
 package io.polyglotted.elastic.search;
 
 import com.google.common.collect.Iterables;
+import io.polyglotted.common.model.MapResult;
 import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
@@ -16,30 +15,32 @@ import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static java.util.Objects.requireNonNull;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-@ToString(includeFieldNames = false, doNotUseGetters = true)
-@EqualsAndHashCode @RequiredArgsConstructor
+@RequiredArgsConstructor
 public final class SimpleResponse {
     public final ResponseHeader header;
     public final List<Object> results;
     public final List<Aggregation> aggregations;
 
+    public List<MapResult> results() { return resultsAs(MapResult.class); }
+
     public <T> List<T> resultsAs(Class<? extends T> tClass) { return transform(results, tClass::cast); }
 
-    public String scrollId() { return requireNonNull(header, "cannot find header in query response").scrollId; }
+    public boolean hasNextScroll() { return header.returnedHits > 0; }
+
+    public String scrollId() { return header.scrollId; }
 
     public static Builder responseBuilder() { return new Builder(); }
 
-    @Setter
-    @Accessors(fluent = true, chain = true)
+    @Accessors(fluent = true, chain = true) @Setter
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Builder {
         private ResponseHeader header = null;
         private final List<Object> results = new ArrayList<>();
         private List<Aggregation> aggregations = new ArrayList<>();
 
-        public Builder result(Object object) { this.results.add(object); return this; }
+        public void results(Iterable<?> objects) { Iterables.addAll(results, objects); }
 
-        public Builder results(Iterable<?> objects) { Iterables.addAll(results, objects); return this; }
+        public Builder result(Object object) { this.results.add(object); return this; }
 
         public void aggregation(Aggregation.Builder builder) { this.aggregations.add(builder.build()); }
 

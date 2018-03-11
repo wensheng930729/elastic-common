@@ -19,10 +19,10 @@ import java.util.List;
 import java.util.Map;
 
 import static io.polyglotted.common.util.BaseSerializer.MAPPER;
-import static io.polyglotted.elastic.search.AggsBuilder.buildAggs;
 import static io.polyglotted.elastic.search.Finder.findAll;
 import static io.polyglotted.elastic.search.Finder.findBy;
 import static io.polyglotted.elastic.search.QueryMaker.scrollRequest;
+import static io.polyglotted.elastic.search.SearchUtil.buildAggs;
 import static io.polyglotted.elastic.search.SearchUtil.clearScroll;
 import static io.polyglotted.elastic.search.SearchUtil.getReturnedHits;
 import static io.polyglotted.elastic.search.SearchUtil.getTotalHits;

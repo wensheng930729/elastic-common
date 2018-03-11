@@ -43,13 +43,13 @@ public class Notification {
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Builder {
         private String realm;
-        private final Map<String, String> simpleKeys = new LinkedHashMap<>();
+        private final Map<String, String> idKeys = new LinkedHashMap<>();
         private final List<KeyAction> keyActions = new LinkedList<>();
 
-        public Builder key(String simpleKey, String key) { simpleKeys.put(simpleKey, key); return this; }
+        public Builder key(String id, String key) { idKeys.put(id, key); return this; }
 
-        public Builder keyAction(String id, String key, String action) {
-            if (simpleKeys.containsKey(key)) { keyActions.add(new KeyAction(id, simpleKeys.get(key), action)); } return this;
+        public Builder keyAction(String id, String action) {
+            if (idKeys.containsKey(id)) { keyActions.add(new KeyAction(id, idKeys.get(id), action)); } return this;
         }
 
         public Notification build() { return new Notification(realm, immutableList(keyActions)); }

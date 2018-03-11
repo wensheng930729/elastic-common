@@ -18,7 +18,6 @@ import static io.polyglotted.common.util.NullUtil.nonNull;
 import static org.elasticsearch.client.Requests.createIndexRequest;
 import static org.elasticsearch.common.xcontent.XContentType.JSON;
 
-@SuppressWarnings({"unused", "WeakerAccess"})
 @Slf4j @RequiredArgsConstructor
 public final class Admin implements AutoCloseable {
     private static final SecureRandom random = new SecureRandom();
@@ -33,10 +32,10 @@ public final class Admin implements AutoCloseable {
         return createIndex(auth, request);
     }
 
-    private static String uniqueIndexName() { return (new BigInteger(130, random)).toString(32).toLowerCase(); }
+    public static String uniqueIndexName() { return (new BigInteger(130, random)).toString(32).toLowerCase(); }
 
     //@Formatter:off
-    private interface AdminClient {
+    @SuppressWarnings("unused") private interface AdminClient {
         void close();
         boolean indexExists(EsAuth auth, String index);
         String getSettings(EsAuth auth, String index);

@@ -10,7 +10,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.elasticsearch.action.DocWriteRequest;
 
@@ -51,7 +50,6 @@ import static io.polyglotted.elastic.index.RecordAction.DELETE;
 import static io.polyglotted.elastic.index.RecordAction.UPDATE;
 import static java.util.Objects.requireNonNull;
 
-@ToString(includeFieldNames = false, doNotUseGetters = true)
 @SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue"})
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class IndexRecord {
@@ -70,9 +68,11 @@ public final class IndexRecord {
 
     public String simpleKey() { return safeUrnOf(model, id, timestamp); }
 
+    public String key() { return safeUrnOf(model, parent, id, timestamp); }
+
     MapResult update(MapResult current) { current.putAll(ancillary); current.put(STATUS_FIELD, action.status); return current; }
 
-    public DocWriteRequest<?> request() { addMeta(source, KEY_FIELD, safeUrnOf(model, parent, id, timestamp)); return action.request(this); }
+    public DocWriteRequest<?> request() { addMeta(source, KEY_FIELD, key()); return action.request(this); }
 
     public static Builder createRecord(String repo, String model, String id, Object source) { return createRecord(repo, model, id, null, source); }
 

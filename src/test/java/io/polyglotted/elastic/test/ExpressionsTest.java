@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static io.polyglotted.common.util.ListBuilder.immutableList;
+import static io.polyglotted.elastic.admin.IndexSetting.autoReplicate;
 import static io.polyglotted.elastic.search.ExprConverter.buildFilter;
 import static io.polyglotted.elastic.search.Expressions.all;
 import static io.polyglotted.elastic.search.Expressions.bool;
@@ -22,6 +23,7 @@ import static io.polyglotted.elastic.search.Expressions.notEquals;
 import static io.polyglotted.elastic.search.Expressions.text;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 @RunWith(JUnitParamsRunner.class)
 public class ExpressionsTest {
@@ -54,5 +56,10 @@ public class ExpressionsTest {
         XContentBuilder result = XContentFactory.jsonBuilder();
         query.toXContent(result, ToXContent.EMPTY_PARAMS);
         assertThat(result.string(), result.string(), is(json));
+    }
+
+    @Test
+    public void indexSettingSuccess() throws Exception {
+        assertThat(autoReplicate().createJson(), is(notNullValue()));
     }
 }

@@ -8,13 +8,17 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+
+import java.util.function.BiConsumer;
 
 import static io.polyglotted.common.util.MapBuilder.immutableMap;
 import static io.polyglotted.common.util.NullUtil.nonNull;
@@ -50,8 +54,16 @@ public final class Indexer {
         return client.index(auth, new IndexRequest(index, "_doc", key).source(immutableMap())).getVersion();
     }
 
-    @SneakyThrows
-    public String bulkSave(EsAuth auth, IndexRecord record) {
+    public boolean bulkIndex(EsAuth auth, BulkRecord bulkRecord) {
+        BulkRequest bulkRequest = bulkRecord.bulkRequest(auth, this);
+        if (bulkRequest.numberOfActions() <= 0) { return true; }
+        try {
+            BulkResponse responses = client.bulk(auth, bulkRequest);
+            return checkResponse(responses, bulkRecord.ignoreErrors, bulkRecord::success, bulkRecord::failure);
+        } catch (RuntimeException ex) { throw logError(ex); }
+    }
+
+    @SneakyThrows public String bulkSave(EsAuth auth, IndexRecord record) {
         try {
             XContentBuilder result = XContentFactory.jsonBuilder().startObject();
             save(auth, record, result);
@@ -107,6 +119,21 @@ public final class Indexer {
             result.field(TIMESTAMP_FIELD, record.timestamp);
             result.field(RESULT_FIELD, response.getResult().getLowercase());
         }
+    }
+
+    private static boolean checkResponse(BulkResponse responses, IgnoreErrors ignore, BiConsumer<String, String> successHandler,
+                                         BiConsumer<String, String> failureHandler) {
+        boolean noErrors = true;
+        for (BulkItemResponse response : responses) {
+            if (response.isFailed()) {
+                String failureMessage = response.getFailureMessage();
+                if (!ignore.ignoreFailure(failureMessage)) {
+                    noErrors = false; failureHandler.accept(response.getId(), failureMessage);
+                }
+            }
+            else { successHandler.accept(response.getId(), response.getResponse().getResult().getLowercase()); }
+        }
+        return noErrors;
     }
 
     private static RuntimeException logError(RuntimeException ex) {
