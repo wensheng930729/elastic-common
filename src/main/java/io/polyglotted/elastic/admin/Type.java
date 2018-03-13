@@ -27,7 +27,6 @@ import static io.polyglotted.elastic.common.MetaFields.AUTO_COMPLETE_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.UNIQUE_FIELD;
 import static java.util.Collections.singleton;
 
-@SuppressWarnings({"unused", "WeakerAccess"})
 @ToString(includeFieldNames = false, doNotUseGetters = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Type {
@@ -47,9 +46,9 @@ public final class Type {
 
     @Override public int hashCode() { return 29 * mappingJson().hashCode(); }
 
-    public String mappingJson() { return serializeType(this); }
+    String mappingJson() { return serializeType(this); }
 
-    @SuppressWarnings("StaticPseudoFunctionalStyleMethod") public List<String> sourceExcludes() {
+    @SuppressWarnings("StaticPseudoFunctionalStyleMethod") List<String> sourceExcludes() {
         return ListBuilder.<String>immutableListBuilder().add(ALL_FIELD).add(AUTO_COMPLETE_FIELD).add(excludeUniqueProps ? UNIQUE_FIELD : null)
             .addAll(transform(filter(fields, Field::excludeFromSrc), Field::field)).build();
     }

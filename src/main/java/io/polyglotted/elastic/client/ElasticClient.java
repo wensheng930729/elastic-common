@@ -20,8 +20,6 @@ import org.elasticsearch.action.search.ClearScrollResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
 
 import java.io.Closeable;
 
@@ -52,8 +50,6 @@ public interface ElasticClient extends Closeable {
 
     IndexResponse index(EsAuth auth, IndexRequest request);
 
-    UpdateResponse update(EsAuth auth, UpdateRequest request);
-
     DeleteResponse delete(EsAuth auth, DeleteRequest request);
 
     BulkResponse bulk(EsAuth auth, BulkRequest bulk);
@@ -67,8 +63,6 @@ public interface ElasticClient extends Closeable {
     MultiGetResponse multiGet(EsAuth auth, MultiGetRequest request);
 
     SearchResponse search(EsAuth auth, SearchRequest request);
-
-    String lowLevelSearch(EsAuth auth, SearchRequest request);
 
     SearchResponse searchScroll(EsAuth auth, SearchScrollRequest request);
 

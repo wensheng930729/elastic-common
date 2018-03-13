@@ -33,8 +33,6 @@ import org.elasticsearch.action.search.ClearScrollResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestClientBuilder;
@@ -55,10 +53,6 @@ import static io.polyglotted.common.util.MapRetriever.mapVal;
 import static io.polyglotted.common.util.ThreadUtil.safeSleep;
 import static io.polyglotted.elastic.client.ElasticException.checkState;
 import static io.polyglotted.elastic.client.ElasticException.throwEx;
-import static io.polyglotted.elastic.client.LowLevelUtil.endpoint;
-import static io.polyglotted.elastic.client.LowLevelUtil.entityFor;
-import static io.polyglotted.elastic.client.LowLevelUtil.paramsFor;
-import static io.polyglotted.elastic.client.LowLevelUtil.parseResponse;
 import static java.util.Collections.emptyMap;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.HttpStatus.SC_MULTIPLE_CHOICES;
@@ -161,10 +155,6 @@ public class ElasticRestClient implements ElasticClient {
         try { return internalClient.index(request, auth.header()); } catch (IOException ioe) { throw throwEx("index failed", ioe); }
     }
 
-    @Override public UpdateResponse update(EsAuth auth, UpdateRequest request) {
-        try { return internalClient.update(request, auth.header()); } catch (IOException ioe) { throw throwEx("update failed", ioe); }
-    }
-
     @Override public DeleteResponse delete(EsAuth auth, DeleteRequest request) {
         try { return internalClient.delete(request, auth.header()); } catch (IOException ioe) { throw throwEx("delete failed", ioe); }
     }
@@ -191,14 +181,6 @@ public class ElasticRestClient implements ElasticClient {
 
     @Override public SearchResponse search(EsAuth auth, SearchRequest request) {
         try { return internalClient.search(request, auth.header()); } catch (IOException ioe) { throw throwEx("search failed", ioe); }
-    }
-
-    @Override public String lowLevelSearch(EsAuth auth, SearchRequest request) {
-        try {
-            String cliResponse = performCliRequest(POST, endpoint(request), paramsFor(request), entityFor(request), auth.header(), ctypeHeader());
-            parseResponse(cliResponse);
-            return cliResponse;
-        } catch (IOException ioe) { throw throwEx("search failed", ioe); }
     }
 
     @Override public SearchResponse searchScroll(EsAuth auth, SearchScrollRequest request) {

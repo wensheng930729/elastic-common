@@ -8,7 +8,6 @@ import java.util.EnumSet;
 import static io.polyglotted.common.util.Assertions.checkBool;
 import static io.polyglotted.common.util.Assertions.checkContains;
 
-@SuppressWarnings({"unused", "WeakerAccess"})
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public enum FieldType {
     BINARY(true, true, false),

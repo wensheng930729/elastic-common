@@ -10,7 +10,6 @@ import static com.google.common.collect.Iterables.toArray;
 import static com.google.common.collect.Iterables.transform;
 import static java.util.Objects.requireNonNull;
 
-@SuppressWarnings("unused")
 public class HighLevelConnector {
 
     @SneakyThrows

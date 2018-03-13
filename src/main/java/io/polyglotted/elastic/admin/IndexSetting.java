@@ -7,7 +7,6 @@ import io.polyglotted.common.model.SortedMapResult;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 
 import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.Maps.filterKeys;
@@ -17,8 +16,7 @@ import static io.polyglotted.common.util.BaseSerializer.serialize;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.common.util.ResourceUtil.readResource;
 
-@ToString(includeFieldNames = false, doNotUseGetters = true)
-@SuppressWarnings({"unused", "WeakerAccess", "Guava"})
+@SuppressWarnings("Guava")
 @RequiredArgsConstructor @EqualsAndHashCode
 public final class IndexSetting {
     private static final String DEF_ANALYSIS = readResource(IndexSetting.class, "def-analysis.json");

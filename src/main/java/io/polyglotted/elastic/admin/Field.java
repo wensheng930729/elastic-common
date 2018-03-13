@@ -29,7 +29,6 @@ import static io.polyglotted.elastic.admin.FieldType.NESTED;
 import static io.polyglotted.elastic.admin.FieldType.OBJECT;
 import static io.polyglotted.elastic.admin.FieldType.TEXT;
 
-@SuppressWarnings({"unused", "WeakerAccess"})
 @ToString(includeFieldNames = false, doNotUseGetters = true)
 @Accessors(fluent = true) @RequiredArgsConstructor
 public final class Field implements Comparable<Field> {
@@ -52,9 +51,9 @@ public final class Field implements Comparable<Field> {
 
     @Override public int compareTo(Field other) { return (other == null) ? -1 : field.compareTo(other.field); }
 
-    public boolean hasProperties() { return (type == NESTED || type == OBJECT) && properties.size() > 0; }
+    boolean hasProperties() { return (type == NESTED || type == OBJECT) && properties.size() > 0; }
 
-    public boolean hasFields() { return Boolean.TRUE.equals(hasFields) && properties.size() > 0; }
+    boolean hasFields() { return Boolean.TRUE.equals(hasFields) && properties.size() > 0; }
 
     public static FieldBuilder keywordField(String field) { return fieldBuilder(field, KEYWORD); }
 
@@ -68,7 +67,7 @@ public final class Field implements Comparable<Field> {
 
     public static FieldBuilder simpleField(String field, FieldType fieldType) { return fieldBuilder(field, fieldType.simpleField()); }
 
-    public static FieldBuilder fieldBuilder(String field, FieldType fieldType) { return new FieldBuilder(field, fieldType); }
+    private static FieldBuilder fieldBuilder(String field, FieldType fieldType) { return new FieldBuilder(field, fieldType); }
 
     @Accessors(fluent = true, chain = true)
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
