@@ -57,7 +57,7 @@ public final class Searcher {
     }
 
     @SneakyThrows
-    public <T> XContentBuilder searchNative(EsAuth auth, SearchRequest request, ResponseBuilder<T> resultBuilder, boolean flattenAgg, Verbose verbose) {
+    public <T> String searchNative(EsAuth auth, SearchRequest request, ResponseBuilder<T> resultBuilder, boolean flattenAgg, Verbose verbose) {
         XContentBuilder result = XContentFactory.jsonBuilder().startObject();
         SearchResponse response = client.search(auth, request);
         headerFrom(response, result);
@@ -65,8 +65,7 @@ public final class Searcher {
             List<T> values = resultBuilder.buildFrom(response, verbose);
             result.rawField("results", new BytesArray(MAPPER.writeValueAsBytes(values)), JSON);
         }
-        buildAggs(response, flattenAgg, result);
-        return result.endObject();
+        return buildAggs(response, flattenAgg, result).endObject().string();
     }
 
     public <T> boolean simpleScroll(EsAuth auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose, ScrollWalker<T> walker) {

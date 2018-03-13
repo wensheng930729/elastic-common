@@ -68,6 +68,8 @@ public interface ElasticClient extends Closeable {
 
     SearchResponse search(EsAuth auth, SearchRequest request);
 
+    String lowLevelSearch(EsAuth auth, SearchRequest request);
+
     SearchResponse searchScroll(EsAuth auth, SearchScrollRequest request);
 
     ClearScrollResponse clearScroll(EsAuth auth, ClearScrollRequest request);

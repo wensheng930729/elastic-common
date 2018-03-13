@@ -3,18 +3,13 @@ package io.polyglotted.elastic.common;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
 
-import java.util.List;
-import java.util.Map.Entry;
-
 import static com.google.common.base.Strings.nullToEmpty;
 import static io.polyglotted.common.model.MapResult.immutableResultBuilder;
 import static io.polyglotted.common.model.MapResult.simpleResult;
 import static io.polyglotted.common.util.Assertions.checkContains;
 import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.common.util.MapBuilder.immutableMapBuilder;
-import static io.polyglotted.common.util.MapRetriever.listVal;
 import static io.polyglotted.common.util.MapRetriever.longStrVal;
-import static io.polyglotted.common.util.MapRetriever.optStr;
 import static io.polyglotted.common.util.MapRetriever.optValue;
 import static io.polyglotted.common.util.MapRetriever.reqdStr;
 import static io.polyglotted.common.util.NullUtil.nonNull;
@@ -24,7 +19,7 @@ import static io.polyglotted.common.util.UrnUtil.urnOf;
 import static io.polyglotted.common.util.UuidUtil.genUuidStr;
 import static io.polyglotted.elastic.common.DocStatus.fromStatus;
 
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings({"WeakerAccess"})
 public abstract class MetaFields {
     public static final String ALL_FIELD = "&all";
     public static final String ANCESTOR_FIELD = "&ancestor";
@@ -56,19 +51,11 @@ public abstract class MetaFields {
         INDEX_FIELD, ID_FIELD, KEY_FIELD, LINK_FIELD, MODEL_FIELD, PARENT_FIELD, SCHEMA_FIELD, SIZE_FIELD, STATUS_FIELD,
         TRAITFQN_FIELD, TRAITID_FIELD, TIMESTAMP_FIELD, TTL_FIELD, UPDATER_FIELD, USER_FIELD).toArray(new String[0]);
 
-    public static <T> T addMetas(T item, MapResult fields) {
-        MapResult mapValue = mapValue(item);
-        for (Entry<String, Object> e : fields.entrySet()) { addMetaField(mapValue, e.getKey(), e.getValue()); }
-        return item;
-    }
-
     public static void addMeta(Object item, String field, Object value) { addMetaField(mapValue(item), field, value); }
 
     public static void addMetaField(MapResult mapValue, String field, Object value) { mapValue.put(field, value); }
 
     public static void removeMeta(Object item, String field) { mapValue(item).remove(field); }
-
-    public static String optMeta(Object object, String field) { return optStr(mapValue(object), field); }
 
     public static String reqdMeta(Object object, String field) { return reqdStr(mapValue(object), field); }
 
@@ -87,10 +74,6 @@ public abstract class MetaFields {
     public static String parent(Object object) { return optValue(mapValue(object), PARENT_FIELD); }
 
     public static long timestamp(Object object) { return longStrVal(mapValue(object), TIMESTAMP_FIELD, -3); }
-
-    public static <T> T timestampStr(Object object) { return optValue(mapValue(object), TIMESTAMP_FIELD); }
-
-    public static List<String> uniqueProps(Object object) { return listVal(mapValue(object), UNIQUE_FIELD); }
 
     public static String keyString(MapResult map) { return urnOf(model(map), id(map)); }
 

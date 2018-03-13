@@ -42,6 +42,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.util.Map;
 
 import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.util.BaseSerializer.deserialize;
@@ -54,6 +55,10 @@ import static io.polyglotted.common.util.MapRetriever.mapVal;
 import static io.polyglotted.common.util.ThreadUtil.safeSleep;
 import static io.polyglotted.elastic.client.ElasticException.checkState;
 import static io.polyglotted.elastic.client.ElasticException.throwEx;
+import static io.polyglotted.elastic.client.LowLevelUtil.endpoint;
+import static io.polyglotted.elastic.client.LowLevelUtil.entityFor;
+import static io.polyglotted.elastic.client.LowLevelUtil.paramsFor;
+import static io.polyglotted.elastic.client.LowLevelUtil.parseResponse;
 import static java.util.Collections.emptyMap;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.HttpStatus.SC_MULTIPLE_CHOICES;
@@ -129,14 +134,14 @@ public class ElasticRestClient implements ElasticClient {
 
     @Override public void buildPipeline(EsAuth auth, String id, String resource) {
         try {
-            performCliRequest(PUT, "_ingest/pipeline/" + id, new StringEntity(resource), auth.header(), ctypeHeader());
+            performCliRequest(PUT, "/_ingest/pipeline/" + id, emptyMap(), new StringEntity(resource), auth.header(), ctypeHeader());
         } catch (Exception ioe) { throw throwEx("buildPipeline failed", ioe); }
     }
 
     @Override public boolean pipelineExists(EsAuth auth, String id) {
         Exception throwable;
         try {
-            performCliRequest(auth, GET, "_ingest/pipeline/" + id); return true;
+            performCliRequest(auth, GET, "/_ingest/pipeline/" + id); return true;
 
         } catch (ResponseException re) {
             if (re.getResponse().getStatusLine().getStatusCode() == 404) { return false; }
@@ -148,7 +153,7 @@ public class ElasticRestClient implements ElasticClient {
 
     @Override public void deletePipeline(EsAuth auth, String id) {
         try {
-            performCliRequest(auth, DELETE, "_ingest/pipeline/" + id);
+            performCliRequest(auth, DELETE, "/_ingest/pipeline/" + id);
         } catch (Exception ioe) { throw throwEx("deletePipeline failed", ioe); }
     }
 
@@ -188,6 +193,14 @@ public class ElasticRestClient implements ElasticClient {
         try { return internalClient.search(request, auth.header()); } catch (IOException ioe) { throw throwEx("search failed", ioe); }
     }
 
+    @Override public String lowLevelSearch(EsAuth auth, SearchRequest request) {
+        try {
+            String cliResponse = performCliRequest(POST, endpoint(request), paramsFor(request), entityFor(request), auth.header(), ctypeHeader());
+            parseResponse(cliResponse);
+            return cliResponse;
+        } catch (IOException ioe) { throw throwEx("search failed", ioe); }
+    }
+
     @Override public SearchResponse searchScroll(EsAuth auth, SearchScrollRequest request) {
         try { return internalClient.searchScroll(request, auth.header()); } catch (IOException ioe) { throw throwEx("searchScroll failed", ioe); }
     }
@@ -197,11 +210,12 @@ public class ElasticRestClient implements ElasticClient {
     }
 
     private String performCliRequest(EsAuth auth, HttpReqType method, String endpoint) throws IOException {
-        return performCliRequest(method, endpoint, null, auth.header());
+        return performCliRequest(method, endpoint, emptyMap(), null, auth.header());
     }
 
-    private String performCliRequest(HttpReqType method, String endpoint, HttpEntity entity, Header... headers) throws IOException {
-        Response response = internalClient.getLowLevelClient().performRequest(method.name(), endpoint, emptyMap(), entity, headers);
+    private String performCliRequest(HttpReqType method, String endpoint, Map<String, String> params,
+                                     HttpEntity entity, Header... headers) throws IOException {
+        Response response = internalClient.getLowLevelClient().performRequest(method.name(), endpoint, params, entity, headers);
         int statusCode = response.getStatusLine().getStatusCode();
         checkState(statusCode >= SC_OK && statusCode < SC_MULTIPLE_CHOICES, response.getStatusLine().getReasonPhrase());
         return EntityUtils.toString(response.getEntity());

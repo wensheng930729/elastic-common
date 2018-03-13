@@ -81,8 +81,7 @@ public class SearchIntegTest {
 
     private void simpleAgg(String query, int hits, String result) throws Exception {
         String aggregations = searchNative(query, false, NONE, hits, "aggregations");
-        System.out.println(aggregations);
-//TODO check why the results are frikked        assertThat(aggregations, aggregations, is(result));
+        assertThat(aggregations, aggregations, is(result));
     }
 
     private void flattenAgg(String query, int hits, String result) throws Exception {
@@ -107,7 +106,7 @@ public class SearchIntegTest {
 
     private String searchNative(String query, boolean flatten, Verbose verb, int totalHits, String resultKey) throws IOException {
         MapResult mapResult = deserialize(searcher.searchNative(ES_AUTH, copyFrom("agex",
-            query.getBytes(UTF_8), null, verb), SourceBuilder, flatten, verb).string());
+            query.getBytes(UTF_8), null, verb), SourceBuilder, flatten, verb));
         assertThat(deepRetrieve(mapResult, "header.totalHits"), is(totalHits));
         return serialize(mapResult.get(resultKey));
     }

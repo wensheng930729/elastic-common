@@ -51,15 +51,15 @@ abstract class SearchUtil {
 
     static long getTotalHits(SearchResponse response) { return response.getHits().getTotalHits(); }
 
-    static void buildAggs(SearchResponse response, boolean flattenAgg, XContentBuilder result) throws IOException {
+    static XContentBuilder buildAggs(SearchResponse response, boolean flattenAgg, XContentBuilder result) throws IOException {
         Aggregations aggregations = response.getAggregations();
         if (aggregations != null) {
-            if (flattenAgg) { performFlatten(result, aggregations); }
-            else { aggregations.toXContent(result, EMPTY_PARAMS); }
+            return flattenAgg ? performFlatten(result, aggregations) : performInternal(result, aggregations);
         }
+        return result;
     }
 
-    private static void performFlatten(XContentBuilder result, Aggregations aggregations) throws IOException {
+    private static XContentBuilder performFlatten(XContentBuilder result, Aggregations aggregations) throws IOException {
         result.startObject("flattened");
         for (org.elasticsearch.search.aggregations.Aggregation agg : aggregations) {
             Aggregation aggregation = detectAgg(agg).build();
@@ -69,6 +69,10 @@ abstract class SearchUtil {
             while (flattened.hasNext()) { result.value(flattened.next()); }
             result.endArray();
         }
-        result.endObject();
+        return result.endObject();
+    }
+
+    private static XContentBuilder performInternal(XContentBuilder result, Aggregations aggregations) throws IOException {
+        aggregations.toXContent(result, EMPTY_PARAMS); return result;
     }
 }
