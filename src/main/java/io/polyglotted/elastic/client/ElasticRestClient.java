@@ -11,7 +11,6 @@ import org.apache.http.ConnectionClosedException;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
@@ -54,7 +53,6 @@ import static io.polyglotted.common.util.ThreadUtil.safeSleep;
 import static io.polyglotted.elastic.client.ElasticException.checkState;
 import static io.polyglotted.elastic.client.ElasticException.throwEx;
 import static java.util.Collections.emptyMap;
-import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.HttpStatus.SC_MULTIPLE_CHOICES;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
@@ -79,11 +77,7 @@ public class ElasticRestClient implements ElasticClient {
         return this;
     }
 
-    @Override public MapResult clusterHealth(EsAuth auth) {
-        try {
-            return deserialize(performCliRequest(auth, GET, "/_cluster/health"));
-        } catch (Exception ioe) { throw throwEx("clusterHealth failed", ioe); }
-    }
+    @Override public MapResult clusterHealth(EsAuth auth) { return deserialize(simpleGet(auth, "/_cluster/health", "clusterHealth")); }
 
     @Override public boolean indexExists(EsAuth auth, String index) {
         try {
@@ -113,11 +107,7 @@ public class ElasticRestClient implements ElasticClient {
         } catch (Exception ioe) { throw throwEx("forceRefresh failed", ioe); }
     }
 
-    @Override public String getSettings(EsAuth auth, String index) {
-        try {
-            return performCliRequest(auth, GET, "/" + index + "/_settings");
-        } catch (Exception e) { throw throwEx("getSettings failed", e); }
-    }
+    @Override public String getSettings(EsAuth auth, String index) { return simpleGet(auth, "/" + index + "/_settings", "getSettings"); }
 
     @Override public ImmutableResult getMapping(EsAuth auth, String index) {
         try {
@@ -126,30 +116,11 @@ public class ElasticRestClient implements ElasticClient {
         } catch (Exception e) { throw throwEx("getMapping failed", e); }
     }
 
-    @Override public void buildPipeline(EsAuth auth, String id, String resource) {
-        try {
-            performCliRequest(PUT, "/_ingest/pipeline/" + id, emptyMap(), new StringEntity(resource), auth.header(), ctypeHeader());
-        } catch (Exception ioe) { throw throwEx("buildPipeline failed", ioe); }
-    }
+    @Override public void buildPipeline(EsAuth auth, String id, String body) { simplePut(auth, "/_ingest/pipeline/" + id, body, "buildPipeline"); }
 
-    @Override public boolean pipelineExists(EsAuth auth, String id) {
-        Exception throwable;
-        try {
-            performCliRequest(auth, GET, "/_ingest/pipeline/" + id); return true;
+    @Override public boolean pipelineExists(EsAuth auth, String id) { return simpleGet(auth, "/_ingest/pipeline/" + id, "pipelineExists") != null; }
 
-        } catch (ResponseException re) {
-            if (re.getResponse().getStatusLine().getStatusCode() == 404) { return false; }
-            throwable = re;
-
-        } catch (Exception ioe) { throwable = ioe; }
-        throw throwEx("pipelineExists failed", throwable);
-    }
-
-    @Override public void deletePipeline(EsAuth auth, String id) {
-        try {
-            performCliRequest(auth, DELETE, "/_ingest/pipeline/" + id);
-        } catch (Exception ioe) { throw throwEx("deletePipeline failed", ioe); }
-    }
+    @Override public void deletePipeline(EsAuth auth, String id) { simpleDelete(auth, "/_ingest/pipeline/" + id, "deletePipeline"); }
 
     @Override public IndexResponse index(EsAuth auth, IndexRequest request) {
         try { return internalClient.index(request, auth.header()); } catch (IOException ioe) { throw throwEx("index failed", ioe); }
@@ -191,6 +162,39 @@ public class ElasticRestClient implements ElasticClient {
         try { return internalClient.clearScroll(request, auth.header()); } catch (IOException ioe) { throw throwEx("clearScroll failed", ioe); }
     }
 
+    @Override public void xpackPut(EsAuth auth, XPackApi api, String id, String body) { simplePut(auth, api.apiEndpoint + id, body, "xpackPut"); }
+
+    @Override public MapResult xpackGet(EsAuth auth, XPackApi api, String id) {
+        String getNotFound = simpleGet(auth, api.apiEndpoint + id, "xpackGet");
+        return getNotFound == null ? immutableResult() : deserialize(getNotFound);
+    }
+
+    @Override public void xpackDelete(EsAuth auth, XPackApi api, String id) { simpleDelete(auth, api.apiEndpoint + id, "xpackDelete"); }
+
+    private String simpleGet(EsAuth auth, String endpoint, String methodName) {
+        Exception throwable;
+        try {
+            return performCliRequest(auth, GET, endpoint);
+
+        } catch (ResponseException re) {
+            if (re.getResponse().getStatusLine().getStatusCode() == 404) { return null; }
+            throwable = re;
+        } catch (Exception ioe) { throwable = ioe; }
+        throw throwEx(methodName + " failed", throwable);
+    }
+
+    private void simplePut(EsAuth auth, String endpoint, String body, String methodName) {
+        try {
+            performCliRequest(PUT, endpoint, emptyMap(), new StringEntity(body, APPLICATION_JSON), auth.header());
+        } catch (Exception ioe) { throw throwEx(methodName + " failed", ioe); }
+    }
+
+    private void simpleDelete(EsAuth auth, String endpoint, String methodName) {
+        try {
+            performCliRequest(auth, DELETE, endpoint);
+        } catch (Exception ioe) { throw throwEx(methodName + " failed", ioe); }
+    }
+
     private String performCliRequest(EsAuth auth, HttpReqType method, String endpoint) throws IOException {
         return performCliRequest(method, endpoint, emptyMap(), null, auth.header());
     }
@@ -202,6 +206,4 @@ public class ElasticRestClient implements ElasticClient {
         checkState(statusCode >= SC_OK && statusCode < SC_MULTIPLE_CHOICES, response.getStatusLine().getReasonPhrase());
         return EntityUtils.toString(response.getEntity());
     }
-
-    private static Header ctypeHeader() { return new BasicHeader(CONTENT_TYPE, APPLICATION_JSON.getMimeType()); }
 }
