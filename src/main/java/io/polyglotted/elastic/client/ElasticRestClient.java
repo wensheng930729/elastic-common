@@ -116,7 +116,7 @@ public class ElasticRestClient implements ElasticClient {
         } catch (Exception e) { throw throwEx("getMapping failed", e); }
     }
 
-    @Override public void buildPipeline(EsAuth auth, String id, String body) { simplePut(auth, "/_ingest/pipeline/" + id, body, "buildPipeline"); }
+    @Override public void putPipeline(EsAuth auth, String id, String body) { simplePut(auth, PUT, "/_ingest/pipeline/" + id, body, "putPipeline"); }
 
     @Override public boolean pipelineExists(EsAuth auth, String id) { return simpleGet(auth, "/_ingest/pipeline/" + id, "pipelineExists") != null; }
 
@@ -162,14 +162,18 @@ public class ElasticRestClient implements ElasticClient {
         try { return internalClient.clearScroll(request, auth.header()); } catch (IOException ioe) { throw throwEx("clearScroll failed", ioe); }
     }
 
-    @Override public void xpackPut(EsAuth auth, XPackApi api, String id, String body) { simplePut(auth, api.apiEndpoint + id, body, "xpackPut"); }
+    @Override public void xpackPut(EsAuth auth, XPackApi api, String id, String body) {
+        simplePut(auth, api.type, api.endpoint + id, body, api.name().toLowerCase() + "Put");
+    }
 
     @Override public MapResult xpackGet(EsAuth auth, XPackApi api, String id) {
-        String getNotFound = simpleGet(auth, api.apiEndpoint + id, "xpackGet");
+        String getNotFound = simpleGet(auth, api.endpoint + id, api.name().toLowerCase() + "Get");
         return getNotFound == null ? immutableResult() : deserialize(getNotFound);
     }
 
-    @Override public void xpackDelete(EsAuth auth, XPackApi api, String id) { simpleDelete(auth, api.apiEndpoint + id, "xpackDelete"); }
+    @Override public void xpackDelete(EsAuth auth, XPackApi api, String id) {
+        simpleDelete(auth, api.endpoint + id, api.name().toLowerCase() + "Delete");
+    }
 
     private String simpleGet(EsAuth auth, String endpoint, String methodName) {
         Exception throwable;
@@ -183,9 +187,9 @@ public class ElasticRestClient implements ElasticClient {
         throw throwEx(methodName + " failed", throwable);
     }
 
-    private void simplePut(EsAuth auth, String endpoint, String body, String methodName) {
+    private void simplePut(EsAuth auth, HttpReqType reqType, String endpoint, String body, String methodName) {
         try {
-            performCliRequest(PUT, endpoint, emptyMap(), new StringEntity(body, APPLICATION_JSON), auth.header());
+            performCliRequest(reqType, endpoint, emptyMap(), new StringEntity(body, APPLICATION_JSON), auth.header());
         } catch (Exception ioe) { throw throwEx(methodName + " failed", ioe); }
     }
 

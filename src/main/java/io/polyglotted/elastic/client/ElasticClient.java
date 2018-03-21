@@ -3,8 +3,6 @@ package io.polyglotted.elastic.client;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.model.MapResult.ImmutableResult;
 import io.polyglotted.elastic.common.EsAuth;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -44,7 +42,7 @@ public interface ElasticClient extends Closeable {
 
     ImmutableResult getMapping(EsAuth auth, String index);
 
-    void buildPipeline(EsAuth auth, String id, String resource);
+    void putPipeline(EsAuth auth, String id, String resource);
 
     boolean pipelineExists(EsAuth auth, String id);
 
@@ -76,10 +74,4 @@ public interface ElasticClient extends Closeable {
 
     void xpackDelete(EsAuth auth, XPackApi api, String id);
 
-    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-    enum XPackApi {
-        ROLE("/_xpack/security/role/"), USER("/_xpack/security/user/");
-
-        final String apiEndpoint;
-    }
 }

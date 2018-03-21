@@ -50,7 +50,7 @@ public class ClientIntegTest {
         String pipeline = "mypipe";
         try (ElasticClient client = highLevelClient(elasticSettings())) {
             assertThat(client.pipelineExists(ES_AUTH, pipeline), is(false));
-            client.buildPipeline(ES_AUTH, pipeline, readResource(ClientIntegTest.class, "pipeline-source.json"));
+            client.putPipeline(ES_AUTH, pipeline, readResource(ClientIntegTest.class, "pipeline-source.json"));
             assertThat(client.pipelineExists(ES_AUTH, pipeline), is(true));
             client.deletePipeline(ES_AUTH, pipeline);
             assertThat(client.pipelineExists(ES_AUTH, pipeline), is(false));

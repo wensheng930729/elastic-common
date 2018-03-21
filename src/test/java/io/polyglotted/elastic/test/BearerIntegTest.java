@@ -9,10 +9,11 @@ import org.junit.Test;
 import java.util.Map;
 
 import static io.polyglotted.common.util.ResourceUtil.readResourceAsMap;
-import static io.polyglotted.elastic.client.ElasticClient.XPackApi.ROLE;
+import static io.polyglotted.elastic.client.XPackApi.ROLE;
 import static io.polyglotted.elastic.client.ElasticSettings.elasticSettings;
 import static io.polyglotted.elastic.client.HighLevelConnector.highLevelClient;
 import static io.polyglotted.elastic.common.EsAuth.AuthType.BASIC;
+import static io.polyglotted.elastic.common.EsAuth.bearerToken;
 import static io.polyglotted.elastic.test.TestTokenUtil.testToken;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -35,7 +36,6 @@ public class BearerIntegTest {
 
     @Test
     public void testBearerAuth() throws Exception {
-        EsAuth BEARER = EsAuth.bearerToken(testToken());
-        assertThat(client.clusterHealth(BEARER), is(notNullValue()));
+        assertThat(client.clusterHealth(bearerToken(testToken())), is(notNullValue()));
     }
 }
