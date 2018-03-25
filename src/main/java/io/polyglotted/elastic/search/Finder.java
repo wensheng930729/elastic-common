@@ -17,10 +17,10 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import java.util.List;
 import java.util.Map;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static io.polyglotted.common.model.MapResult.simpleResult;
 import static io.polyglotted.common.util.EncodingUtil.urlEncode;
 import static io.polyglotted.common.util.MapBuilder.immutableMap;
+import static io.polyglotted.common.util.StrUtil.nullOrEmpty;
 import static io.polyglotted.elastic.common.MetaFields.keyString;
 
 @Slf4j @SuppressWarnings("unused")
@@ -29,7 +29,7 @@ public abstract class Finder {
     static Map<String, MapResult> findAll(ElasticClient client, EsAuth auth, List<IndexRecord.Builder> builders) {
         MultiGetRequest multiGetRequest = new MultiGetRequest();
         for (IndexRecord.Builder rec : builders) {
-            if (isNullOrEmpty(rec.id)) continue;
+            if (nullOrEmpty(rec.id)) continue;
             log.debug("multi get " + rec.index + " " + rec.id + " " + rec.parent);
             multiGetRequest.add(new MultiGetRequest.Item(rec.index, "_doc", rec.id).routing(rec.parent).parent(rec.parent));
         }

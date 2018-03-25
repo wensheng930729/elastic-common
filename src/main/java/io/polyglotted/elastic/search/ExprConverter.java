@@ -9,11 +9,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.common.collect.Collections2.filter;
-import static com.google.common.collect.Collections2.transform;
-import static com.google.common.collect.Iterables.toArray;
+import static io.polyglotted.common.util.CollUtil.transform;
 import static io.polyglotted.common.util.NullUtil.nonNull;
+import static io.polyglotted.common.util.StrUtil.nullOrEmpty;
 import static io.polyglotted.elastic.search.Expression.NilExpression;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
@@ -64,7 +62,7 @@ public enum ExprConverter {
     Text {
         @Override
         QueryBuilder buildFrom(Expression expr) {
-            String field = isNullOrEmpty(expr.label) ? "_all" : expr.label;
+            String field = nullOrEmpty(expr.label) ? "_all" : expr.label;
             Operator operator = expr.args.containsKey("operator") ? Operator.valueOf(expr.stringArg("operator")) : Operator.AND;
             MatchQuery.Type type = MatchQuery.Type.valueOf(nonNull(expr.stringArg("type"), "PHRASE_PREFIX"));
             switch (type) {
@@ -94,6 +92,6 @@ public enum ExprConverter {
     }
 
     @SuppressWarnings("ConstantConditions") private static QueryBuilder[] aggregateFilters(Collection<Expression> expressions) {
-        return toArray(filter(transform(expressions, ExprConverter::buildFilter), Objects::nonNull), QueryBuilder.class);
+        return transform(expressions, ExprConverter::buildFilter).filter(Objects::nonNull).toArray(QueryBuilder.class);
     }
 }

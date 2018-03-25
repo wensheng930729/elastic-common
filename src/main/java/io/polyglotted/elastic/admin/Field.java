@@ -16,10 +16,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import static com.google.common.collect.Collections2.transform;
-import static com.google.common.collect.Maps.uniqueIndex;
 import static io.polyglotted.common.model.SortedMapResult.treeResult;
 import static io.polyglotted.common.util.BaseSerializer.serialize;
+import static io.polyglotted.common.util.CollUtil.transform;
+import static io.polyglotted.common.util.CollUtil.uniqueIndex;
 import static io.polyglotted.common.util.ListBuilder.immutableListBuilder;
 import static io.polyglotted.common.util.MapBuilder.immutableMapBuilder;
 import static io.polyglotted.common.util.MapRetriever.reqdStr;
@@ -29,6 +29,7 @@ import static io.polyglotted.elastic.admin.FieldType.NESTED;
 import static io.polyglotted.elastic.admin.FieldType.OBJECT;
 import static io.polyglotted.elastic.admin.FieldType.TEXT;
 
+@SuppressWarnings({"unused", "WeakerAccess"})
 @ToString(includeFieldNames = false, doNotUseGetters = true)
 @Accessors(fluent = true) @RequiredArgsConstructor
 public final class Field implements Comparable<Field> {

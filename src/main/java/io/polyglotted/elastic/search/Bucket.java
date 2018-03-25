@@ -11,7 +11,7 @@ import lombok.experimental.Accessors;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.common.collect.Lists.transform;
+import static io.polyglotted.common.util.CollUtil.transformList;
 import static io.polyglotted.common.util.ConversionUtil.asLong;
 import static io.polyglotted.common.util.MapRetriever.optValue;
 import static io.polyglotted.common.util.MapRetriever.reqdStr;
@@ -46,6 +46,6 @@ public final class Bucket {
 
         public void aggregation(Aggregation.Builder builder) { this.builders.add(builder); }
 
-        public Bucket build() { return new Bucket(key, value, count, transform(builders, Aggregation.Builder::build)); }
+        public Bucket build() { return new Bucket(key, value, count, transformList(builders, Aggregation.Builder::build)); }
     }
 }

@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.model.MapResult.simpleResultBuilder;
 import static io.polyglotted.common.util.BaseSerializer.deserialize;
@@ -34,6 +33,7 @@ import static io.polyglotted.elastic.admin.Admin.uniqueIndexName;
 import static io.polyglotted.elastic.client.ElasticSettings.elasticSettings;
 import static io.polyglotted.elastic.client.HighLevelConnector.highLevelClient;
 import static io.polyglotted.elastic.common.EsAuth.AuthType.BASIC;
+import static io.polyglotted.elastic.common.Verbose.ID;
 import static io.polyglotted.elastic.common.Verbose.NONE;
 import static io.polyglotted.elastic.index.BulkRecord.bulkBuilder;
 import static io.polyglotted.elastic.search.QueryMaker.DEFAULT_KEEP_ALIVE;
@@ -42,6 +42,7 @@ import static io.polyglotted.elastic.search.QueryMaker.filterToScroller;
 import static io.polyglotted.elastic.search.ResultBuilder.NullBuilder;
 import static io.polyglotted.elastic.search.ResultBuilder.SourceBuilder;
 import static java.lang.System.currentTimeMillis;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.elasticsearch.common.xcontent.XContentType.JSON;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -90,7 +91,7 @@ public class SearchIntegTest {
     }
 
     private void simpleSearchAndScroll() throws Exception {
-        String textResponse = searchNative(MESSAGES.get("text.query"), false, NONE, 5, "results");
+        String textResponse = searchNative(MESSAGES.get("text.query"), false, ID, 5, "results");
         assertThat(textResponse, textResponse, is(MESSAGES.get("text.response")));
 
         int totalHits = 0;

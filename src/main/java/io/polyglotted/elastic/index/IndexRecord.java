@@ -1,6 +1,5 @@
 package io.polyglotted.elastic.index;
 
-import com.google.common.annotations.VisibleForTesting;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.model.MapResult.ImmutableResult;
 import io.polyglotted.common.model.SortedMapResult;
@@ -18,9 +17,9 @@ import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Set;
 
-import static com.google.common.collect.Maps.filterKeys;
 import static io.polyglotted.common.model.SortedMapResult.treeResult;
 import static io.polyglotted.common.util.BaseSerializer.serializeBytes;
+import static io.polyglotted.common.util.CollUtil.filterKeys;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.common.util.StrUtil.notNullOrEmpty;
 import static io.polyglotted.common.util.UrnUtil.safeUrnOf;
@@ -94,7 +93,6 @@ public final class IndexRecord {
         return expired(DELETE, repo, model, id, parent, version, new LinkedHashMap<>());
     }
 
-    @VisibleForTesting
     public static Builder expired(RecordAction action, String repo, String model, String id, String parent, Long tstamp, Object src) {
         return new Builder(action, repo, model, id, parent, src).baseVersion(tstamp);
     }

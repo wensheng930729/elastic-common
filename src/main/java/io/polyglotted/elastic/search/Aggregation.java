@@ -15,10 +15,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import static com.google.common.collect.Iterables.transform;
 import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.model.SortedMapResult.treeResult;
 import static io.polyglotted.common.util.Assertions.checkBool;
+import static io.polyglotted.common.util.CollUtil.transform;
 import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.common.util.ListBuilder.simpleList;
 import static io.polyglotted.common.util.MapBuilder.immutableMapBuilder;
@@ -96,9 +96,8 @@ public final class Aggregation {
         public void bucket(Bucket.Builder builder) { this.builders.add(builder); }
 
         public Aggregation build() {
-            Iterable<Bucket> buckets = transform(builders, Bucket.Builder::build);
             return new Aggregation(requireNonNull(label, "label is required"), requireNonNull(type, "type is required").name(),
-                type.valueFrom(valueMap, buckets), immutableResult(paramsMap));
+                type.valueFrom(valueMap, transform(builders, Bucket.Builder::build)), immutableResult(paramsMap));
         }
     }
 

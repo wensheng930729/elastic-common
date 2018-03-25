@@ -1,7 +1,6 @@
 package io.polyglotted.elastic.common;
 
 import io.polyglotted.common.model.MapResult;
-import io.polyglotted.common.model.MapResult.ImmutableResult;
 
 import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.util.MapRetriever.reqdStr;
@@ -15,23 +14,32 @@ import static io.polyglotted.elastic.common.MetaFields.PARENT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TIMESTAMP_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.readHeader;
 import static io.polyglotted.elastic.common.MetaFields.readKey;
+import static io.polyglotted.elastic.common.MetaFields.reqdId;
+import static io.polyglotted.elastic.common.MetaFields.reqdKey;
 
 @SuppressWarnings("unused")
 public enum Verbose {
     NONE() {
         @Override public <T> T buildFrom(MapResult source, T result) { return result; }
     },
+    ID(ID_FIELD) {
+        @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, immutableResult(ID_FIELD, reqdId(source))); }
+    },
     KEY(KEY_FIELD) {
-        @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, readPlainKey(source)); }
+        @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, immutableResult(KEY_FIELD, reqdKey(source))); }
     },
     MINIMAL(LINK_FIELD, MODEL_FIELD, PARENT_FIELD, ID_FIELD, TIMESTAMP_FIELD) {
         @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, readKey(source).result()); }
     },
     PARENT(PARENT_FIELD) {
-        @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, readParent(source)); }
+        @Override public <T> T buildFrom(MapResult source, T result) {
+            return addHeader(result, immutableResult(PARENT_FIELD, reqdStr(source, PARENT_FIELD)));
+        }
     },
     UNIQUE(ID_FIELD, KEY_FIELD) {
-        @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, readUnique(source)); }
+        @Override public <T> T buildFrom(MapResult source, T result) {
+            return addHeader(result, immutableResult(ID_FIELD, reqdId(source), KEY_FIELD, reqdKey(source)));
+        }
     },
     META(ALL_FIELDS) {
         @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, readHeader(source)); }
@@ -62,13 +70,5 @@ public enum Verbose {
         if (result instanceof MapResult) { ((MapResult) result).putAll(header); }
         else { fieldValue(result, "_meta", header); }
         return result;
-    }
-
-    private static ImmutableResult readParent(MapResult map) { return immutableResult(PARENT_FIELD, reqdStr(map, PARENT_FIELD)); }
-
-    private static ImmutableResult readPlainKey(MapResult map) { return immutableResult(KEY_FIELD, reqdStr(map, KEY_FIELD)); }
-
-    private static ImmutableResult readUnique(MapResult map) {
-        return immutableResult(ID_FIELD, reqdStr(map, ID_FIELD), KEY_FIELD, reqdStr(map, KEY_FIELD));
     }
 }

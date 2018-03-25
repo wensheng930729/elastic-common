@@ -1,6 +1,5 @@
 package io.polyglotted.elastic.admin;
 
-import com.google.common.base.Predicate;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.model.MapResult.ImmutableResult;
 import io.polyglotted.common.model.SortedMapResult;
@@ -8,22 +7,20 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
-import static com.google.common.base.Predicates.not;
-import static com.google.common.collect.Maps.filterKeys;
 import static io.polyglotted.common.model.SortedMapResult.treeResult;
 import static io.polyglotted.common.util.BaseSerializer.deserialize;
 import static io.polyglotted.common.util.BaseSerializer.serialize;
+import static io.polyglotted.common.util.CollUtil.filterKeysNeg;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.common.util.ResourceUtil.readResource;
 
-@SuppressWarnings("Guava")
+@SuppressWarnings({"unused", "WeakerAccess"})
 @RequiredArgsConstructor @EqualsAndHashCode
 public final class IndexSetting {
     private static final String DEF_ANALYSIS = readResource(IndexSetting.class, "def-analysis.json");
-    private static final Predicate<String> NAME_PREDICATE = "index_name"::equals;
     public final ImmutableResult mapResult;
 
-    public String createJson() { return serialize(filterKeys(mapResult, not(NAME_PREDICATE))); }
+    public String createJson() { return serialize(filterKeysNeg(mapResult, "index_name"::equals)); }
 
     public static IndexSetting with(int numberOfShards, int numberOfReplicas) { return settingBuilder(numberOfShards, numberOfReplicas).build(); }
 

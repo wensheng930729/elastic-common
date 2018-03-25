@@ -1,6 +1,5 @@
 package io.polyglotted.elastic.admin;
 
-import com.google.common.collect.ImmutableSet;
 import io.polyglotted.common.model.MapResult.ImmutableResult;
 import io.polyglotted.common.util.ListBuilder;
 import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
@@ -17,16 +16,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static com.google.common.collect.Collections2.filter;
-import static com.google.common.collect.Collections2.transform;
-import static com.google.common.collect.ImmutableSet.copyOf;
 import static io.polyglotted.common.model.MapResult.immutableResultBuilder;
+import static io.polyglotted.common.util.CollUtil.filterColl;
+import static io.polyglotted.common.util.CollUtil.transformColl;
+import static io.polyglotted.common.util.ListBuilder.immutableSet;
 import static io.polyglotted.elastic.admin.TypeSerializer.serializeType;
 import static io.polyglotted.elastic.common.MetaFields.ALL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.AUTO_COMPLETE_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.UNIQUE_FIELD;
 import static java.util.Collections.singleton;
 
+@SuppressWarnings({"unused", "WeakerAccess"})
 @ToString(includeFieldNames = false, doNotUseGetters = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Type {
@@ -37,7 +37,7 @@ public final class Type {
     public final boolean enableSource;
     public final boolean includeMeta;
     public final boolean excludeUniqueProps;
-    public final ImmutableSet<Field> fields;
+    public final Set<Field> fields;
     public final ImmutableResult meta;
 
     @Override public boolean equals(Object o) {
@@ -48,9 +48,9 @@ public final class Type {
 
     String mappingJson() { return serializeType(this); }
 
-    @SuppressWarnings("StaticPseudoFunctionalStyleMethod") List<String> sourceExcludes() {
+    List<String> sourceExcludes() {
         return ListBuilder.<String>immutableListBuilder().add(ALL_FIELD).add(AUTO_COMPLETE_FIELD).add(excludeUniqueProps ? UNIQUE_FIELD : null)
-            .addAll(transform(filter(fields, Field::excludeFromSrc), Field::field)).build();
+            .addAll(transformColl(filterColl(fields, Field::excludeFromSrc), Field::field)).build();
     }
 
     public static Builder typeBuilder() { return new Builder(); }
@@ -80,7 +80,7 @@ public final class Type {
         public Builder metaData(String name, Object value) { if (value != null) { metaData.put(name, value); } return this; }
 
         public Type build() {
-            return new Type(parent, strict, enabled, enableSource, includeMeta, excludeUniqueProps, copyOf(fields), metaData.immutable());
+            return new Type(parent, strict, enabled, enableSource, includeMeta, excludeUniqueProps, immutableSet(fields), metaData.immutable());
         }
     }
 }

@@ -3,7 +3,6 @@ package io.polyglotted.elastic.common;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
 
-import static com.google.common.base.Strings.nullToEmpty;
 import static io.polyglotted.common.model.MapResult.immutableResultBuilder;
 import static io.polyglotted.common.model.MapResult.simpleResult;
 import static io.polyglotted.common.util.Assertions.checkContains;
@@ -14,6 +13,7 @@ import static io.polyglotted.common.util.MapRetriever.optValue;
 import static io.polyglotted.common.util.MapRetriever.reqdStr;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.common.util.ReflectionUtil.safeFieldValue;
+import static io.polyglotted.common.util.StrUtil.nullAsEmpty;
 import static io.polyglotted.common.util.UrnUtil.safeUrnOf;
 import static io.polyglotted.common.util.UrnUtil.urnOf;
 import static io.polyglotted.common.util.UuidUtil.genUuidStr;
@@ -77,7 +77,7 @@ public abstract class MetaFields {
 
     public static String keyString(MapResult map) { return urnOf(model(map), id(map)); }
 
-    public static String uniqueId(MapResult map) { return safeUrnOf(model(map), parent(map), nullToEmpty(id(map)), String.valueOf(timestamp(map))); }
+    public static String uniqueId(MapResult map) { return safeUrnOf(model(map), parent(map), nullAsEmpty(id(map)), String.valueOf(timestamp(map))); }
 
     public static String genUniqueId(String model, String id, long timestamp) { return genUuidStr(safeUrnOf(model, id, String.valueOf(timestamp))); }
 

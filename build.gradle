@@ -17,8 +17,11 @@ idea {
     }
 }
 repositories {
-    mavenCentral()
     mavenLocal()
+    mavenCentral()
+    maven {
+        url "https://oss.sonatype.org/content/repositories/releases/"
+    }
 }
 
 ext {
@@ -31,7 +34,7 @@ ext {
     log4jVersion = '2.10.0'
     lombokVersion = '1.16.20'
     spatial4jVersion = '0.6'
-    utilsCommonVersion='1.0.10'
+    utilsCommonVersion='1.0.12'
 }
 dependencies {
     compileOnly "org.projectlombok:lombok:${lombokVersion}"

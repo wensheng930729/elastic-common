@@ -9,7 +9,7 @@ import org.elasticsearch.action.index.IndexRequest;
 
 import java.util.Map;
 
-import static com.google.common.collect.Maps.filterKeys;
+import static io.polyglotted.common.util.CollUtil.filterKeys;
 import static io.polyglotted.elastic.common.MetaFields.ANCESTOR_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.addMeta;
 import static io.polyglotted.elastic.common.MetaFields.timestamp;

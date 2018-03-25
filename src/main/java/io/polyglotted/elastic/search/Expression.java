@@ -6,10 +6,10 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.Objects;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.util.BaseSerializer.serialize;
 import static io.polyglotted.common.util.ListBuilder.immutableList;
+import static io.polyglotted.common.util.StrUtil.nullOrEmpty;
 import static java.util.Objects.requireNonNull;
 
 @RequiredArgsConstructor
@@ -50,5 +50,5 @@ public final class Expression {
 
     @Override public int hashCode() { return Objects.hash(operation, label, args); }
 
-    @Override public String toString() { return (isNullOrEmpty(label) ? "" : label + " ") + operation + (args.isEmpty() ? "" : " " + args); }
+    @Override public String toString() { return (nullOrEmpty(label) ? "" : label + " ") + operation + (args.isEmpty() ? "" : " " + args); }
 }

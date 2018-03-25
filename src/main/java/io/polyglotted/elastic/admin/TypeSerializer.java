@@ -8,12 +8,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeSet;
+import java.util.Set;
 
-import static com.google.common.collect.Iterables.concat;
-import static com.google.common.collect.Maps.uniqueIndex;
-import static com.google.common.collect.Sets.newTreeSet;
+import static io.polyglotted.common.util.CollUtil.concat;
+import static io.polyglotted.common.util.CollUtil.uniqueIndex;
 import static io.polyglotted.common.util.ListBuilder.immutableList;
+import static io.polyglotted.common.util.ListBuilder.immutableSortedSet;
 import static io.polyglotted.elastic.admin.Field.keywordField;
 import static io.polyglotted.elastic.admin.Field.simpleField;
 import static io.polyglotted.elastic.admin.Field.textField;
@@ -57,8 +57,8 @@ abstract class TypeSerializer {
         return gen.endObject().endObject();
     }
 
-    private static TreeSet<Field> typeValues(Type type) {
-        return type.includeMeta ? newTreeSet(concat(metaFields(), type.fields)) : newTreeSet(type.fields);
+    private static Set<Field> typeValues(Type type) {
+        return type.includeMeta ? immutableSortedSet(concat(metaFields(), type.fields)) : immutableSortedSet(type.fields);
     }
 
     private static void writeFields(String name, Map<String, Field> fields, XContentBuilder gen) throws IOException {

@@ -16,9 +16,8 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import java.util.List;
 import java.util.Map;
 
-import static com.google.common.collect.Maps.filterKeys;
-import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.model.MapResult.simpleResult;
+import static io.polyglotted.common.util.CollUtil.filterKeys;
 import static io.polyglotted.common.util.ListBuilder.immutableListBuilder;
 import static io.polyglotted.elastic.common.MetaFields.HIGHLTGHT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.ID_FIELD;
@@ -34,7 +33,7 @@ public interface ResultBuilder<T> extends ResponseBuilder<T> {
     }
 
     default T buildFromHit(SearchHit hit, Verbose verbose) {
-        T result = buildVerbose(requireNonNull(hit).hasSource() ? immutableResult(hit.getSourceAsMap()) : immutableResult(), verbose);
+        T result = buildVerbose(requireNonNull(hit).hasSource() ? simpleResult(hit.getSourceAsMap()) : simpleResult(), verbose);
         Map<String, HighlightField> highlightFields = hit.getHighlightFields();
         if (result instanceof MapResult && !highlightFields.isEmpty()) {
 

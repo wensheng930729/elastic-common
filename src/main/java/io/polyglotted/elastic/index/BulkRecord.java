@@ -1,6 +1,5 @@
 package io.polyglotted.elastic.index;
 
-import com.google.common.collect.ImmutableList;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.util.ListBuilder.ImmutableListBuilder;
 import io.polyglotted.elastic.common.EsAuth;
@@ -15,7 +14,7 @@ import org.elasticsearch.action.bulk.BulkRequest;
 import java.util.List;
 import java.util.Map;
 
-import static com.google.common.collect.Iterables.transform;
+import static io.polyglotted.common.util.CollUtil.transform;
 import static io.polyglotted.common.util.ListBuilder.immutableListBuilder;
 import static io.polyglotted.common.util.MapBuilder.simpleMap;
 import static io.polyglotted.elastic.common.MetaFields.id;
@@ -77,7 +76,7 @@ public final class BulkRecord {
         }
 
         public BulkRecord build() {
-            ImmutableList<IndexRecord> recordsList = records.build();
+            List<IndexRecord> recordsList = records.build();
             if (notification != null) { recordsList.forEach(record -> notification.key(record.id, record.key())); }
             return new BulkRecord(model, timestamp, recordsList, ignoreErrors, validator, notification);
         }

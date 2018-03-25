@@ -43,7 +43,7 @@ public final class Admin implements AutoCloseable {
         String createIndex(EsAuth auth, CreateIndexRequest request);
         void dropIndex(EsAuth auth, String index);
         MapResult clusterHealth(EsAuth auth);
-        void buildPipeline(EsAuth auth, String id, String resource);
+        void putPipeline(EsAuth auth, String id, String resource);
         boolean pipelineExists(EsAuth auth, String id);
     } //@Formatter:on
 }

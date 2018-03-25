@@ -1,15 +1,13 @@
 package io.polyglotted.elastic.search;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static com.google.common.collect.Iterables.transform;
-import static io.polyglotted.common.util.ListBuilder.immutableList;
+import static io.polyglotted.common.util.CollUtil.transform;
+import static io.polyglotted.common.util.ListBuilder.immutableListBuilder;
+import static java.util.Arrays.asList;
 
 abstract class AggsFlattener {
 
@@ -38,14 +36,11 @@ abstract class AggsFlattener {
     }
 
     private static List<Object> build(String[] strings, long docCount) {
-        final List<Object> values = Lists.newArrayList((Object[]) strings);
-        values.add(docCount);
-        return immutableList(values);
+        return immutableListBuilder().addAll(asList((Object[]) strings)).add(docCount).build();
     }
 
     private static List<Object> build(String[] strings, Iterable<Map.Entry<String, Object>> aggs) {
-        final List<Object> values = Lists.newArrayList((Object[]) strings);
-        Iterables.addAll(values, transform(aggs, Map.Entry::getValue));
-        return immutableList(values);
+        return immutableListBuilder().addAll(asList((Object[]) strings))
+            .addAll(transform(aggs, Map.Entry::getValue)).build();
     }
 }
