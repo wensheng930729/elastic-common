@@ -90,7 +90,7 @@ abstract class TypeSerializer {
         return immutableList(
             textField(ALL_FIELD, "allAnalyzer").build(),
             keywordField(ANCESTOR_FIELD).build(),
-            textField(AUTO_COMPLETE_FIELD, "autoAnalyzer").build(),
+            textField(AUTO_COMPLETE_FIELD, "autoCompleteAnalyzer").build(),
             simpleField(EXPIRY_FIELD, DATE).build(),
             keywordField(ID_FIELD).normalise().build(),
             keywordField(KEY_FIELD).normalise().build(),

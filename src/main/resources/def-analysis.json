@@ -12,9 +12,19 @@
       "pattern": "[^\\pL]",
       "replacement": ""
     },
+    "alphanum": {
+      "type": "pattern_replace",
+      "pattern": "[^(\\d|\\pL)]",
+      "replacement": ""
+    },
     "digitonly": {
       "type": "pattern_replace",
       "pattern": "[^\\d]",
+      "replacement": ""
+    },
+    "rfc5322": {
+      "type": "pattern_replace",
+      "pattern": "[^(\\d\\pL!#$%&'*+-/=?^_`{|}~@)]",
       "replacement": ""
     },
     "zeroremove": {
@@ -35,26 +45,39 @@
         "asciifolding"
       ]
     },
-    "pathAnalyzer": {
-      "tokenizer": "path_hierarchy",
-      "filter": [
-        "lowercase"
-      ]
-    },
-    "normAnalyzer": {
-      "type": "custom",
-      "tokenizer": "keyword",
-      "filter": [
-        "lowercase",
-        "asciifolding"
-      ]
-    },
     "alphaAnalyzer": {
       "type": "custom",
       "tokenizer": "keyword",
       "char_filter": [
         "alphaonly"
       ],
+      "filter": [
+        "lowercase",
+        "asciifolding"
+      ]
+    },
+    "alphanumAnalyzer": {
+      "type": "custom",
+      "tokenizer": "keyword",
+      "char_filter": [
+        "alphanum"
+      ],
+      "filter": [
+        "lowercase",
+        "asciifolding"
+      ]
+    },
+    "autoCompleteAnalyzer": {
+      "type": "custom",
+      "tokenizer": "whitespace",
+      "filter": [
+        "lowercase",
+        "autocomplete"
+      ]
+    },
+    "normAnalyzer": {
+      "type": "custom",
+      "tokenizer": "keyword",
       "filter": [
         "lowercase",
         "asciifolding"
@@ -68,12 +91,21 @@
         "zeroremove"
       ]
     },
-    "autoAnalyzer": {
+    "pathAnalyzer": {
+      "tokenizer": "path_hierarchy",
+      "filter": [
+        "lowercase"
+      ]
+    },
+    "rfc5322Analyzer": {
       "type": "custom",
-      "tokenizer": "whitespace",
+      "tokenizer": "keyword",
+      "char_filter": [
+        "rfc5322"
+      ],
       "filter": [
         "lowercase",
-        "autocomplete"
+        "asciifolding"
       ]
     }
   }
