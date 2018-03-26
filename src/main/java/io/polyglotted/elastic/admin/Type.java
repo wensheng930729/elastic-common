@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 import static io.polyglotted.common.model.MapResult.immutableResultBuilder;
 import static io.polyglotted.common.util.CollUtil.filterColl;
@@ -46,7 +47,7 @@ public final class Type {
 
     @Override public int hashCode() { return 29 * mappingJson().hashCode(); }
 
-    String mappingJson() { return serializeType(this); }
+    public String mappingJson() { return serializeType(this); }
 
     List<String> sourceExcludes() {
         return ListBuilder.<String>immutableListBuilder().add(ALL_FIELD).add(AUTO_COMPLETE_FIELD).add(excludeUniqueProps ? UNIQUE_FIELD : null)
@@ -77,7 +78,9 @@ public final class Type {
 
         public Builder fields(Collection<Field> fields) { this.fields.removeAll(fields); this.fields.addAll(fields); return this; }
 
-        public Builder metaData(String name, Object value) { if (value != null) { metaData.put(name, value); } return this; }
+        public Builder metaData(String name, Object value) { metaData.put(name, value); return this; }
+
+        public Builder with(Consumer<Builder> consumer) { consumer.accept(this); return this; }
 
         public Type build() {
             return new Type(parent, strict, enabled, enableSource, includeMeta, excludeUniqueProps, immutableSet(fields), metaData.immutable());
