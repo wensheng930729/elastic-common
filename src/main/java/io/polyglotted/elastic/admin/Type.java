@@ -22,9 +22,7 @@ import static io.polyglotted.common.util.CollUtil.filterColl;
 import static io.polyglotted.common.util.CollUtil.transformColl;
 import static io.polyglotted.common.util.ListBuilder.immutableSet;
 import static io.polyglotted.elastic.admin.TypeSerializer.serializeType;
-import static io.polyglotted.elastic.common.MetaFields.ALL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.AUTO_COMPLETE_FIELD;
-import static io.polyglotted.elastic.common.MetaFields.UNIQUE_FIELD;
 import static java.util.Collections.singleton;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
@@ -37,9 +35,9 @@ public final class Type {
     public final boolean enabled;
     public final boolean enableSource;
     public final boolean includeMeta;
-    public final boolean excludeUniqueProps;
     public final Set<Field> fields;
     public final ImmutableResult meta;
+    public final Set<String> srcExcludes;
 
     @Override public boolean equals(Object o) {
         return this == o || (!(o == null || getClass() != o.getClass()) && mappingJson().equals(((Type) o).mappingJson()));
@@ -50,11 +48,11 @@ public final class Type {
     public String mappingJson() { return serializeType(this); }
 
     List<String> sourceExcludes() {
-        return ListBuilder.<String>immutableListBuilder().add(ALL_FIELD).add(AUTO_COMPLETE_FIELD).add(excludeUniqueProps ? UNIQUE_FIELD : null)
+        return ListBuilder.<String>immutableListBuilder().addAll(srcExcludes)
             .addAll(transformColl(filterColl(fields, Field::excludeFromSrc), Field::field)).build();
     }
 
-    public static Builder typeBuilder() { return new Builder(); }
+    public static Builder typeBuilder() { return new Builder().exclude(AUTO_COMPLETE_FIELD); }
 
     @Setter @Accessors(fluent = true, chain = true)
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -64,13 +62,11 @@ public final class Type {
         private boolean enabled = true;
         private boolean enableSource = true;
         private boolean includeMeta = true;
-        private boolean excludeUniqueProps = false;
         private final Set<Field> fields = new TreeSet<>();
         private final ImmutableMapBuilder<String, Object> metaData = immutableResultBuilder();
+        private final Set<String> srcExcludes = new TreeSet<>();
 
         public Builder strict() { return strict(true); }
-
-        public Builder excludeUniqueProps() { return excludeUniqueProps(true); }
 
         public Builder field(FieldBuilder builder) { return field(builder.build()); }
 
@@ -78,12 +74,14 @@ public final class Type {
 
         public Builder fields(Collection<Field> fields) { this.fields.removeAll(fields); this.fields.addAll(fields); return this; }
 
+        public Builder exclude(String excl) { this.srcExcludes.add(excl); return this; }
+
         public Builder metaData(String name, Object value) { metaData.put(name, value); return this; }
 
         public Builder with(Consumer<Builder> consumer) { consumer.accept(this); return this; }
 
         public Type build() {
-            return new Type(parent, strict, enabled, enableSource, includeMeta, excludeUniqueProps, immutableSet(fields), metaData.immutable());
+            return new Type(parent, strict, enabled, enableSource, includeMeta, immutableSet(fields), metaData.immutable(), immutableSet(srcExcludes));
         }
     }
 }

@@ -24,8 +24,10 @@ public final class IndexSetting {
 
     public static IndexSetting with(int numberOfShards, int numberOfReplicas) { return settingBuilder(numberOfShards, numberOfReplicas).build(); }
 
-    public static IndexSetting autoReplicate() {
-        return settingBuilder().numberOfShards(1).autoExpandReplicas().analysis(DEF_ANALYSIS).ignoreMalformed().disableDynamicMapping().build();
+    public static IndexSetting autoReplicate() { return autoReplicate(DEF_ANALYSIS); }
+
+    public static IndexSetting autoReplicate(String analysis) {
+        return settingBuilder().numberOfShards(1).autoExpandReplicas().analysis(analysis).ignoreMalformed().disableDynamicMapping().build();
     }
 
     public static Builder settingBuilder(int numShards, int numReplicas) { return settingBuilder(numShards, numReplicas, DEF_ANALYSIS); }
