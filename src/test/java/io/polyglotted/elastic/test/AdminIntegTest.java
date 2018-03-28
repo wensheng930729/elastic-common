@@ -92,7 +92,7 @@ public class AdminIntegTest {
             .field(nonIndexField("nonIndexedText", TEXT).copyTo("copyField"))
             .field(textField("textField", "standard"))
             .field(textField("rawField", "standard").addRawFields())
-            .field(textField("copyField", "allAnalyzer"))
+            .field(textField("copyField", "all"))
             .field(nestedField("emptyNestedField"))
             .field(nestedField("fullyNested").properties(asList(keywordField("effect"),
                 nestedField("constraint").properties(asList(keywordField("attr").copyTo("copyField"), keywordField("func"))))))

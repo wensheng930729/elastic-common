@@ -1,33 +1,33 @@
 {
   "filter": {
-    "autocomplete": {
+    "autocomplete_filter": {
       "type": "edge_ngram",
       "min_gram": "1",
       "max_gram": "20"
     }
   },
   "char_filter": {
-    "alphaonly": {
+    "alphaonly_filter": {
       "type": "pattern_replace",
       "pattern": "[^\\pL]",
       "replacement": ""
     },
-    "alphanum": {
+    "alphanum_filter": {
       "type": "pattern_replace",
       "pattern": "[^(\\d|\\pL)]",
       "replacement": ""
     },
-    "digitonly": {
+    "digitonly_filter": {
       "type": "pattern_replace",
       "pattern": "[^\\d]",
       "replacement": ""
     },
-    "rfc5322": {
+    "rfc5322_filter": {
       "type": "pattern_replace",
       "pattern": "[^(\\d\\pL!#$%&'*+-/=?^_`{|}~@)]",
       "replacement": ""
     },
-    "zeroremove": {
+    "zeroremove_filter": {
       "type": "pattern_replace",
       "pattern": "\\b0+",
       "replacement": ""
@@ -37,7 +37,7 @@
     "default": {
       "type": "standard"
     },
-    "allAnalyzer": {
+    "all": {
       "type": "custom",
       "tokenizer": "whitespace",
       "filter": [
@@ -45,37 +45,37 @@
         "asciifolding"
       ]
     },
-    "alphaAnalyzer": {
+    "alpha": {
       "type": "custom",
       "tokenizer": "keyword",
       "char_filter": [
-        "alphaonly"
+        "alphaonly_filter"
       ],
       "filter": [
         "lowercase",
         "asciifolding"
       ]
     },
-    "alphanumAnalyzer": {
+    "alphanum": {
       "type": "custom",
       "tokenizer": "keyword",
       "char_filter": [
-        "alphanum"
+        "alphanum_filter"
       ],
       "filter": [
         "lowercase",
         "asciifolding"
       ]
     },
-    "autoCompleteAnalyzer": {
+    "autocomplete": {
       "type": "custom",
       "tokenizer": "whitespace",
       "filter": [
         "lowercase",
-        "autocomplete"
+        "autocomplete_filter"
       ]
     },
-    "normAnalyzer": {
+    "norm": {
       "type": "custom",
       "tokenizer": "keyword",
       "filter": [
@@ -83,25 +83,25 @@
         "asciifolding"
       ]
     },
-    "numAnalyzer": {
+    "num": {
       "type": "custom",
       "tokenizer": "keyword",
       "char_filter": [
-        "digitonly",
-        "zeroremove"
+        "digitonly_filter",
+        "zeroremove_filter"
       ]
     },
-    "pathAnalyzer": {
+    "path": {
       "tokenizer": "path_hierarchy",
       "filter": [
         "lowercase"
       ]
     },
-    "rfc5322Analyzer": {
+    "rfc5322": {
       "type": "custom",
       "tokenizer": "keyword",
       "char_filter": [
-        "rfc5322"
+        "rfc5322_filter"
       ],
       "filter": [
         "lowercase",

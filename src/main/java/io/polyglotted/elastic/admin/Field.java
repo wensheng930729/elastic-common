@@ -91,9 +91,9 @@ public final class Field implements Comparable<Field> {
 
         public FieldBuilder properties(Map<String, FieldBuilder> builders) { this.properties.putAll(builders); return this; }
 
-        public FieldBuilder isAPath() { return addField("tree", "pathAnalyzer"); }
+        public FieldBuilder isAPath() { return addField("tree", "path"); }
 
-        public FieldBuilder normalise() { return addField("text", "normAnalyzer"); }
+        public FieldBuilder normalise() { return addField("text", "norm"); }
 
         public FieldBuilder addRawFields() { hasFields(true); return mapping(keywordField("raw")); }
 

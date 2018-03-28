@@ -88,9 +88,9 @@ abstract class TypeSerializer {
 
     private static List<Field> metaFields() {
         return immutableList(
-            textField(ALL_FIELD, "allAnalyzer").build(),
+            textField(ALL_FIELD, "all").build(),
             keywordField(ANCESTOR_FIELD).build(),
-            textField(AUTO_COMPLETE_FIELD, "autoCompleteAnalyzer").build(),
+            textField(AUTO_COMPLETE_FIELD, "autocomplete").build(),
             simpleField(EXPIRY_FIELD, DATE).build(),
             keywordField(ID_FIELD).normalise().build(),
             keywordField(KEY_FIELD).normalise().build(),
