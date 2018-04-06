@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 
 import static io.polyglotted.common.model.MapResult.simpleResult;
-import static io.polyglotted.common.util.EncodingUtil.urlEncode;
 import static io.polyglotted.common.util.MapBuilder.immutableMap;
 import static io.polyglotted.common.util.StrUtil.nullOrEmpty;
 import static io.polyglotted.elastic.common.MetaFields.keyString;
@@ -57,7 +56,7 @@ public abstract class Finder {
     }
 
     @SneakyThrows public static MapResult findBy(ElasticClient client, EsAuth auth, String repo, String model, String id, String parent) {
-        GetResponse response = client.get(auth, new GetRequest(repo, "_doc", urlEncode(id)).routing(parent));
+        GetResponse response = client.get(auth, new GetRequest(repo, "_doc", id).routing(parent));
         return response.isExists() && !response.isSourceEmpty() ? simpleResult(response.getSource()) : null;
     }
 
