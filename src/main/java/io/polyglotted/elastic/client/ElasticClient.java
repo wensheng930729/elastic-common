@@ -68,10 +68,11 @@ public interface ElasticClient extends Closeable {
 
     ClearScrollResponse clearScroll(EsAuth auth, ClearScrollRequest request);
 
-    void xpackPut(EsAuth auth, XPackApi api, String id, String body);
+    MapResult xpackPut(EsAuth auth, XPackApi api, String id, String body);
 
     MapResult xpackGet(EsAuth auth, XPackApi api, String id);
 
     void xpackDelete(EsAuth auth, XPackApi api, String id);
 
+    void xpackDelete(EsAuth auth, XPackApi api, String id, String body);
 }

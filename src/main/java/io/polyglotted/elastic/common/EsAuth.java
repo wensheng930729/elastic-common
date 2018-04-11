@@ -17,6 +17,8 @@ public class EsAuth {
     @NonNull public final String creds;
     @NonNull public final AuthType type;
 
+    public static EsAuth basicAuth(String user, String passwd) { return new EsAuth(user, passwd, AuthType.BASIC); }
+
     public static EsAuth bearerToken(String token) { return new EsAuth(null, token, AuthType.BEARER); }
 
     public Header header() { return new BasicHeader(AUTHORIZATION, type.header(this)); }

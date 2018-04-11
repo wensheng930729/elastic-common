@@ -162,8 +162,9 @@ public class ElasticRestClient implements ElasticClient {
         try { return internalClient.clearScroll(request, auth.header()); } catch (IOException ioe) { throw throwEx("clearScroll failed", ioe); }
     }
 
-    @Override public void xpackPut(EsAuth auth, XPackApi api, String id, String body) {
-        simplePut(auth, api.type, api.endpoint + id, body, api.name().toLowerCase() + "Put");
+    @Override public MapResult xpackPut(EsAuth auth, XPackApi api, String id, String body) {
+        String putNotFound = simplePut(auth, api.type, api.endpoint + id, body, api.name().toLowerCase() + "Put");
+        return putNotFound == null ? immutableResult() : deserialize(putNotFound);
     }
 
     @Override public MapResult xpackGet(EsAuth auth, XPackApi api, String id) {
@@ -173,6 +174,12 @@ public class ElasticRestClient implements ElasticClient {
 
     @Override public void xpackDelete(EsAuth auth, XPackApi api, String id) {
         simpleDelete(auth, api.endpoint + id, api.name().toLowerCase() + "Delete");
+    }
+
+    @Override public void xpackDelete(EsAuth auth, XPackApi api, String id, String body) {
+        try {
+            performCliRequest(DELETE, api.endpoint + id, emptyMap(), new StringEntity(body, APPLICATION_JSON), auth.header());
+        } catch (Exception ioe) { throw throwEx(api.name().toLowerCase() + "Delete failed", ioe); }
     }
 
     private String simpleGet(EsAuth auth, String endpoint, String methodName) {
@@ -187,9 +194,9 @@ public class ElasticRestClient implements ElasticClient {
         throw throwEx(methodName + " failed", throwable);
     }
 
-    private void simplePut(EsAuth auth, HttpReqType reqType, String endpoint, String body, String methodName) {
+    private String simplePut(EsAuth auth, HttpReqType reqType, String endpoint, String body, String methodName) {
         try {
-            performCliRequest(reqType, endpoint, emptyMap(), new StringEntity(body, APPLICATION_JSON), auth.header());
+            return performCliRequest(reqType, endpoint, emptyMap(), new StringEntity(body, APPLICATION_JSON), auth.header());
         } catch (Exception ioe) { throw throwEx(methodName + " failed", ioe); }
     }
 

@@ -22,10 +22,10 @@ import static io.polyglotted.common.util.MapBuilder.immutableMap;
 import static io.polyglotted.common.util.StrUtil.nullOrEmpty;
 import static io.polyglotted.elastic.common.MetaFields.keyString;
 
-@Slf4j @SuppressWarnings("unused")
+@Slf4j @SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class Finder {
 
-    static Map<String, MapResult> findAll(ElasticClient client, EsAuth auth, List<IndexRecord.Builder> builders) {
+    public static Map<String, MapResult> findAll(ElasticClient client, EsAuth auth, List<IndexRecord.Builder> builders) {
         MultiGetRequest multiGetRequest = new MultiGetRequest();
         for (IndexRecord.Builder rec : builders) {
             if (nullOrEmpty(rec.id)) continue;

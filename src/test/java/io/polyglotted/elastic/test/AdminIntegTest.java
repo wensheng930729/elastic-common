@@ -42,14 +42,14 @@ import static io.polyglotted.elastic.admin.IndexSetting.settingBuilder;
 import static io.polyglotted.elastic.admin.Type.typeBuilder;
 import static io.polyglotted.elastic.client.ElasticSettings.elasticSettings;
 import static io.polyglotted.elastic.client.HighLevelConnector.highLevelClient;
-import static io.polyglotted.elastic.common.EsAuth.AuthType.BASIC;
+import static io.polyglotted.elastic.common.EsAuth.basicAuth;
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 public class AdminIntegTest {
     private static final Map<String, String> MESSAGES = readResourceAsMap(AdminIntegTest.class, "admin-integ.txt");
-    private static final EsAuth ES_AUTH = new EsAuth("elastic", "SteelEye", BASIC);
+    private static final EsAuth ES_AUTH = basicAuth("elastic", "SteelEye");
 
     @Test
     public void createIndexSuccess() throws Exception {

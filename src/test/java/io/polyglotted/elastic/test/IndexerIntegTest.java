@@ -23,7 +23,7 @@ import static io.polyglotted.elastic.admin.IndexSetting.with;
 import static io.polyglotted.elastic.admin.Type.typeBuilder;
 import static io.polyglotted.elastic.client.ElasticSettings.elasticSettings;
 import static io.polyglotted.elastic.client.HighLevelConnector.highLevelClient;
-import static io.polyglotted.elastic.common.EsAuth.AuthType.BASIC;
+import static io.polyglotted.elastic.common.EsAuth.basicAuth;
 import static io.polyglotted.elastic.common.MetaFields.ANCESTOR_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.EXPIRY_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.ID_FIELD;
@@ -47,7 +47,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.fail;
 
 public class IndexerIntegTest {
-    private static final EsAuth ES_AUTH = new EsAuth("elastic", "SteelEye", BASIC);
+    private static final EsAuth ES_AUTH = basicAuth("elastic", "SteelEye");
     private static final long T1 = 1000;
     private static final long T1_5 = 1500;
     private static final long T2 = 2000;

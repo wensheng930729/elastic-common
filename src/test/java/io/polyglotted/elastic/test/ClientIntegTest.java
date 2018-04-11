@@ -10,13 +10,13 @@ import org.junit.Test;
 import static io.polyglotted.common.util.ResourceUtil.readResource;
 import static io.polyglotted.elastic.client.ElasticSettings.elasticSettings;
 import static io.polyglotted.elastic.client.HighLevelConnector.highLevelClient;
-import static io.polyglotted.elastic.common.EsAuth.AuthType.BASIC;
+import static io.polyglotted.elastic.common.EsAuth.basicAuth;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 public class ClientIntegTest {
-    private static final EsAuth ES_AUTH = new EsAuth("elastic", "SteelEye", BASIC);
+    private static final EsAuth ES_AUTH = basicAuth("elastic", "SteelEye");
 
     @Test
     public void testHighLevelClient() throws Exception {

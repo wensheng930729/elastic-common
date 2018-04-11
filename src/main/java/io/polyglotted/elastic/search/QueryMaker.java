@@ -53,7 +53,9 @@ public abstract class QueryMaker {
         return trace(new SearchRequest(repo).indicesOptions(lenientExpandOpen()).source(source));
     }
 
-    static SearchScrollRequest scrollRequest(String scrollId, TimeValue scrollTime) { return new SearchScrollRequest(scrollId).scroll(scrollTime); }
+    public static SearchScrollRequest scrollRequest(String scrollId, TimeValue scrollTime) {
+        return new SearchScrollRequest(scrollId).scroll(scrollTime);
+    }
 
     @SneakyThrows
     private static SearchRequest trace(SearchRequest searchRequest) {

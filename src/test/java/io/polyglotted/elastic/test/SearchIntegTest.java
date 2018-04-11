@@ -32,7 +32,7 @@ import static io.polyglotted.common.util.ResourceUtil.readResourceAsMap;
 import static io.polyglotted.elastic.admin.Admin.uniqueIndexName;
 import static io.polyglotted.elastic.client.ElasticSettings.elasticSettings;
 import static io.polyglotted.elastic.client.HighLevelConnector.highLevelClient;
-import static io.polyglotted.elastic.common.EsAuth.AuthType.BASIC;
+import static io.polyglotted.elastic.common.EsAuth.basicAuth;
 import static io.polyglotted.elastic.common.Verbose.ID;
 import static io.polyglotted.elastic.common.Verbose.NONE;
 import static io.polyglotted.elastic.index.BulkRecord.bulkBuilder;
@@ -49,7 +49,7 @@ import static org.junit.Assert.assertThat;
 
 public class SearchIntegTest {
     private static final Map<String, String> MESSAGES = readResourceAsMap(SearchIntegTest.class, "search-integ.txt");
-    private static final EsAuth ES_AUTH = new EsAuth("elastic", "SteelEye", BASIC);
+    private static final EsAuth ES_AUTH = basicAuth("elastic", "SteelEye");
     private ElasticClient client;
     private Admin admin;
     private Indexer indexer;
