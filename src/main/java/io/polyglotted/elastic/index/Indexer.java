@@ -26,7 +26,6 @@ import static io.polyglotted.elastic.common.MetaFields.ID_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.MODEL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.RESULT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TIMESTAMP_FIELD;
-import static io.polyglotted.elastic.index.ServerException.serverException;
 import static io.polyglotted.elastic.index.Validator.STRICT;
 import static org.elasticsearch.action.DocWriteRequest.OpType.CREATE;
 import static org.elasticsearch.rest.RestStatus.CREATED;
@@ -40,7 +39,7 @@ public final class Indexer {
 
     public void lockTheIndexOrFail(EsAuth auth, String index, String keyString, boolean refresh) {
         IndexResponse response = client.index(auth, new IndexRequest(index, "_doc", keyString).opType(CREATE).source(immutableMap("i", 1)));
-        if (response.status() != CREATED) { throw serverException("response failed while locking the keyString " + keyString); }
+        if (response.status() != CREATED) { throw new IndexerException("response failed while locking the keyString " + keyString); }
         if (refresh) { client.forceRefresh(auth, index); }
     }
 
