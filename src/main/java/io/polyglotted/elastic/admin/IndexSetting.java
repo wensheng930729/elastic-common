@@ -27,7 +27,7 @@ public final class IndexSetting {
     public static IndexSetting autoReplicate() { return autoReplicate(DEF_ANALYSIS); }
 
     public static IndexSetting autoReplicate(String analysis) {
-        return settingBuilder().numberOfShards(1).autoExpandReplicas().analysis(analysis).ignoreMalformed().disableDynamicMapping().build();
+        return settingBuilder().numberOfShards(1).autoExpandReplicas().analysis(analysis).ignoreMalformed().build();
     }
 
     public static Builder settingBuilder(int numShards, int numReplicas) { return settingBuilder(numShards, numReplicas, DEF_ANALYSIS); }
@@ -49,8 +49,6 @@ public final class IndexSetting {
         public Builder refreshInterval(long refreshInterval) { treeResult.put("refresh_interval", refreshInterval); return this; }
 
         public Builder ignoreMalformed() { treeResult.putIfAbsent("mapping.ignore_malformed", true); return this; }
-
-        public Builder disableDynamicMapping() { treeResult.putIfAbsent("mapper.dynamic", false); return this; }
 
         public Builder autoExpandReplicas() { treeResult.putIfAbsent("auto_expand_replicas", "0-all"); return this; }
 

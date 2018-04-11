@@ -18,7 +18,6 @@ import static io.polyglotted.elastic.admin.Field.keywordField;
 import static io.polyglotted.elastic.admin.Field.simpleField;
 import static io.polyglotted.elastic.admin.Field.textField;
 import static io.polyglotted.elastic.admin.FieldType.DATE;
-import static io.polyglotted.elastic.admin.FieldType.LONG;
 import static io.polyglotted.elastic.admin.FieldType.OBJECT;
 import static io.polyglotted.elastic.common.MetaFields.ALL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.ANCESTOR_FIELD;
@@ -29,7 +28,6 @@ import static io.polyglotted.elastic.common.MetaFields.KEY_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.LINK_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.MODEL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.PARENT_FIELD;
-import static io.polyglotted.elastic.common.MetaFields.SIZE_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.STATUS_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TIMESTAMP_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TRAITFQN_FIELD;
@@ -38,9 +36,10 @@ import static io.polyglotted.elastic.common.MetaFields.UNIQUE_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.UPDATER_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.USER_FIELD;
 
-abstract class TypeSerializer {
+@SuppressWarnings("WeakerAccess")
+public abstract class TypeSerializer {
 
-    @SneakyThrows static String serializeType(Type type) { return writeType(type, XContentFactory.jsonBuilder()).string(); }
+    @SneakyThrows public static String serializeType(Type type) { return writeType(type, XContentFactory.jsonBuilder()).string(); }
 
     private static XContentBuilder writeType(Type type, XContentBuilder gen) throws IOException {
         gen.startObject().field(type.type).startObject();
@@ -50,6 +49,7 @@ abstract class TypeSerializer {
             if (!type.meta.isEmpty()) { gen.field("_meta", type.meta); }
             if (!type.enableSource) { gen.field("_source").startObject().field("enabled", false).endObject(); }
             else {
+                if (type.enableSize) { gen.field("_size").startObject().field("enabled", true).endObject(); }
                 if (type.includeMeta) { gen.field("_source").startObject().field("excludes", type.sourceExcludes()).endObject(); }
                 writeFields("properties", uniqueIndex(typeValues(type), Field::field), gen);
             }
@@ -97,7 +97,6 @@ abstract class TypeSerializer {
             keywordField(LINK_FIELD).build(),
             keywordField(MODEL_FIELD).normalise().build(),
             keywordField(PARENT_FIELD).build(),
-            simpleField(SIZE_FIELD, LONG).build(),
             keywordField(STATUS_FIELD).build(),
             simpleField(TIMESTAMP_FIELD, DATE).build(),
             keywordField(TRAITFQN_FIELD).build(),

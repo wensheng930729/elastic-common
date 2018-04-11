@@ -52,9 +52,9 @@ public final class Field implements Comparable<Field> {
 
     @Override public int compareTo(Field other) { return (other == null) ? -1 : field.compareTo(other.field); }
 
-    boolean hasProperties() { return (type == NESTED || type == OBJECT) && properties.size() > 0; }
+    public boolean hasProperties() { return (type == NESTED || type == OBJECT) && properties.size() > 0; }
 
-    boolean hasFields() { return Boolean.TRUE.equals(hasFields) && properties.size() > 0; }
+    public boolean hasFields() { return Boolean.TRUE.equals(hasFields) && properties.size() > 0; }
 
     public static FieldBuilder keywordField(String field) { return fieldBuilder(field, KEYWORD); }
 

@@ -34,7 +34,6 @@ import static io.polyglotted.elastic.common.MetaFields.KEY_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.MODEL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.PARENT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.SCHEMA_FIELD;
-import static io.polyglotted.elastic.common.MetaFields.SIZE_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.STATUS_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TIMESTAMP_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TRAITFQN_FIELD;
@@ -120,7 +119,7 @@ public final class IndexRecord {
             this.action = requireNonNull(action);
             this.keyString = urnOf(model, id);
             this.source = object;
-            addMeta(source, MODEL_FIELD, model); addMeta(source, ID_FIELD, id); addMeta(source, SIZE_FIELD, bytes.length);
+            addMeta(source, MODEL_FIELD, model); addMeta(source, ID_FIELD, id);
             if (notNullOrEmpty(parent)) { addMeta(source, PARENT_FIELD, parent); }
         }
 

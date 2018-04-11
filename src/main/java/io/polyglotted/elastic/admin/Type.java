@@ -34,6 +34,7 @@ public final class Type {
     public final boolean strict;
     public final boolean enabled;
     public final boolean enableSource;
+    public final boolean enableSize;
     public final boolean includeMeta;
     public final Set<Field> fields;
     public final ImmutableResult meta;
@@ -61,6 +62,7 @@ public final class Type {
         private boolean strict = false;
         private boolean enabled = true;
         private boolean enableSource = true;
+        private boolean enableSize = true;
         private boolean includeMeta = true;
         private final Set<Field> fields = new TreeSet<>();
         private final ImmutableMapBuilder<String, Object> metaData = immutableResultBuilder();
@@ -81,7 +83,8 @@ public final class Type {
         public Builder with(Consumer<Builder> consumer) { consumer.accept(this); return this; }
 
         public Type build() {
-            return new Type(parent, strict, enabled, enableSource, includeMeta, immutableSet(fields), metaData.immutable(), immutableSet(srcExcludes));
+            return new Type(parent, strict, enabled, enableSource, enableSize, includeMeta,
+                immutableSet(fields), metaData.immutable(), immutableSet(srcExcludes));
         }
     }
 }

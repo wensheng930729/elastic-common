@@ -62,7 +62,7 @@ public enum ExprConverter {
     Text {
         @Override
         QueryBuilder buildFrom(Expression expr) {
-            String field = nullOrEmpty(expr.label) ? "_all" : expr.label;
+            String field = nullOrEmpty(expr.label) ? "&all" : expr.label;
             Operator operator = expr.args.containsKey("operator") ? Operator.valueOf(expr.stringArg("operator")) : Operator.AND;
             MatchQuery.Type type = MatchQuery.Type.valueOf(nonNull(expr.stringArg("type"), "PHRASE_PREFIX"));
             switch (type) {

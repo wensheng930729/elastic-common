@@ -37,7 +37,6 @@ public abstract class MetaFields {
     public static final String PARENT_FIELD = "&parent";
     public static final String RESULT_FIELD = "&result";
     public static final String SCHEMA_FIELD = "&schema";
-    public static final String SIZE_FIELD = "&size";
     public static final String STATUS_FIELD = "&status";
     public static final String TIMESTAMP_FIELD = "&timestamp";
     public static final String TRAITFQN_FIELD = "&traitFqn";
@@ -48,7 +47,7 @@ public abstract class MetaFields {
     public static final String USER_FIELD = "&user";
 
     public static final String[] ALL_FIELDS = immutableList(ANCESTOR_FIELD, APPROVAL_ROLES_FIELD, BASE_TS_FIELD, COMMENT_FIELD, EXPIRY_FIELD,
-        INDEX_FIELD, ID_FIELD, KEY_FIELD, LINK_FIELD, MODEL_FIELD, PARENT_FIELD, SCHEMA_FIELD, SIZE_FIELD, STATUS_FIELD,
+        INDEX_FIELD, ID_FIELD, KEY_FIELD, LINK_FIELD, MODEL_FIELD, PARENT_FIELD, SCHEMA_FIELD, STATUS_FIELD,
         TRAITFQN_FIELD, TRAITID_FIELD, TIMESTAMP_FIELD, TTL_FIELD, UPDATER_FIELD, USER_FIELD).toArray(new String[0]);
 
     public static void addMeta(Object item, String field, Object value) { addMetaField(mapValue(item), field, value); }
@@ -107,7 +106,6 @@ public abstract class MetaFields {
         putVal(map, mandatory ? checkContains(map, MODEL_FIELD) : MODEL_FIELD, builder);
         putVal(map, PARENT_FIELD, builder);
         putVal(map, SCHEMA_FIELD, builder);
-        putVal(map, SIZE_FIELD, builder);
         if (map.containsKey(STATUS_FIELD)) { builder.put(STATUS_FIELD, fromStatus(map.get(STATUS_FIELD).toString()));}
         putVal(map, TRAITFQN_FIELD, builder);
         putVal(map, TRAITID_FIELD, builder);
