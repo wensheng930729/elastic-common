@@ -30,7 +30,6 @@ import static java.util.Collections.singleton;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Type {
     public final String type = "_doc";
-    public final String parent;
     public final boolean strict;
     public final boolean enabled;
     public final boolean enableSource;
@@ -58,7 +57,6 @@ public final class Type {
     @Setter @Accessors(fluent = true, chain = true)
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Builder {
-        private String parent;
         private boolean strict = false;
         private boolean enabled = true;
         private boolean enableSource = true;
@@ -83,7 +81,7 @@ public final class Type {
         public Builder with(Consumer<Builder> consumer) { consumer.accept(this); return this; }
 
         public Type build() {
-            return new Type(parent, strict, enabled, enableSource, enableSize, includeMeta,
+            return new Type(strict, enabled, enableSource, enableSize, includeMeta,
                 immutableSet(fields), metaData.immutable(), immutableSet(srcExcludes));
         }
     }

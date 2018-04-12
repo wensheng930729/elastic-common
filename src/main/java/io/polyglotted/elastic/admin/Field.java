@@ -68,7 +68,7 @@ public final class Field implements Comparable<Field> {
 
     public static FieldBuilder simpleField(String field, FieldType fieldType) { return fieldBuilder(field, fieldType.simpleField()); }
 
-    private static FieldBuilder fieldBuilder(String field, FieldType fieldType) { return new FieldBuilder(field, fieldType); }
+    public static FieldBuilder fieldBuilder(String field, FieldType fieldType) { return new FieldBuilder(field, fieldType); }
 
     @Accessors(fluent = true, chain = true)
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
