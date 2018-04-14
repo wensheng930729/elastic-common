@@ -27,14 +27,15 @@ public enum FieldType {
     KEYWORD(true, true, true),
     TEXT(false, true, true),
     NESTED(false, false, false),
-    OBJECT(false, false, false);
+    OBJECT(false, false, false),
+    JOIN(false, false, false);
 
     private final boolean docValues;
     private final boolean storable;
     private final boolean indexable;
 
     private static final EnumSet<FieldType> SIMPLE_FIELDS = EnumSet.of(BINARY, BOOLEAN, DATE, GEO_POINT, GEO_SHAPE, IP,
-        DOUBLE, FLOAT, HALF_FLOAT, SCALED_FLOAT, BYTE, SHORT, INTEGER, LONG);
+        DOUBLE, FLOAT, HALF_FLOAT, SCALED_FLOAT, BYTE, SHORT, INTEGER, LONG, KEYWORD);
 
     FieldType simpleField() { return checkContains(SIMPLE_FIELDS, this, name() + " not a simple type"); }
 

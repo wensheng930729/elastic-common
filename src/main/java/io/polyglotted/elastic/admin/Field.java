@@ -123,6 +123,8 @@ public final class Field implements Comparable<Field> {
 
         public FieldBuilder copyToFields(Collection<String> copyFields) { this.copyToFields.addAll(copyFields); return this; }
 
+        public FieldBuilder arg(String key, Object value) { this.args.put(key, value); return this; }
+
         public FieldBuilder args(Map<String, Object> args) { this.args.putAll(args); return this; }
 
         public FieldBuilder duplicate(String newField) {

@@ -1,5 +1,6 @@
 package io.polyglotted.elastic.admin;
 
+import io.polyglotted.common.util.ListBuilder.ImmutableListBuilder;
 import lombok.SneakyThrows;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
@@ -12,16 +13,22 @@ import java.util.Set;
 
 import static io.polyglotted.common.util.CollUtil.concat;
 import static io.polyglotted.common.util.CollUtil.uniqueIndex;
-import static io.polyglotted.common.util.ListBuilder.immutableList;
+import static io.polyglotted.common.util.ListBuilder.immutableListBuilder;
 import static io.polyglotted.common.util.ListBuilder.immutableSortedSet;
+import static io.polyglotted.elastic.admin.Field.fieldBuilder;
 import static io.polyglotted.elastic.admin.Field.keywordField;
 import static io.polyglotted.elastic.admin.Field.simpleField;
 import static io.polyglotted.elastic.admin.Field.textField;
 import static io.polyglotted.elastic.admin.FieldType.DATE;
+import static io.polyglotted.elastic.admin.FieldType.JOIN;
+import static io.polyglotted.elastic.admin.FieldType.LONG;
 import static io.polyglotted.elastic.admin.FieldType.OBJECT;
 import static io.polyglotted.elastic.common.MetaFields.ALL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.ANCESTOR_FIELD;
+import static io.polyglotted.elastic.common.MetaFields.APPROVAL_ROLES_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.AUTO_COMPLETE_FIELD;
+import static io.polyglotted.elastic.common.MetaFields.BASE_TS_FIELD;
+import static io.polyglotted.elastic.common.MetaFields.COMMENT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.EXPIRY_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.ID_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.KEY_FIELD;
@@ -58,7 +65,7 @@ public abstract class TypeSerializer {
     }
 
     private static Set<Field> typeValues(Type type) {
-        return type.includeMeta ? immutableSortedSet(concat(metaFields(), type.fields)) : immutableSortedSet(type.fields);
+        return type.includeMeta ? immutableSortedSet(concat(metaFields(type), type.fields)) : immutableSortedSet(type.fields);
     }
 
     private static void writeFields(String name, Map<String, Field> fields, XContentBuilder gen) throws IOException {
@@ -86,23 +93,29 @@ public abstract class TypeSerializer {
         if (value != null) { builder.field(key, value); }
     }
 
-    private static List<Field> metaFields() {
-        return immutableList(
-            textField(ALL_FIELD, "all").build(),
-            keywordField(ANCESTOR_FIELD).build(),
-            textField(AUTO_COMPLETE_FIELD, "autocomplete").build(),
-            simpleField(EXPIRY_FIELD, DATE).build(),
-            keywordField(ID_FIELD).normalise().build(),
-            keywordField(KEY_FIELD).normalise().build(),
-            keywordField(LINK_FIELD).build(),
-            keywordField(MODEL_FIELD).normalise().build(),
-            keywordField(PARENT_FIELD).build(),
-            keywordField(STATUS_FIELD).build(),
-            simpleField(TIMESTAMP_FIELD, DATE).build(),
-            keywordField(TRAITFQN_FIELD).build(),
-            keywordField(TRAITID_FIELD).build(),
-            keywordField(UNIQUE_FIELD).normalise().build(),
-            keywordField(UPDATER_FIELD).build(),
-            keywordField(USER_FIELD).build());
+    private static List<Field> metaFields(Type type) {
+        ImmutableListBuilder<Field> builder = immutableListBuilder();
+        if (type.enableAll) { builder.add(textField(ALL_FIELD, "all").build()); }
+        if (type.enableAutocomplete) { builder.add(textField(AUTO_COMPLETE_FIELD, "autocomplete").build()); }
+        if (type.hasApproval) {
+            builder.add(keywordField(APPROVAL_ROLES_FIELD).build()).add(simpleField(BASE_TS_FIELD, LONG).build())
+                .add(textField(COMMENT_FIELD, "all").build());
+        }
+        builder.add(type.hasRelations() ? fieldBuilder(MODEL_FIELD, JOIN).arg("relations", type.relations).build()
+            : keywordField(MODEL_FIELD).normalise().build());
+        builder.add(keywordField(ANCESTOR_FIELD).build());
+        builder.add(simpleField(EXPIRY_FIELD, DATE).build());
+        builder.add(keywordField(ID_FIELD).normalise().build());
+        builder.add(keywordField(KEY_FIELD).normalise().build());
+        builder.add(keywordField(LINK_FIELD).build());
+        builder.add(keywordField(PARENT_FIELD).build());
+        builder.add(keywordField(STATUS_FIELD).build());
+        builder.add(simpleField(TIMESTAMP_FIELD, DATE).build());
+        builder.add(keywordField(TRAITFQN_FIELD).build());
+        builder.add(keywordField(TRAITID_FIELD).build());
+        builder.add(keywordField(UNIQUE_FIELD).normalise().build());
+        builder.add(keywordField(UPDATER_FIELD).build());
+        builder.add(keywordField(USER_FIELD).build());
+        return builder.build();
     }
 }

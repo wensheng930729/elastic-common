@@ -34,6 +34,7 @@ import static io.polyglotted.elastic.admin.FieldType.GEO_SHAPE;
 import static io.polyglotted.elastic.admin.FieldType.HALF_FLOAT;
 import static io.polyglotted.elastic.admin.FieldType.INTEGER;
 import static io.polyglotted.elastic.admin.FieldType.IP;
+import static io.polyglotted.elastic.admin.FieldType.KEYWORD;
 import static io.polyglotted.elastic.admin.FieldType.LONG;
 import static io.polyglotted.elastic.admin.FieldType.SCALED_FLOAT;
 import static io.polyglotted.elastic.admin.FieldType.SHORT;
@@ -68,6 +69,22 @@ public class AdminIntegTest {
                 assertThat(serMapping, serMapping, is(MESSAGES.get("completeMapping")));
             } finally { admin.dropIndex(ES_AUTH, index); }
         }
+    }
+
+    @Test
+    public void parentChildIndexSuccess() throws Exception {
+        try (Admin admin = new Admin(highLevelClient(elasticSettings(), ES_AUTH))) {
+            String index = admin.createIndex(ES_AUTH, IndexSetting.with(2, 0), parentChildTypeMapping().build(), "ParChilIndex");
+            try {
+                String parChildMapping = serialize(admin.getMapping(ES_AUTH, index));
+                assertThat(parChildMapping, parChildMapping, is(MESSAGES.get("parentChildMapping")));
+            } finally { admin.dropIndex(ES_AUTH, index); }
+        }
+    }
+
+    private static Type.Builder parentChildTypeMapping() {
+        return typeBuilder().strict().enableAutocomplete(false).relation("Foo", asList("Bar", "Baz", "Tux"))
+            .field(simpleField("val", KEYWORD));
     }
 
     private static Type.Builder completeTypeMapping() {

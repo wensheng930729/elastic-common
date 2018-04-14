@@ -20,6 +20,7 @@ import java.util.Set;
 import static io.polyglotted.common.model.SortedMapResult.treeResult;
 import static io.polyglotted.common.util.BaseSerializer.serializeBytes;
 import static io.polyglotted.common.util.CollUtil.filterKeys;
+import static io.polyglotted.common.util.MapBuilder.immutableMap;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.common.util.StrUtil.notNullOrEmpty;
 import static io.polyglotted.common.util.UrnUtil.safeUrnOf;
@@ -119,8 +120,12 @@ public final class IndexRecord {
             this.action = requireNonNull(action);
             this.keyString = urnOf(model, id);
             this.source = object;
-            addMeta(source, MODEL_FIELD, model); addMeta(source, ID_FIELD, id);
-            if (notNullOrEmpty(parent)) { addMeta(source, PARENT_FIELD, parent); }
+            addMeta(source, ID_FIELD, id);
+            if (notNullOrEmpty(parent)) {
+                addMeta(source, MODEL_FIELD, immutableMap("name", model, "parent", parent));
+                addMeta(source, PARENT_FIELD, parent);
+            }
+            else { addMeta(source, MODEL_FIELD, model); }
         }
 
         @Override

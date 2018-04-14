@@ -30,7 +30,7 @@ public abstract class Finder {
         for (IndexRecord.Builder rec : builders) {
             if (nullOrEmpty(rec.id)) continue;
             log.debug("multi get " + rec.index + " " + rec.id + " " + rec.parent);
-            multiGetRequest.add(new MultiGetRequest.Item(rec.index, "_doc", rec.id).routing(rec.parent).parent(rec.parent));
+            multiGetRequest.add(new MultiGetRequest.Item(rec.index, "_doc", rec.id).routing(rec.parent));
         }
 
         if (multiGetRequest.getItems().size() == 0) return immutableMap();
