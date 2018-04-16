@@ -14,6 +14,7 @@ import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
 import java.util.List;
 import java.util.Map;
@@ -38,14 +39,18 @@ public final class Searcher {
 
     public Map<String, MapResult> getAll(EsAuth auth, List<IndexRecord.Builder> builders) { return findAll(client, auth, builders); }
 
-    public MapResult getSourceBy(EsAuth auth, IndexRecord.Builder rec) { return findBy(client, auth, rec.index, rec.id, rec.parent); }
+    public MapResult getSourceBy(EsAuth auth, IndexRecord.Builder rec) { return findBy(client, auth, rec.index, rec.id, rec.parent, null); }
 
     public <T> T getById(EsAuth auth, String index, String id, ResultBuilder<T> resultBuilder, Verbose verbose) {
-        return getById(auth, index, id, null, resultBuilder, verbose);
+        return getById(auth, index, id, null, null, resultBuilder, verbose);
     }
 
     public <T> T getById(EsAuth auth, String index, String id, String parent, ResultBuilder<T> resultBuilder, Verbose verbose) {
-        return resultBuilder.buildVerbose(findBy(client, auth, index, id, parent), verbose);
+        return getById(auth, index, id, parent, null, resultBuilder, verbose);
+    }
+
+    public <T> T getById(EsAuth auth, String index, String id, String parent, FetchSourceContext ctx, ResultBuilder<T> builder, Verbose verbose) {
+        return builder.buildVerbose(findBy(client, auth, index, id, parent, ctx), verbose);
     }
 
     public <T> SimpleResponse searchBy(EsAuth auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {

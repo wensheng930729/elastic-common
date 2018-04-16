@@ -13,6 +13,7 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.get.MultiGetResponse;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
 import java.util.List;
 import java.util.Map;
@@ -48,15 +49,16 @@ public abstract class Finder {
     }
 
     public static MapResult findBy(ElasticClient client, EsAuth auth, IndexRecord rec) {
-        return findBy(client, auth, rec.index, rec.model, rec.id, rec.parent);
+        return findBy(client, auth, rec.index, rec.id, rec.parent, null);
     }
 
-    public static MapResult findBy(ElasticClient client, EsAuth auth, String repo, String model, String id) {
-        return findBy(client, auth, repo, model, id, null);
+    public static MapResult findBy(ElasticClient client, EsAuth auth, String index, String id) {
+        return findBy(client, auth, index, id, null, null);
     }
 
-    @SneakyThrows public static MapResult findBy(ElasticClient client, EsAuth auth, String repo, String model, String id, String parent) {
-        GetResponse response = client.get(auth, new GetRequest(repo, "_doc", id).routing(parent));
+    @SneakyThrows public static MapResult findBy(ElasticClient client, EsAuth auth, String repo, String id,
+                                                 String parent, FetchSourceContext context) {
+        GetResponse response = client.get(auth, new GetRequest(repo, "_doc", id).routing(parent).fetchSourceContext(context));
         return response.isExists() && !response.isSourceEmpty() ? simpleResult(response.getSource()) : null;
     }
 
