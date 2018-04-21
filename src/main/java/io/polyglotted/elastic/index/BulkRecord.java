@@ -38,6 +38,7 @@ public final class BulkRecord {
         BulkRequest bulkRequest = new BulkRequest().setRefreshPolicy(IMMEDIATE);
         records.forEach(record -> {
             try {
+                //TODO revisit this logic - cannot handle one at a time!
                 indexer.validateRecord(esAuth, record, bulkRequest, validator);
             } catch (NoopException noop) { success(record.id, "noop"); }
         });
@@ -77,7 +78,7 @@ public final class BulkRecord {
 
         public BulkRecord build() {
             List<IndexRecord> recordsList = records.build();
-            if (notification != null) { recordsList.forEach(record -> notification.key(record.id, record.key())); }
+            if (notification != null) { recordsList.forEach(record -> notification.key(record.id, record.simpleKey())); }
             return new BulkRecord(model, timestamp, recordsList, ignoreErrors, validator, notification);
         }
     }

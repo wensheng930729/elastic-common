@@ -31,9 +31,9 @@ public enum RecordAction {
     public boolean notCreateOrUpdate() { return this != CREATE && this != UPDATE; }
 
     public DocWriteRequest<?> request(IndexRecord record) {
-        if (log.isTraceEnabled()) { log.trace(message + " record " + record.id + " for " + record.model + " at " + record.index); }
-        return isDelete ? new DeleteRequest(record.index, "_doc", record.id).routing(record.parent)
-            : detectSource(new IndexRequest(record.index, "_doc", record.id), record.pipeline, record.source).routing(record.parent);
+        if (log.isTraceEnabled()) { log.trace(message + " record for " + record.model + " at " + record.index); }
+        return isDelete ? new DeleteRequest(record.index, "_doc", record.ancestorId()).routing(record.parent)
+            : detectSource(new IndexRequest(record.index, "_doc"), record.pipeline, record.source).routing(record.parent);
     }
 
     @SuppressWarnings("unchecked") private static IndexRequest detectSource(IndexRequest request, String pipeline, Object source) {

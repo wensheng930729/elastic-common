@@ -5,7 +5,6 @@ import io.polyglotted.common.model.MapResult.ImmutableResult;
 import io.polyglotted.common.model.SortedMapResult;
 import io.polyglotted.elastic.common.DocStatus;
 import io.polyglotted.elastic.common.MetaFields;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -23,9 +22,9 @@ import static io.polyglotted.common.util.CollUtil.filterKeys;
 import static io.polyglotted.common.util.MapBuilder.immutableMap;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.common.util.StrUtil.notNullOrEmpty;
-import static io.polyglotted.common.util.UrnUtil.safeUrnOf;
 import static io.polyglotted.common.util.UrnUtil.urnOf;
 import static io.polyglotted.common.util.UuidUtil.generateUuid;
+import static io.polyglotted.elastic.common.MetaFields.ANCESTOR_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.APPROVAL_ROLES_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.BASE_TS_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.COMMENT_FIELD;
@@ -38,8 +37,6 @@ import static io.polyglotted.elastic.common.MetaFields.SCHEMA_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.STATUS_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TIMESTAMP_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TRAITFQN_FIELD;
-import static io.polyglotted.elastic.common.MetaFields.TRAITID_FIELD;
-import static io.polyglotted.elastic.common.MetaFields.TTL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.UPDATER_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.USER_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.addMeta;
@@ -48,9 +45,10 @@ import static io.polyglotted.elastic.index.RecordAction.CREATE;
 import static io.polyglotted.elastic.index.RecordAction.DELETE;
 import static io.polyglotted.elastic.index.RecordAction.UPDATE;
 import static java.util.Objects.requireNonNull;
+import static lombok.AccessLevel.PRIVATE;
 
 @SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue"})
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@RequiredArgsConstructor(access = PRIVATE)
 public final class IndexRecord {
     public final String index;
     public final String model;
@@ -60,18 +58,22 @@ public final class IndexRecord {
     public final RecordAction action;
     public final Long baseVersion;
     public final Object source;
-    private final ImmutableResult ancillary;
+    public final ImmutableResult ancillary;
     public final String pipeline;
+    private String ancestorId = null;
+    @Getter private String result = null;
 
     public String keyString() { return urnOf(model, id); }
 
-    public String simpleKey() { return safeUrnOf(model, id, timestamp); }
+    public String simpleKey() { return MetaFields.simpleKey(model, parent, id, timestamp); }
 
-    public String key() { return safeUrnOf(model, parent, id, timestamp); }
+    void update(String ancestorId, String ancestor, DocStatus status) {
+        this.ancestorId = ancestorId; this.result = status.toString(); addMeta(source, ANCESTOR_FIELD, ancestor);
+    }
 
-    MapResult update(MapResult current) { current.putAll(ancillary); current.put(STATUS_FIELD, action.status); return current; }
+    String ancestorId() { return requireNonNull(ancestorId, "_id not found for delete"); }
 
-    public DocWriteRequest<?> request() { addMeta(source, KEY_FIELD, key()); return action.request(this); }
+    DocWriteRequest<?> request() { System.out.println("adding key " + simpleKey()); addMeta(source, KEY_FIELD, simpleKey()); return action.request(this); }
 
     public static Builder createRecord(String repo, String model, String id, Object source) { return createRecord(repo, model, id, null, source); }
 
@@ -142,8 +144,7 @@ public final class IndexRecord {
         }
 
         public Builder user(String user) {
-            addMeta(source, USER_FIELD, requireNonNull(user));
-            ancillary.put(UPDATER_FIELD, user); return this;
+            addMeta(source, USER_FIELD, requireNonNull(user)); ancillary.put(UPDATER_FIELD, user); return this;
         }
 
         public Builder comment(String comment, boolean meta) {
@@ -152,8 +153,6 @@ public final class IndexRecord {
         }
 
         public Builder traitFqn(String traitFqn) { addMeta(source, TRAITFQN_FIELD, traitFqn); return this; }
-
-        public Builder traitId(String traitId) { addMeta(source, TRAITID_FIELD, requireNonNull(traitId)); return this; }
 
         public Builder schema(String schema) { addMeta(source, SCHEMA_FIELD, schema); return this; }
 
@@ -166,8 +165,6 @@ public final class IndexRecord {
         public Builder noStatus() { removeMeta(source, STATUS_FIELD); removeMeta(source, BASE_TS_FIELD); return this; }
 
         public Builder approvalRoles(Set<String> roles) { if (notEmpty(roles)) { addMeta(source, APPROVAL_ROLES_FIELD, roles); } return this; }
-
-        public Builder ttlExpiry(long ttl) { addMeta(source, TTL_FIELD, ttl); return this; }
 
         public IndexRecord build() {
             return new IndexRecord(index, model, id, parent, requireNonNull(timestamp), action, baseVersion, source, ancillary.immutable(), pipeline);

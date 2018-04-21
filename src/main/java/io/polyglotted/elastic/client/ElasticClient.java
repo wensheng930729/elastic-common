@@ -10,7 +10,6 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -57,8 +56,6 @@ public interface ElasticClient extends Closeable {
     void bulkAsync(EsAuth auth, BulkRequest bulkRequest, ActionListener<BulkResponse> listener);
 
     boolean exists(EsAuth auth, GetRequest request);
-
-    GetResponse get(EsAuth auth, GetRequest request);
 
     MultiGetResponse multiGet(EsAuth auth, MultiGetRequest request);
 

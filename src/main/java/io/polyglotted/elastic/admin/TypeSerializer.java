@@ -38,7 +38,6 @@ import static io.polyglotted.elastic.common.MetaFields.PARENT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.STATUS_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TIMESTAMP_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TRAITFQN_FIELD;
-import static io.polyglotted.elastic.common.MetaFields.TRAITID_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.UNIQUE_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.UPDATER_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.USER_FIELD;
@@ -112,7 +111,6 @@ public abstract class TypeSerializer {
         builder.add(keywordField(STATUS_FIELD).build());
         builder.add(simpleField(TIMESTAMP_FIELD, DATE).build());
         builder.add(keywordField(TRAITFQN_FIELD).build());
-        builder.add(keywordField(TRAITID_FIELD).build());
         builder.add(keywordField(UNIQUE_FIELD).normalise().build());
         builder.add(keywordField(UPDATER_FIELD).build());
         builder.add(keywordField(USER_FIELD).build());

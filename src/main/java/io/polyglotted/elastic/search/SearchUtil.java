@@ -1,5 +1,6 @@
 package io.polyglotted.elastic.search;
 
+import io.polyglotted.common.model.MapResult;
 import io.polyglotted.elastic.client.ElasticClient;
 import io.polyglotted.elastic.common.EsAuth;
 import io.polyglotted.elastic.common.Verbose;
@@ -7,15 +8,18 @@ import org.elasticsearch.action.search.ClearScrollRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregations;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
+import static io.polyglotted.common.model.MapResult.simpleResult;
 import static io.polyglotted.elastic.search.AggsConverter.detectAgg;
 import static io.polyglotted.elastic.search.AggsFlattener.flattenAggs;
 import static io.polyglotted.elastic.search.QueryMaker.DEFAULT_KEEP_ALIVE;
+import static java.util.Objects.requireNonNull;
 import static org.elasticsearch.common.xcontent.ToXContent.EMPTY_PARAMS;
 
 abstract class SearchUtil {
@@ -50,6 +54,8 @@ abstract class SearchUtil {
     static int getReturnedHits(SearchResponse response) { return response.getHits().getHits().length; }
 
     static long getTotalHits(SearchResponse response) { return response.getHits().getTotalHits(); }
+
+    static MapResult hitSource(SearchHit hit) { return requireNonNull(hit).hasSource() ? simpleResult(hit.getSourceAsMap()) : simpleResult(); }
 
     static XContentBuilder buildAggs(SearchResponse response, boolean flattenAgg, XContentBuilder result) throws IOException {
         Aggregations aggregations = response.getAggregations();

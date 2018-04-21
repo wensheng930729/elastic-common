@@ -22,7 +22,6 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -140,10 +139,6 @@ public class ElasticRestClient implements ElasticClient {
 
     @Override public boolean exists(EsAuth auth, GetRequest request) {
         try { return internalClient.exists(request, auth.header()); } catch (IOException ioe) { throw throwEx("exists failed", ioe); }
-    }
-
-    @Override public GetResponse get(EsAuth auth, GetRequest request) {
-        try { return internalClient.get(request, auth.header()); } catch (IOException ioe) { throw throwEx("get failed", ioe); }
     }
 
     @Override public MultiGetResponse multiGet(EsAuth auth, MultiGetRequest request) {

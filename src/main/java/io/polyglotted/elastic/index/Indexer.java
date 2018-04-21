@@ -116,7 +116,7 @@ public final class Indexer {
             result.field(MODEL_FIELD, record.model);
             result.field(ID_FIELD, record.id);
             result.field(TIMESTAMP_FIELD, record.timestamp);
-            result.field(RESULT_FIELD, response.getResult().getLowercase());
+            result.field(RESULT_FIELD, nonNull(record.getResult(), response.getResult().getLowercase()));
         }
     }
 

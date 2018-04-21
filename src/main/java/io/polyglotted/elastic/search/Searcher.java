@@ -20,8 +20,9 @@ import java.util.List;
 import java.util.Map;
 
 import static io.polyglotted.common.util.BaseSerializer.MAPPER;
+import static io.polyglotted.elastic.common.DocResult.docSource;
 import static io.polyglotted.elastic.search.Finder.findAll;
-import static io.polyglotted.elastic.search.Finder.findBy;
+import static io.polyglotted.elastic.search.Finder.findById;
 import static io.polyglotted.elastic.search.QueryMaker.scrollRequest;
 import static io.polyglotted.elastic.search.SearchUtil.buildAggs;
 import static io.polyglotted.elastic.search.SearchUtil.clearScroll;
@@ -31,6 +32,7 @@ import static io.polyglotted.elastic.search.SearchUtil.headerFrom;
 import static io.polyglotted.elastic.search.SearchUtil.performScroll;
 import static io.polyglotted.elastic.search.SearchUtil.responseBuilder;
 import static org.elasticsearch.common.xcontent.XContentType.JSON;
+import static org.elasticsearch.search.fetch.subphase.FetchSourceContext.FETCH_SOURCE;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 @Slf4j @RequiredArgsConstructor
@@ -39,18 +41,16 @@ public final class Searcher {
 
     public Map<String, MapResult> getAll(EsAuth auth, List<IndexRecord.Builder> builders) { return findAll(client, auth, builders); }
 
-    public MapResult getSourceBy(EsAuth auth, IndexRecord.Builder rec) { return findBy(client, auth, rec.index, rec.id, rec.parent, null); }
-
     public <T> T getById(EsAuth auth, String index, String id, ResultBuilder<T> resultBuilder, Verbose verbose) {
-        return getById(auth, index, id, null, null, resultBuilder, verbose);
+        return getById(auth, index, id, null, FETCH_SOURCE, resultBuilder, verbose);
     }
 
     public <T> T getById(EsAuth auth, String index, String id, String parent, ResultBuilder<T> resultBuilder, Verbose verbose) {
-        return getById(auth, index, id, parent, null, resultBuilder, verbose);
+        return getById(auth, index, id, parent, FETCH_SOURCE, resultBuilder, verbose);
     }
 
     public <T> T getById(EsAuth auth, String index, String id, String parent, FetchSourceContext ctx, ResultBuilder<T> builder, Verbose verbose) {
-        return builder.buildVerbose(findBy(client, auth, index, id, parent, ctx), verbose);
+        return builder.buildVerbose(docSource(findById(client, auth, index, id, parent, ctx)), verbose);
     }
 
     public <T> SimpleResponse searchBy(EsAuth auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {

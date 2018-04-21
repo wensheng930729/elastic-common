@@ -13,10 +13,8 @@ import static io.polyglotted.common.util.MapRetriever.optValue;
 import static io.polyglotted.common.util.MapRetriever.reqdStr;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.common.util.ReflectionUtil.safeFieldValue;
-import static io.polyglotted.common.util.StrUtil.nullAsEmpty;
 import static io.polyglotted.common.util.UrnUtil.safeUrnOf;
 import static io.polyglotted.common.util.UrnUtil.urnOf;
-import static io.polyglotted.common.util.UuidUtil.genUuidStr;
 import static io.polyglotted.elastic.common.DocStatus.fromStatus;
 
 @SuppressWarnings({"WeakerAccess"})
@@ -40,15 +38,13 @@ public abstract class MetaFields {
     public static final String STATUS_FIELD = "&status";
     public static final String TIMESTAMP_FIELD = "&timestamp";
     public static final String TRAITFQN_FIELD = "&traitFqn";
-    public static final String TRAITID_FIELD = "&traitId";
-    public static final String TTL_FIELD = "&ttlExpiry";
     public static final String UNIQUE_FIELD = "&uniqueProps";
     public static final String UPDATER_FIELD = "&updater";
     public static final String USER_FIELD = "&user";
 
     public static final String[] ALL_FIELDS = immutableList(ANCESTOR_FIELD, APPROVAL_ROLES_FIELD, BASE_TS_FIELD, COMMENT_FIELD, EXPIRY_FIELD,
         INDEX_FIELD, ID_FIELD, KEY_FIELD, LINK_FIELD, MODEL_FIELD, PARENT_FIELD, SCHEMA_FIELD, STATUS_FIELD,
-        TRAITFQN_FIELD, TRAITID_FIELD, TIMESTAMP_FIELD, TTL_FIELD, UPDATER_FIELD, USER_FIELD).toArray(new String[0]);
+        TRAITFQN_FIELD, TIMESTAMP_FIELD, UPDATER_FIELD, USER_FIELD).toArray(new String[0]);
 
     public static void addMeta(Object item, String field, Object value) { addMetaField(mapValue(item), field, value); }
 
@@ -76,9 +72,9 @@ public abstract class MetaFields {
 
     public static String keyString(MapResult map) { return urnOf(model(map), id(map)); }
 
-    public static String uniqueId(MapResult map) { return safeUrnOf(model(map), parent(map), nullAsEmpty(id(map)), String.valueOf(timestamp(map))); }
+    public static String simpleKey(MapResult map) { return simpleKey(model(map), parent(map), id(map), timestamp(map)); }
 
-    public static String genUniqueId(String model, String id, long timestamp) { return genUuidStr(safeUrnOf(model, id, String.valueOf(timestamp))); }
+    public static String simpleKey(String model, String parent, String id, long ts) { return safeUrnOf(model, parent, id, String.valueOf(ts)); }
 
     public static ImmutableMapBuilder<String, Object> readKey(MapResult map) {
         ImmutableMapBuilder<String, Object> builder = immutableMapBuilder();
@@ -108,9 +104,7 @@ public abstract class MetaFields {
         putVal(map, SCHEMA_FIELD, builder);
         if (map.containsKey(STATUS_FIELD)) { builder.put(STATUS_FIELD, fromStatus(map.get(STATUS_FIELD).toString()));}
         putVal(map, TRAITFQN_FIELD, builder);
-        putVal(map, TRAITID_FIELD, builder);
         putTs(map, mandatory ? checkContains(map, TIMESTAMP_FIELD) : TIMESTAMP_FIELD, builder);
-        putVal(map, TTL_FIELD, builder);
         putVal(map, UPDATER_FIELD, builder);
         putVal(map, mandatory ? checkContains(map, USER_FIELD) : USER_FIELD, builder);
         return builder.result();

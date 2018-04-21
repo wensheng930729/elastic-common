@@ -3,7 +3,6 @@ package io.polyglotted.elastic.common;
 import io.polyglotted.common.model.MapResult;
 
 import static io.polyglotted.common.model.MapResult.immutableResult;
-import static io.polyglotted.common.util.MapRetriever.reqdStr;
 import static io.polyglotted.common.util.ReflectionUtil.fieldValue;
 import static io.polyglotted.elastic.common.MetaFields.ALL_FIELDS;
 import static io.polyglotted.elastic.common.MetaFields.ID_FIELD;
@@ -12,6 +11,7 @@ import static io.polyglotted.elastic.common.MetaFields.LINK_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.MODEL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.PARENT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TIMESTAMP_FIELD;
+import static io.polyglotted.elastic.common.MetaFields.parent;
 import static io.polyglotted.elastic.common.MetaFields.readHeader;
 import static io.polyglotted.elastic.common.MetaFields.readKey;
 import static io.polyglotted.elastic.common.MetaFields.reqdId;
@@ -32,9 +32,7 @@ public enum Verbose {
         @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, readKey(source).result()); }
     },
     PARENT(PARENT_FIELD) {
-        @Override public <T> T buildFrom(MapResult source, T result) {
-            return addHeader(result, immutableResult(PARENT_FIELD, reqdStr(source, PARENT_FIELD)));
-        }
+        @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, immutableResult(PARENT_FIELD, parent(source))); }
     },
     UNIQUE(ID_FIELD, KEY_FIELD) {
         @Override public <T> T buildFrom(MapResult source, T result) {

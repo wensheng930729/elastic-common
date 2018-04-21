@@ -4,6 +4,7 @@ import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.util.MapBuilder;
 import io.polyglotted.elastic.admin.Admin;
 import io.polyglotted.elastic.client.ElasticClient;
+import io.polyglotted.elastic.common.DocResult;
 import io.polyglotted.elastic.common.EsAuth;
 import io.polyglotted.elastic.index.IndexRecord;
 import io.polyglotted.elastic.index.Indexer;
@@ -18,7 +19,6 @@ import java.util.Map;
 import static io.polyglotted.common.model.MapResult.simpleResult;
 import static io.polyglotted.common.util.MapBuilder.immutableMap;
 import static io.polyglotted.common.util.MapBuilder.immutableMapBuilder;
-import static io.polyglotted.common.util.UrnUtil.safeUrnOf;
 import static io.polyglotted.elastic.admin.IndexSetting.with;
 import static io.polyglotted.elastic.admin.Type.typeBuilder;
 import static io.polyglotted.elastic.client.ElasticSettings.elasticSettings;
@@ -32,6 +32,7 @@ import static io.polyglotted.elastic.common.MetaFields.STATUS_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TIMESTAMP_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.UPDATER_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.USER_FIELD;
+import static io.polyglotted.elastic.common.MetaFields.simpleKey;
 import static io.polyglotted.elastic.index.IndexRecord.createRecord;
 import static io.polyglotted.elastic.index.IndexRecord.deleteRecord;
 import static io.polyglotted.elastic.index.IndexRecord.expired;
@@ -39,7 +40,8 @@ import static io.polyglotted.elastic.index.IndexRecord.updateRecord;
 import static io.polyglotted.elastic.index.RecordAction.UPDATE;
 import static io.polyglotted.elastic.index.Validator.OVERRIDE;
 import static io.polyglotted.elastic.index.Validator.STRICT;
-import static io.polyglotted.elastic.search.Finder.findBy;
+import static io.polyglotted.elastic.search.Finder.findById;
+import static io.polyglotted.elastic.search.Finder.findByKey;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -63,14 +65,14 @@ public class IndexerIntegTest {
     @After public void close() { client.close(); }
 
     @Test
-    public void createIndexSuccess() throws Exception {
+    public void strictSaveLifeCycle() throws Exception {
         String repo = "repo1", model = "User", id = "sam", tester = "tester";
         String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), repo);
         try {
             MapResult user = simpleResult("name", "shankar", "age", 25, "title", "programmer");
             String result = indexer.strictSave(ES_AUTH, createRecord(repo, model, id, user).timestamp(T1).user(tester).build(), STRICT);
             assertThat(result, result, is("{\"&model\":\"User\",\"&id\":\"sam\",\"&timestamp\":1000,\"&result\":\"created\"}"));
-            assertHeaders(findBy(client, ES_AUTH, repo, id), immutableMap(MODEL_FIELD, model, ID_FIELD, id,
+            assertHeaders(findById(client, ES_AUTH, repo, id), immutableMap(MODEL_FIELD, model, ID_FIELD, id,
                 TIMESTAMP_FIELD, String.valueOf(T1), USER_FIELD, tester));
 
             result = indexer.strictSave(ES_AUTH, createRecord(repo, model, id, user).timestamp(T1_5).user(tester).build(), STRICT);
@@ -79,18 +81,18 @@ public class IndexerIntegTest {
             MapResult user2 = simpleResult("name", "shankar", "age", 25, "title", "developer", "salary", 10000L);
             result = indexer.strictSave(ES_AUTH, updateRecord(repo, model, id, T1, user2).timestamp(T2).user(tester).build(), STRICT);
             assertThat(result, result, is("{\"&model\":\"User\",\"&id\":\"sam\",\"&timestamp\":2000,\"&result\":\"updated\"}"));
-            String ancestor1 = safeUrnOf(model, id, String.valueOf(T1));
-            assertHeaders(findBy(client, ES_AUTH, repo, id), stringMapBuilder().put(MODEL_FIELD, model)
+            String ancestor1 = simpleKey(model, null, id, T1);
+            assertHeaders(findById(client, ES_AUTH, repo, id), stringMapBuilder().put(MODEL_FIELD, model)
                 .put(ID_FIELD, id).put(TIMESTAMP_FIELD, String.valueOf(T2)).put(USER_FIELD, tester).put(ANCESTOR_FIELD, ancestor1).build());
-            assertHeaders(findBy(client, ES_AUTH, repo, ancestor1), stringMapBuilder().put(MODEL_FIELD, model)
+            assertHeaders(findByKey(client, ES_AUTH, repo, ancestor1), stringMapBuilder().put(MODEL_FIELD, model)
                 .put(ID_FIELD, id).put(TIMESTAMP_FIELD, String.valueOf(T1)).put(USER_FIELD, tester).put(UPDATER_FIELD, tester)
                 .put(EXPIRY_FIELD, String.valueOf(T2)).put(STATUS_FIELD, "updated").build());
 
             result = indexer.strictSave(ES_AUTH, deleteRecord(repo, model, id, T2).timestamp(T3).user(tester).build(), STRICT);
             assertThat(result, result, is("{\"&model\":\"User\",\"&id\":\"sam\",\"&timestamp\":3000,\"&result\":\"deleted\"}"));
-            assertThat(findBy(client, ES_AUTH, repo, id), is(nullValue()));
-            String ancestor2 = safeUrnOf(model, id, String.valueOf(T2));
-            assertHeaders(findBy(client, ES_AUTH, repo, ancestor2), stringMapBuilder().put(MODEL_FIELD, model)
+            assertThat(findById(client, ES_AUTH, repo, id), is(nullValue()));
+            String ancestor2 = simpleKey(model, null, id, T2);
+            assertHeaders(findByKey(client, ES_AUTH, repo, ancestor2), stringMapBuilder().put(MODEL_FIELD, model)
                 .put(ID_FIELD, id).put(TIMESTAMP_FIELD, String.valueOf(T2)).put(USER_FIELD, tester).put(UPDATER_FIELD, tester)
                 .put(EXPIRY_FIELD, String.valueOf(T3)).put(STATUS_FIELD, "deleted").build());
 
@@ -105,7 +107,7 @@ public class IndexerIntegTest {
             MapResult user = simpleResult("name", "shankar", "age", 25, "title", "programmer");
             String result = indexer.strictSave(ES_AUTH, createRecord(repo, model, id, user).timestamp(T1).user(tester).build(), STRICT);
             assertThat(result, result, is("{\"&model\":\"User\",\"&id\":\"sam\",\"&timestamp\":1000,\"&result\":\"created\"}"));
-            assertHeaders(findBy(client, ES_AUTH, repo, id), immutableMap(MODEL_FIELD, model, ID_FIELD, id,
+            assertHeaders(findById(client, ES_AUTH, repo, id), immutableMap(MODEL_FIELD, model, ID_FIELD, id,
                 TIMESTAMP_FIELD, String.valueOf(T1), USER_FIELD, tester));
 
             result = indexer.strictSave(ES_AUTH, createRecord(repo, model, id, user).timestamp(T1_5).user(tester).build(), STRICT);
@@ -114,18 +116,18 @@ public class IndexerIntegTest {
             MapResult user2 = simpleResult("name", "shankar", "age", 25, "title", "developer", "salary", 10000L);
             result = indexer.strictSave(ES_AUTH, createRecord(repo, model, id, user2).timestamp(T2).user(tester).build(), OVERRIDE);
             assertThat(result, result, is("{\"&model\":\"User\",\"&id\":\"sam\",\"&timestamp\":2000,\"&result\":\"updated\"}"));
-            String ancestor1 = safeUrnOf(model, id, String.valueOf(T1));
-            assertHeaders(findBy(client, ES_AUTH, repo, id), stringMapBuilder().put(MODEL_FIELD, model)
+            String ancestor1 = simpleKey(model, null, id, T1);
+            assertHeaders(findById(client, ES_AUTH, repo, id), stringMapBuilder().put(MODEL_FIELD, model)
                 .put(ID_FIELD, id).put(TIMESTAMP_FIELD, String.valueOf(T2)).put(USER_FIELD, tester).put(ANCESTOR_FIELD, ancestor1).build());
-            assertHeaders(findBy(client, ES_AUTH, repo, ancestor1), stringMapBuilder().put(MODEL_FIELD, model)
+            assertHeaders(findByKey(client, ES_AUTH, repo, ancestor1), stringMapBuilder().put(MODEL_FIELD, model)
                 .put(ID_FIELD, id).put(TIMESTAMP_FIELD, String.valueOf(T1)).put(USER_FIELD, tester).put(UPDATER_FIELD, tester)
                 .put(EXPIRY_FIELD, String.valueOf(T2)).put(STATUS_FIELD, "updated").build());
 
             result = indexer.strictSave(ES_AUTH, deleteRecord(repo, model, id, null).timestamp(T3).user(tester).build(), OVERRIDE);
             assertThat(result, result, is("{\"&model\":\"User\",\"&id\":\"sam\",\"&timestamp\":3000,\"&result\":\"deleted\"}"));
-            assertThat(findBy(client, ES_AUTH, repo, id), is(nullValue()));
-            String ancestor2 = safeUrnOf(model, id, String.valueOf(T2));
-            assertHeaders(findBy(client, ES_AUTH, repo, ancestor2), stringMapBuilder().put(MODEL_FIELD, model)
+            assertThat(findById(client, ES_AUTH, repo, id), is(nullValue()));
+            String ancestor2 = simpleKey(model, null, id, T2);
+            assertHeaders(findByKey(client, ES_AUTH, repo, ancestor2), stringMapBuilder().put(MODEL_FIELD, model)
                 .put(ID_FIELD, id).put(TIMESTAMP_FIELD, String.valueOf(T2)).put(USER_FIELD, tester).put(UPDATER_FIELD, tester)
                 .put(EXPIRY_FIELD, String.valueOf(T3)).put(STATUS_FIELD, "deleted").build());
 
@@ -211,8 +213,9 @@ public class IndexerIntegTest {
         } catch (IndexerException ie) { assertThat(ie.getMessage(), is("induced validation")); }
     }
 
-    private static void assertHeaders(MapResult result, Map<String, String> headers) {
-        assertThat(result, is(notNullValue())); headers.forEach((key, value) -> assertThat(result.get(key), is(value)));
+    private static void assertHeaders(DocResult result, Map<String, String> headers) {
+        assertThat(result, is(notNullValue())); assertThat(result.source, is(notNullValue()));
+        headers.forEach((key, value) -> assertThat(result.source.get(key), is(value)));
     }
 
     private static MapBuilder.ImmutableMapBuilder<String, String> stringMapBuilder() { return immutableMapBuilder(); }

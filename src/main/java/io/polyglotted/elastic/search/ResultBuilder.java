@@ -21,7 +21,7 @@ import static io.polyglotted.common.util.CollUtil.filterKeys;
 import static io.polyglotted.common.util.ListBuilder.immutableListBuilder;
 import static io.polyglotted.elastic.common.MetaFields.HIGHLTGHT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.ID_FIELD;
-import static java.util.Objects.requireNonNull;
+import static io.polyglotted.elastic.search.SearchUtil.hitSource;
 
 @SuppressWarnings("unused")
 public interface ResultBuilder<T> extends ResponseBuilder<T> {
@@ -33,7 +33,7 @@ public interface ResultBuilder<T> extends ResponseBuilder<T> {
     }
 
     default T buildFromHit(SearchHit hit, Verbose verbose) {
-        T result = buildVerbose(requireNonNull(hit).hasSource() ? simpleResult(hit.getSourceAsMap()) : simpleResult(), verbose);
+        T result = buildVerbose(hitSource(hit), verbose);
         Map<String, HighlightField> highlightFields = hit.getHighlightFields();
         if (result instanceof MapResult && !highlightFields.isEmpty()) {
 
@@ -57,6 +57,7 @@ public interface ResultBuilder<T> extends ResponseBuilder<T> {
     ResultBuilder<?> NullBuilder = MapBuilder::immutableMap;
     ResultBuilder<MapResult> HeaderBuilder = MetaFields::readHeader;
     ResultBuilder<String> IdBuilder = (source) -> MapRetriever.reqdStr(source, ID_FIELD);
-    ResultBuilder<MapResult> EmptyBuilder = MapResult::simpleResult;
+    ResultBuilder<MapResult> EmptyBuilder = source -> simpleResult();
+    ResultBuilder<MapResult> SimpleBuilder = source -> source;
     ResultBuilder<MapResult> SourceBuilder = (source) -> simpleResult(filterKeys(source, MetaFields::isNotMeta));
 }

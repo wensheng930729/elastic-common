@@ -20,6 +20,7 @@ import static org.elasticsearch.action.support.IndicesOptions.lenientExpandOpen;
 import static org.elasticsearch.common.unit.TimeValue.timeValueMillis;
 import static org.elasticsearch.common.unit.TimeValue.timeValueMinutes;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.search.fetch.subphase.FetchSourceContext.FETCH_SOURCE;
 
 @Slf4j @SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class QueryMaker {
@@ -27,10 +28,10 @@ public abstract class QueryMaker {
     public static final TimeValue DEFAULT_KEEP_ALIVE = timeValueMinutes(5);
     private static final WrapperModule searchModule = new WrapperModule();
 
-    public static SearchRequest copyFrom(String index, byte[] bytes, Verbose verbose) { return copyFrom(index, bytes, null, verbose); }
+    public static SearchRequest copyFrom(String repo, byte[] bytes, Verbose verbose) { return copyFrom(repo, bytes, null, verbose); }
 
-    public static SearchRequest copyFrom(String index, byte[] bytes, Long scroll, Verbose verbose) {
-        SearchRequest request = new SearchRequest(index == null ? Strings.EMPTY_ARRAY : new String[]{index});
+    public static SearchRequest copyFrom(String repo, byte[] bytes, Long scroll, Verbose verbose) {
+        SearchRequest request = new SearchRequest(repo == null ? Strings.EMPTY_ARRAY : new String[]{repo});
         request.indicesOptions(lenientExpandOpen());
         if (scroll != null) { request.scroll(timeValueMillis(scroll)); }
 
@@ -44,11 +45,11 @@ public abstract class QueryMaker {
     }
 
     public static SearchRequest filterToScroller(String repo, Expression filter, int size) {
-        return filterToRequest(repo, filter, immutableList(), size).scroll(DEFAULT_KEEP_ALIVE);
+        return filterToRequest(repo, filter, FETCH_SOURCE, immutableList(), size).scroll(DEFAULT_KEEP_ALIVE);
     }
 
-    public static SearchRequest filterToRequest(String repo, Expression filter, List<SortBuilder<?>> sorts, int size) {
-        SearchSourceBuilder source = new SearchSourceBuilder().size(size).query(nonNull(buildFilter(filter), matchAllQuery()));
+    public static SearchRequest filterToRequest(String repo, Expression filter, FetchSourceContext context, List<SortBuilder<?>> sorts, int size) {
+        SearchSourceBuilder source = new SearchSourceBuilder().size(size).query(nonNull(buildFilter(filter), matchAllQuery())).fetchSource(context);
         for (SortBuilder<?> sort : sorts) { source.sort(sort); }
         return trace(new SearchRequest(repo).indicesOptions(lenientExpandOpen()).source(source));
     }

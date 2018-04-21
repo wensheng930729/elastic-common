@@ -46,11 +46,11 @@ public abstract class Expressions {
 
         public BoolBuilder approvalRejected() { return filter(in(STATUS_FIELD, immutableList("REJECTED"))).not(exists(EXPIRY_FIELD)); }
 
+        public BoolBuilder pendingApproval() { return filter(in(STATUS_FIELD, immutableList("PENDING", "PENDING_DELETE"))).not(exists(EXPIRY_FIELD)); }
+
         public BoolBuilder archiveIndex() { return filters(exists(STATUS_FIELD), exists(EXPIRY_FIELD)); }
 
         public BoolBuilder liveIndex() { return filter(exists(TIMESTAMP_FIELD)).nots(exists(STATUS_FIELD), exists(EXPIRY_FIELD)); }
-
-        public BoolBuilder pendingApproval() { return filter(in(STATUS_FIELD, immutableList("PENDING", "PENDING_DELETE"))).not(exists(EXPIRY_FIELD)); }
 
         public BoolBuilder must(Expression expr) { if (expr != null) { this.musts.add(expr); } return this; }
 
