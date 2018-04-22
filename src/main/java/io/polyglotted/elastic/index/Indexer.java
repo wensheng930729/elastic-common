@@ -28,6 +28,7 @@ import static io.polyglotted.elastic.common.MetaFields.RESULT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TIMESTAMP_FIELD;
 import static io.polyglotted.elastic.index.Validator.STRICT;
 import static org.elasticsearch.action.DocWriteRequest.OpType.CREATE;
+import static org.elasticsearch.action.support.WriteRequest.RefreshPolicy.IMMEDIATE;
 import static org.elasticsearch.rest.RestStatus.CREATED;
 
 @Slf4j @SuppressWarnings({"unused", "WeakerAccess"})
@@ -54,12 +55,16 @@ public final class Indexer {
     }
 
     public boolean bulkIndex(EsAuth auth, BulkRecord bulkRecord) {
-        BulkRequest bulkRequest = bulkRecord.bulkRequest(auth, this);
+        BulkRequest bulkRequest = validateRecords(bulkRecord.validator, auth, bulkRecord, new BulkRequest().setRefreshPolicy(IMMEDIATE));
         if (bulkRequest.numberOfActions() <= 0) { return true; }
         try {
             BulkResponse responses = client.bulk(auth, bulkRequest);
             return checkResponse(responses, bulkRecord.ignoreErrors, bulkRecord::success, bulkRecord::failure);
         } catch (RuntimeException ex) { throw logError(ex); }
+    }
+
+    public BulkRequest validateRecords(Validator validator, EsAuth auth, BulkRecord bulkRecord, BulkRequest bulkRequest) {
+        return validator.validateAll(client, auth, bulkRecord, bulkRequest);
     }
 
     @SneakyThrows public String bulkSave(EsAuth auth, IndexRecord record) {
@@ -74,11 +79,10 @@ public final class Indexer {
         } catch (RuntimeException ex) { throw logError(ex); }
     }
 
-    public BulkRequest validateRecord(EsAuth auth, IndexRecord record, BulkRequest bulkRequest, Validator validator) {
+    public void validateRecord(EsAuth auth, IndexRecord record, BulkRequest bulkRequest, Validator validator) {
         IndexRequest archiveRequest = validator.validate(client, auth, record);
         bulkRequest.add(record.request());
         if (archiveRequest != null) { bulkRequest.add(archiveRequest); }
-        return bulkRequest;
     }
 
     public String strictSave(EsAuth auth, Pair<IndexRecord, IndexRecord> pair) { return strictSave(auth, pair._a, pair._b, STRICT); }

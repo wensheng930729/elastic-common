@@ -6,20 +6,24 @@ import io.polyglotted.elastic.common.DocResult;
 import io.polyglotted.elastic.common.EsAuth;
 import io.polyglotted.elastic.common.MetaFields;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
 
 import java.util.Map;
 
 import static io.polyglotted.common.util.CollUtil.filterKeys;
-import static io.polyglotted.elastic.common.MetaFields.simpleKey;
+import static io.polyglotted.elastic.common.MetaFields.reqdKey;
 import static io.polyglotted.elastic.common.MetaFields.timestamp;
 import static io.polyglotted.elastic.index.RecordAction.CREATE;
+import static io.polyglotted.elastic.search.Finder.findAll;
 import static io.polyglotted.elastic.search.Finder.findById;
 import static org.elasticsearch.search.fetch.subphase.FetchSourceContext.FETCH_SOURCE;
 
 public interface Validator {
     Validator STRICT = new StrictValidator();
     Validator OVERRIDE = new OverwriteValidator();
+
+    BulkRequest validateAll(ElasticClient client, EsAuth auth, BulkRecord bulkRecord, BulkRequest bulkRequest);
 
     IndexRequest validate(ElasticClient client, EsAuth auth, IndexRecord record);
 
@@ -36,9 +40,29 @@ public interface Validator {
     }
 
     @Slf4j @SuppressWarnings({"unused", "WeakerAccess"}) class OverwriteValidator implements Validator {
+        @Override public BulkRequest validateAll(ElasticClient client, EsAuth auth, BulkRecord bulkRecord, BulkRequest bulkRequest) {
+            Map<String, DocResult> docs = findAll(client, auth, bulkRecord.repo, bulkRecord.parent, bulkRecord.records);
+            for (IndexRecord record : bulkRecord.records) {
+                try {
+                    IndexRequest ancestor = checkRecordWithDoc(record, docs.get(record.keyString()));
+                    bulkRequest.add(record.request());
+                    if (ancestor != null) { bulkRequest.add(ancestor); }
+                } catch (NoopException nex) {
+                    bulkRecord.success(record.id, nex.getMessage());
+                } catch (Exception ex) {
+                    bulkRecord.failure(record.id, ex.getMessage());
+                }
+            }
+            return bulkRequest;
+        }
+
         @Override public final IndexRequest validate(ElasticClient client, EsAuth auth, IndexRecord record) {
             preValidate(client, record);
             DocResult existing = findById(client, auth, record.index, record.id, record.parent, FETCH_SOURCE);
+            return checkRecordWithDoc(record, existing);
+        }
+
+        private IndexRequest checkRecordWithDoc(IndexRecord record, DocResult existing) {
             if (isIdempotent(record, existing)) { throw new NoopException(existing.source); }
             validateCurrent(record, existing == null ? null : existing.source);
             postValidate(record);
@@ -52,7 +76,7 @@ public interface Validator {
         protected void validateCurrent(IndexRecord record, MapResult current) { }
 
         public static IndexRequest createParentRequest(IndexRecord record, DocResult ancestor) {
-            record.update(ancestor.id, simpleKey(ancestor.source), record.action.status);
+            record.update(ancestor.id, reqdKey(ancestor.source), record.action.status);
             if (log.isTraceEnabled()) { log.trace("creating archive record for " + record.simpleKey()); }
             return ancestor.createRequest(record.ancillary, record.parent, record.action.status);
         }

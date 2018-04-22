@@ -12,6 +12,8 @@ public final class DocResult {
     public final String id;
     public final MapResult source;
 
+    public String keyString() { return MetaFields.keyString(source); }
+
     public static MapResult docSource(DocResult result) { return result == null ? null : result.source; }
 
     public IndexRequest createRequest(MapResult ancillary, String parent, DocStatus status) {

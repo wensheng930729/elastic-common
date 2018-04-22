@@ -1,10 +1,8 @@
 package io.polyglotted.elastic.search;
 
-import io.polyglotted.common.model.MapResult;
 import io.polyglotted.elastic.client.ElasticClient;
 import io.polyglotted.elastic.common.EsAuth;
 import io.polyglotted.elastic.common.Verbose;
-import io.polyglotted.elastic.index.IndexRecord;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -17,11 +15,9 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
 import java.util.List;
-import java.util.Map;
 
 import static io.polyglotted.common.util.BaseSerializer.MAPPER;
 import static io.polyglotted.elastic.common.DocResult.docSource;
-import static io.polyglotted.elastic.search.Finder.findAll;
 import static io.polyglotted.elastic.search.Finder.findById;
 import static io.polyglotted.elastic.search.QueryMaker.scrollRequest;
 import static io.polyglotted.elastic.search.SearchUtil.buildAggs;
@@ -38,8 +34,6 @@ import static org.elasticsearch.search.fetch.subphase.FetchSourceContext.FETCH_S
 @Slf4j @RequiredArgsConstructor
 public final class Searcher {
     private final ElasticClient client;
-
-    public Map<String, MapResult> getAll(EsAuth auth, List<IndexRecord.Builder> builders) { return findAll(client, auth, builders); }
 
     public <T> T getById(EsAuth auth, String index, String id, ResultBuilder<T> resultBuilder, Verbose verbose) {
         return getById(auth, index, id, null, FETCH_SOURCE, resultBuilder, verbose);

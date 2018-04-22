@@ -70,9 +70,9 @@ public abstract class MetaFields {
 
     public static long timestamp(Object object) { return longStrVal(mapValue(object), TIMESTAMP_FIELD, -3); }
 
-    public static String keyString(MapResult map) { return urnOf(model(map), id(map)); }
+    public static Long tstamp(Object object) { return longStrVal(mapValue(object), TIMESTAMP_FIELD); }
 
-    public static String simpleKey(MapResult map) { return simpleKey(model(map), parent(map), id(map), timestamp(map)); }
+    public static String keyString(MapResult map) { return urnOf(model(map), id(map)); }
 
     public static String simpleKey(String model, String parent, String id, long ts) { return safeUrnOf(model, parent, id, String.valueOf(ts)); }
 

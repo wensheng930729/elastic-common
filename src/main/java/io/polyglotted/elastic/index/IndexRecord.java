@@ -52,7 +52,7 @@ import static lombok.AccessLevel.PRIVATE;
 public final class IndexRecord {
     public final String index;
     public final String model;
-    public final String id;
+    @Getter public final String id;
     public final String parent;
     public final long timestamp;
     public final RecordAction action;
@@ -73,7 +73,11 @@ public final class IndexRecord {
 
     String ancestorId() { return requireNonNull(ancestorId, "_id not found for delete"); }
 
-    DocWriteRequest<?> request() { System.out.println("adding key " + simpleKey()); addMeta(source, KEY_FIELD, simpleKey()); return action.request(this); }
+    DocWriteRequest<?> request() { addMeta(source, KEY_FIELD, simpleKey()); return action.request(this); }
+
+    public static Builder saveRecord(String repo, String model, String id, String parent, Long version, Object source) {
+        return version == null ? createRecord(repo, model, id, parent, source) : updateRecord(repo, model, id, parent, version, source);
+    }
 
     public static Builder createRecord(String repo, String model, String id, Object source) { return createRecord(repo, model, id, null, source); }
 

@@ -2,48 +2,39 @@ package io.polyglotted.elastic.index;
 
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.util.ListBuilder.ImmutableListBuilder;
-import io.polyglotted.elastic.common.EsAuth;
+import io.polyglotted.elastic.common.MetaFields;
 import io.polyglotted.elastic.common.Notification;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.elasticsearch.action.bulk.BulkRequest;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+import static io.polyglotted.common.util.Assertions.checkBool;
 import static io.polyglotted.common.util.CollUtil.transform;
 import static io.polyglotted.common.util.ListBuilder.immutableListBuilder;
 import static io.polyglotted.common.util.MapBuilder.simpleMap;
 import static io.polyglotted.elastic.common.MetaFields.id;
+import static io.polyglotted.elastic.common.MetaFields.tstamp;
 import static io.polyglotted.elastic.common.Notification.notificationBuilder;
-import static io.polyglotted.elastic.index.IndexRecord.createRecord;
+import static io.polyglotted.elastic.index.IndexRecord.saveRecord;
 import static java.util.Objects.requireNonNull;
-import static org.elasticsearch.action.support.WriteRequest.RefreshPolicy.IMMEDIATE;
 
 @SuppressWarnings({"unused", "WeakerAccess", "StaticPseudoFunctionalStyleMethod"})
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class BulkRecord {
+    public final String repo;
     public final String model;
-    public final long timestamp;
+    public final String parent;
     public final List<IndexRecord> records;
     public final IgnoreErrors ignoreErrors;
-    private final Validator validator;
+    public final Validator validator;
     private final Notification.Builder notification;
     public final Map<String, String> failures = simpleMap();
-
-    BulkRequest bulkRequest(EsAuth esAuth, Indexer indexer) {
-        BulkRequest bulkRequest = new BulkRequest().setRefreshPolicy(IMMEDIATE);
-        records.forEach(record -> {
-            try {
-                //TODO revisit this logic - cannot handle one at a time!
-                indexer.validateRecord(esAuth, record, bulkRequest, validator);
-            } catch (NoopException noop) { success(record.id, "noop"); }
-        });
-        return bulkRequest;
-    }
 
     void success(String id, String result) { if (notification != null) { notification.keyAction(id, result); } }
 
@@ -59,6 +50,7 @@ public final class BulkRecord {
         private final String model;
         private final long timestamp;
         private final String user;
+        @Setter private String parent;
         @Setter @NonNull private IgnoreErrors ignoreErrors = IgnoreErrors.STRICT;
         @Setter @NonNull private Validator validator = Validator.STRICT;
         @Setter private Notification.Builder notification;
@@ -66,20 +58,25 @@ public final class BulkRecord {
 
         public Builder withNotification() { return notification(notificationBuilder()); }
 
-        public Builder record(IndexRecord record) { this.records.add(record); return this; }
+        public Builder record(IndexRecord record) { this.records.add(checkParent(record)); return this; }
 
-        public Builder records(Iterable<IndexRecord> records) { this.records.addAll(records); return this; }
+        public Builder records(Iterable<IndexRecord> records) { for (IndexRecord rec : records) { this.record(rec); } return this; }
 
         public Builder objects(Iterable<MapResult> objects) { return records(transform(objects, this::indexRec)); }
 
         private IndexRecord indexRec(MapResult object) {
-            return createRecord(requireNonNull(repo), requireNonNull(model), id(object), object).timestamp(timestamp).user(user).build();
+            return checkParent(saveRecord(requireNonNull(repo), requireNonNull(model), id(object), MetaFields.parent(object),
+                tstamp(object), object).timestamp(timestamp).user(user).build());
+        }
+
+        private IndexRecord checkParent(IndexRecord record) {
+            checkBool(Objects.equals(parent, record.parent), "bulk record cannot index child records for multiple parents"); return record;
         }
 
         public BulkRecord build() {
             List<IndexRecord> recordsList = records.build();
             if (notification != null) { recordsList.forEach(record -> notification.key(record.id, record.simpleKey())); }
-            return new BulkRecord(model, timestamp, recordsList, ignoreErrors, validator, notification);
+            return new BulkRecord(model, repo, parent, recordsList, ignoreErrors, validator, notification);
         }
     }
 
