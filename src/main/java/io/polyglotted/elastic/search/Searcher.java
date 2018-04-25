@@ -35,16 +35,17 @@ import static org.elasticsearch.search.fetch.subphase.FetchSourceContext.FETCH_S
 public final class Searcher {
     private final ElasticClient client;
 
-    public <T> T getById(EsAuth auth, String index, String id, ResultBuilder<T> resultBuilder, Verbose verbose) {
-        return getById(auth, index, id, null, FETCH_SOURCE, resultBuilder, verbose);
+    public <T> T getById(EsAuth auth, String index, String model, String id, ResultBuilder<T> resultBuilder, Verbose verbose) {
+        return getById(auth, index, model, id, null, FETCH_SOURCE, resultBuilder, verbose);
     }
 
-    public <T> T getById(EsAuth auth, String index, String id, String parent, ResultBuilder<T> resultBuilder, Verbose verbose) {
-        return getById(auth, index, id, parent, FETCH_SOURCE, resultBuilder, verbose);
+    public <T> T getById(EsAuth auth, String index, String model, String id, String parent, ResultBuilder<T> resultBuilder, Verbose verbose) {
+        return getById(auth, index, model, id, parent, FETCH_SOURCE, resultBuilder, verbose);
     }
 
-    public <T> T getById(EsAuth auth, String index, String id, String parent, FetchSourceContext ctx, ResultBuilder<T> builder, Verbose verbose) {
-        return builder.buildVerbose(docSource(findById(client, auth, index, id, parent, ctx)), verbose);
+    public <T> T getById(EsAuth auth, String index, String model, String id, String parent,
+                         FetchSourceContext ctx, ResultBuilder<T> builder, Verbose verbose) {
+        return builder.buildVerbose(docSource(findById(client, auth, index, model, id, parent, ctx)), verbose);
     }
 
     public <T> SimpleResponse searchBy(EsAuth auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {

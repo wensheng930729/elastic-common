@@ -29,7 +29,7 @@ import static org.hamcrest.Matchers.notNullValue;
 public class ExpressionsTest {
     public static Object[][] expressionInputs() {
         return new Object[][]{
-            {bool().approvalRejected().build(), "{\"bool\":{\"filter\":[{\"terms\":{\"&status\":[\"REJECTED\"],\"boost\":1.0}}]," +
+            {bool().rejected().build(), "{\"bool\":{\"filter\":[{\"terms\":{\"&status\":[\"REJECTED\"],\"boost\":1.0}}]," +
                 "\"must_not\":[{\"exists\":{\"field\":\"&expiry\",\"boost\":1.0}}],\"adjust_pure_negative\":true,\"boost\":1.0}}"},
             {bool().archiveIndex().build(), "{\"bool\":{\"filter\":[{\"exists\":{\"field\":\"&status\",\"boost\":1.0}}," +
                 "{\"exists\":{\"field\":\"&expiry\",\"boost\":1.0}}],\"adjust_pure_negative\":true,\"boost\":1.0}}"},
@@ -47,6 +47,10 @@ public class ExpressionsTest {
                     ":true,\"boost\":1.0}},{\"bool\":{\"must_not\":[{\"term\":{\"foo\":{\"value\":\"bar\",\"boost\":1.0}}}],\"" +
                     "adjust_pure_negative\":true,\"boost\":1.0}}],\"adjust_pure_negative\":true,\"boost\":1.0}}"},
             {text("foo", "bar"), "{\"match_phrase_prefix\":{\"foo\":{\"query\":\"bar\",\"slop\":0,\"max_expansions\":50,\"boost\":1.0}}}"},
+            {bool().liveOrPending().build(), "{\"bool\":{\"must\":[{\"exists\":{\"field\":\"&timestamp\",\"boost\":1.0}}],\"must_not\":" +
+                "[{\"exists\":{\"field\":\"&expiry\",\"boost\":1.0}}],\"should\":[{\"bool\":{\"must_not\":[{\"exists\":{\"field\":\"&status\"," +
+                "\"boost\":1.0}}],\"adjust_pure_negative\":true,\"boost\":1.0}},{\"terms\":{\"&status\":[\"PENDING\",\"PENDING_DELETE\"]," +
+                "\"boost\":1.0}}],\"adjust_pure_negative\":true,\"boost\":1.0}}"},
         };
     }
 

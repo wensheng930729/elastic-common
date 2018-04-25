@@ -4,14 +4,13 @@ import io.polyglotted.common.model.MapResult;
 import io.polyglotted.elastic.client.ElasticClient;
 import io.polyglotted.elastic.common.DocResult;
 import io.polyglotted.elastic.common.EsAuth;
-import io.polyglotted.elastic.common.MetaFields;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
 
 import java.util.Map;
 
-import static io.polyglotted.common.util.CollUtil.filterKeys;
+import static io.polyglotted.elastic.common.DocResult.filtered;
 import static io.polyglotted.elastic.common.MetaFields.reqdKey;
 import static io.polyglotted.elastic.common.MetaFields.timestamp;
 import static io.polyglotted.elastic.index.RecordAction.CREATE;
@@ -41,7 +40,7 @@ public interface Validator {
 
     @Slf4j @SuppressWarnings({"unused", "WeakerAccess"}) class OverwriteValidator implements Validator {
         @Override public BulkRequest validateAll(ElasticClient client, EsAuth auth, BulkRecord bulkRecord, BulkRequest bulkRequest) {
-            Map<String, DocResult> docs = findAll(client, auth, bulkRecord.repo, bulkRecord.parent, bulkRecord.records);
+            Map<String, DocResult> docs = findAll(client, auth, bulkRecord);
             for (IndexRecord record : bulkRecord.records) {
                 try {
                     IndexRequest ancestor = checkRecordWithDoc(record, docs.get(record.keyString()));
@@ -58,7 +57,7 @@ public interface Validator {
 
         @Override public final IndexRequest validate(ElasticClient client, EsAuth auth, IndexRecord record) {
             preValidate(client, record);
-            DocResult existing = findById(client, auth, record.index, record.id, record.parent, FETCH_SOURCE);
+            DocResult existing = findById(client, auth, record.index, record.model, record.id, record.parent, FETCH_SOURCE);
             return checkRecordWithDoc(record, existing);
         }
 
@@ -78,14 +77,14 @@ public interface Validator {
         public static IndexRequest createParentRequest(IndexRecord record, DocResult ancestor) {
             record.update(ancestor.id, reqdKey(ancestor.source), record.action.status);
             if (log.isTraceEnabled()) { log.trace("creating archive record for " + record.simpleKey()); }
-            return ancestor.createRequest(record.ancillary, record.parent, record.action.status);
+            return ancestor.ancestorRequest(record.ancillary, record.parent, record.action.status);
         }
     }
 
     @SuppressWarnings("unchecked")
     static boolean isIdempotent(IndexRecord record, DocResult existing) {
         if (existing == null || record.action.notCreateOrUpdate() || !(record.source instanceof Map)) { return false; }
-        Map<String, Object> current = filterKeys((MapResult) record.source, MetaFields::isNotMeta);
-        return current.equals(filterKeys(existing.source, MetaFields::isNotMeta));
+        Map<String, Object> current = filtered((MapResult) record.source);
+        return current.equals(filtered(existing.source));
     }
 }

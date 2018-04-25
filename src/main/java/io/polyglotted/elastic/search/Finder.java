@@ -3,6 +3,7 @@ package io.polyglotted.elastic.search;
 import io.polyglotted.elastic.client.ElasticClient;
 import io.polyglotted.elastic.common.DocResult;
 import io.polyglotted.elastic.common.EsAuth;
+import io.polyglotted.elastic.index.BulkRecord;
 import io.polyglotted.elastic.index.IndexRecord;
 import io.polyglotted.elastic.search.Expressions.BoolBuilder;
 import lombok.SneakyThrows;
@@ -10,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
-import java.util.List;
 import java.util.Map;
 
 import static io.polyglotted.common.util.CollUtil.transform;
@@ -18,6 +18,7 @@ import static io.polyglotted.common.util.CollUtil.uniqueIndex;
 import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.elastic.common.MetaFields.ID_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.KEY_FIELD;
+import static io.polyglotted.elastic.common.MetaFields.MODEL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.PARENT_FIELD;
 import static io.polyglotted.elastic.common.Verbose.NONE;
 import static io.polyglotted.elastic.search.Expressions.bool;
@@ -31,9 +32,9 @@ import static org.elasticsearch.search.fetch.subphase.FetchSourceContext.FETCH_S
 @Slf4j @SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class Finder {
 
-    public static Map<String, DocResult> findAll(ElasticClient client, EsAuth auth, String repo, String parent, List<IndexRecord> records) {
-        BoolBuilder idBuilder = idBuilder(in(ID_FIELD, transform(records, IndexRecord::getId)), parent);
-        SearchResponse response = client.search(auth, filterToRequest(repo, idBuilder.build(), FETCH_SOURCE, immutableList(), records.size()));
+    public static Map<String, DocResult> findAll(ElasticClient client, EsAuth auth, BulkRecord record) {
+        BoolBuilder idBuilder = idBuilder(record.model, in(ID_FIELD, transform(record.records, IndexRecord::getId)), record.parent);
+        SearchResponse response = client.search(auth, filterToRequest(record.repo, idBuilder.build(), FETCH_SOURCE, immutableList(), record.size()));
         return uniqueIndex(DocResultBuilder.buildFrom(response, NONE), DocResult::keyString);
     }
 
@@ -43,10 +44,12 @@ public abstract class Finder {
         return findBy(client, auth, repo, equalsTo(KEY_FIELD, key), context);
     }
 
-    public static DocResult findById(ElasticClient client, EsAuth auth, String repo, String id) { return findById(client, auth, repo, id, null, null); }
+    public static DocResult findById(ElasticClient client, EsAuth auth, String repo, String model, String id) {
+        return findById(client, auth, repo, model, id, null, null);
+    }
 
-    public static DocResult findById(ElasticClient client, EsAuth auth, String repo, String id, String parent, FetchSourceContext context) {
-        return findBy(client, auth, repo, idBuilder(equalsTo(ID_FIELD, id), parent).build(), context);
+    public static DocResult findById(ElasticClient client, EsAuth auth, String repo, String model, String id, String parent, FetchSourceContext ctx) {
+        return findBy(client, auth, repo, idBuilder(model, equalsTo(ID_FIELD, id), parent).build(), ctx);
     }
 
     @SneakyThrows private static DocResult findBy(ElasticClient client, EsAuth auth, String repo, Expression expr, FetchSourceContext context) {
@@ -54,8 +57,8 @@ public abstract class Finder {
         return getReturnedHits(response) > 0 ? DocResultBuilder.buildFrom(response, NONE).get(0) : null;
     }
 
-    private static BoolBuilder idBuilder(Expression must, String parent) {
-        BoolBuilder idBuilder = bool().liveIndex().must(must);
+    private static BoolBuilder idBuilder(String model, Expression must, String parent) {
+        BoolBuilder idBuilder = bool().liveOrPending().must(equalsTo(MODEL_FIELD, model)).must(must);
         if (parent != null) { idBuilder.filter(equalsTo(PARENT_FIELD, parent)); }
         return idBuilder;
     }

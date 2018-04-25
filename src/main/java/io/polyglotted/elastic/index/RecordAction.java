@@ -30,6 +30,8 @@ public enum RecordAction {
 
     public boolean notCreateOrUpdate() { return this != CREATE && this != UPDATE; }
 
+    public String approvalComment() { return this == REJECT ? "rejected by user" : (this == DISCARD ? "discarded by user" : "approved by user"); }
+
     public DocWriteRequest<?> request(IndexRecord record) {
         if (log.isTraceEnabled()) { log.trace(message + " record for " + record.model + " at " + record.index); }
         return isDelete ? new DeleteRequest(record.index, "_doc", record.ancestorId()).routing(record.parent)

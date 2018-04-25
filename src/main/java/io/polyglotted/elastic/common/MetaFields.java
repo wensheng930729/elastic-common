@@ -10,7 +10,7 @@ import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.common.util.MapBuilder.immutableMapBuilder;
 import static io.polyglotted.common.util.MapRetriever.longStrVal;
 import static io.polyglotted.common.util.MapRetriever.optValue;
-import static io.polyglotted.common.util.MapRetriever.reqdStr;
+import static io.polyglotted.common.util.MapRetriever.reqdValue;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.common.util.ReflectionUtil.safeFieldValue;
 import static io.polyglotted.common.util.UrnUtil.safeUrnOf;
@@ -52,7 +52,7 @@ public abstract class MetaFields {
 
     public static void removeMeta(Object item, String field) { mapValue(item).remove(field); }
 
-    public static String reqdMeta(Object object, String field) { return reqdStr(mapValue(object), field); }
+    public static <T> T reqdMeta(Object object, String field) { return reqdValue(mapValue(object), field); }
 
     public static boolean isNotMeta(String field) { return field.indexOf('&') != 0; }
 
@@ -73,6 +73,8 @@ public abstract class MetaFields {
     public static Long tstamp(Object object) { return longStrVal(mapValue(object), TIMESTAMP_FIELD); }
 
     public static String keyString(MapResult map) { return urnOf(model(map), id(map)); }
+
+    public static DocStatus status(MapResult map) { return fromStatus(map.get(STATUS_FIELD).toString()); }
 
     public static String simpleKey(String model, String parent, String id, long ts) { return safeUrnOf(model, parent, id, String.valueOf(ts)); }
 
@@ -102,7 +104,7 @@ public abstract class MetaFields {
         putVal(map, mandatory ? checkContains(map, MODEL_FIELD) : MODEL_FIELD, builder);
         putVal(map, PARENT_FIELD, builder);
         putVal(map, SCHEMA_FIELD, builder);
-        if (map.containsKey(STATUS_FIELD)) { builder.put(STATUS_FIELD, fromStatus(map.get(STATUS_FIELD).toString()));}
+        if (map.containsKey(STATUS_FIELD)) { builder.put(STATUS_FIELD, status(map));}
         putVal(map, TRAITFQN_FIELD, builder);
         putTs(map, mandatory ? checkContains(map, TIMESTAMP_FIELD) : TIMESTAMP_FIELD, builder);
         putVal(map, UPDATER_FIELD, builder);

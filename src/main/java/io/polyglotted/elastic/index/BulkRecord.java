@@ -15,12 +15,12 @@ import java.util.Map;
 import java.util.Objects;
 
 import static io.polyglotted.common.util.Assertions.checkBool;
-import static io.polyglotted.common.util.CollUtil.transform;
 import static io.polyglotted.common.util.ListBuilder.immutableListBuilder;
 import static io.polyglotted.common.util.MapBuilder.simpleMap;
 import static io.polyglotted.elastic.common.MetaFields.id;
 import static io.polyglotted.elastic.common.MetaFields.tstamp;
 import static io.polyglotted.elastic.common.Notification.notificationBuilder;
+import static io.polyglotted.elastic.index.ApprovalUtil.approvalModel;
 import static io.polyglotted.elastic.index.IndexRecord.saveRecord;
 import static java.util.Objects.requireNonNull;
 
@@ -36,21 +36,24 @@ public final class BulkRecord {
     private final Notification.Builder notification;
     public final Map<String, String> failures = simpleMap();
 
+    public int size() { return records.size(); }
+
     void success(String id, String result) { if (notification != null) { notification.keyAction(id, result); } }
 
     void failure(String id, String result) { failures.put(id, result); }
 
     public static Builder bulkBuilder(String repo, String model, long timestamp, String user) {
-        return new Builder(repo, model, timestamp, requireNonNull(user));
+        return new Builder(requireNonNull(repo), requireNonNull(model), timestamp, requireNonNull(user));
     }
 
     @RequiredArgsConstructor @Accessors(fluent = true, chain = true)
     public static class Builder {
-        private final String repo;
-        private final String model;
+        @NonNull private final String repo;
+        @NonNull private final String model;
         private final long timestamp;
-        private final String user;
+        @NonNull private final String user;
         @Setter private String parent;
+        @Setter private boolean hasApproval;
         @Setter @NonNull private IgnoreErrors ignoreErrors = IgnoreErrors.STRICT;
         @Setter @NonNull private Validator validator = Validator.STRICT;
         @Setter private Notification.Builder notification;
@@ -58,15 +61,17 @@ public final class BulkRecord {
 
         public Builder withNotification() { return notification(notificationBuilder()); }
 
+        public Builder hasApproval() { return hasApproval(true); }
+
         public Builder record(IndexRecord record) { this.records.add(checkParent(record)); return this; }
 
         public Builder records(Iterable<IndexRecord> records) { for (IndexRecord rec : records) { this.record(rec); } return this; }
 
-        public Builder objects(Iterable<MapResult> objects) { return records(transform(objects, this::indexRec)); }
+        public Builder objects(Iterable<MapResult> docs) { for (MapResult doc : docs) { this.record(indexRec(doc)); } return this; }
 
-        private IndexRecord indexRec(MapResult object) {
-            return checkParent(saveRecord(requireNonNull(repo), requireNonNull(model), id(object), MetaFields.parent(object),
-                tstamp(object), object).timestamp(timestamp).user(user).build());
+        private IndexRecord indexRec(MapResult doc) {
+            return checkParent(saveRecord(repo, hasApproval ? approvalModel(model) : model, id(doc),
+                MetaFields.parent(doc), tstamp(doc), doc).userTs(user, timestamp).approval(hasApproval).build());
         }
 
         private IndexRecord checkParent(IndexRecord record) {
@@ -76,7 +81,7 @@ public final class BulkRecord {
         public BulkRecord build() {
             List<IndexRecord> recordsList = records.build();
             if (notification != null) { recordsList.forEach(record -> notification.key(record.id, record.simpleKey())); }
-            return new BulkRecord(model, repo, parent, recordsList, ignoreErrors, validator, notification);
+            return new BulkRecord(repo, model, parent, recordsList, ignoreErrors, validator, notification);
         }
     }
 

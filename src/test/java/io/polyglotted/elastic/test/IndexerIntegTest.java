@@ -50,10 +50,9 @@ import static org.junit.Assert.fail;
 
 public class IndexerIntegTest {
     private static final EsAuth ES_AUTH = basicAuth("elastic", "SteelEye");
-    private static final long T1 = 1000;
-    private static final long T1_5 = 1500;
-    private static final long T2 = 2000;
-    private static final long T3 = 3000;
+    private static final String Tester = "tester";
+    private static final long T1 = 1000, T1_5 = 1500, T2 = 2000, T3 = 3000;
+    private static final String REPO = "repo1", MODEL = "User", ID = "sam";
     private ElasticClient client;
     private Admin admin;
     private Indexer indexer;
@@ -66,85 +65,80 @@ public class IndexerIntegTest {
 
     @Test
     public void strictSaveLifeCycle() throws Exception {
-        String repo = "repo1", model = "User", id = "sam", tester = "tester";
-        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), repo);
+        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), REPO);
         try {
             MapResult user = simpleResult("name", "shankar", "age", 25, "title", "programmer");
-            String result = indexer.strictSave(ES_AUTH, createRecord(repo, model, id, user).timestamp(T1).user(tester).build(), STRICT);
+            String result = indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, user).userTs(Tester, T1).build(), STRICT);
             assertThat(result, result, is("{\"&model\":\"User\",\"&id\":\"sam\",\"&timestamp\":1000,\"&result\":\"created\"}"));
-            assertHeaders(findById(client, ES_AUTH, repo, id), immutableMap(MODEL_FIELD, model, ID_FIELD, id,
-                TIMESTAMP_FIELD, String.valueOf(T1), USER_FIELD, tester));
+            assertHeaders(findById(client, ES_AUTH, REPO, MODEL, ID), immutableMap(MODEL_FIELD, MODEL, ID_FIELD, ID,
+                TIMESTAMP_FIELD, String.valueOf(T1), USER_FIELD, Tester));
 
-            result = indexer.strictSave(ES_AUTH, createRecord(repo, model, id, user).timestamp(T1_5).user(tester).build(), STRICT);
+            result = indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, user).userTs(Tester, T1_5).build(), STRICT);
             assertThat(result, result, is("{\"&model\":\"User\",\"&id\":\"sam\",\"&timestamp\":1000,\"&result\":\"noop\"}"));
 
             MapResult user2 = simpleResult("name", "shankar", "age", 25, "title", "developer", "salary", 10000L);
-            result = indexer.strictSave(ES_AUTH, updateRecord(repo, model, id, T1, user2).timestamp(T2).user(tester).build(), STRICT);
+            result = indexer.strictSave(ES_AUTH, updateRecord(REPO, MODEL, ID, T1, user2).userTs(Tester, T2).build(), STRICT);
             assertThat(result, result, is("{\"&model\":\"User\",\"&id\":\"sam\",\"&timestamp\":2000,\"&result\":\"updated\"}"));
-            String ancestor1 = simpleKey(model, null, id, T1);
-            assertHeaders(findById(client, ES_AUTH, repo, id), stringMapBuilder().put(MODEL_FIELD, model)
-                .put(ID_FIELD, id).put(TIMESTAMP_FIELD, String.valueOf(T2)).put(USER_FIELD, tester).put(ANCESTOR_FIELD, ancestor1).build());
-            assertHeaders(findByKey(client, ES_AUTH, repo, ancestor1), stringMapBuilder().put(MODEL_FIELD, model)
-                .put(ID_FIELD, id).put(TIMESTAMP_FIELD, String.valueOf(T1)).put(USER_FIELD, tester).put(UPDATER_FIELD, tester)
-                .put(EXPIRY_FIELD, String.valueOf(T2)).put(STATUS_FIELD, "updated").build());
+            String ancestor1 = simpleKey(MODEL, null, ID, T1);
+            assertHeaders(findById(client, ES_AUTH, REPO, MODEL, ID), stringMapBuilder().put(MODEL_FIELD, MODEL)
+                .put(ID_FIELD, ID).put(TIMESTAMP_FIELD, String.valueOf(T2)).put(USER_FIELD, Tester).put(ANCESTOR_FIELD, ancestor1).build());
+            assertHeaders(findByKey(client, ES_AUTH, REPO, ancestor1), stringMapBuilder().put(MODEL_FIELD, MODEL)
+                .put(ID_FIELD, ID).put(TIMESTAMP_FIELD, String.valueOf(T1)).put(USER_FIELD, Tester).put(UPDATER_FIELD, Tester)
+                .put(EXPIRY_FIELD, String.valueOf(T2)).put(STATUS_FIELD, "UPDATED").build());
 
-            result = indexer.strictSave(ES_AUTH, deleteRecord(repo, model, id, T2).timestamp(T3).user(tester).build(), STRICT);
+            result = indexer.strictSave(ES_AUTH, deleteRecord(REPO, MODEL, ID, T2).userTs(Tester, T3).build(), STRICT);
             assertThat(result, result, is("{\"&model\":\"User\",\"&id\":\"sam\",\"&timestamp\":3000,\"&result\":\"deleted\"}"));
-            assertThat(findById(client, ES_AUTH, repo, id), is(nullValue()));
-            String ancestor2 = simpleKey(model, null, id, T2);
-            assertHeaders(findByKey(client, ES_AUTH, repo, ancestor2), stringMapBuilder().put(MODEL_FIELD, model)
-                .put(ID_FIELD, id).put(TIMESTAMP_FIELD, String.valueOf(T2)).put(USER_FIELD, tester).put(UPDATER_FIELD, tester)
-                .put(EXPIRY_FIELD, String.valueOf(T3)).put(STATUS_FIELD, "deleted").build());
+            assertThat(findById(client, ES_AUTH, REPO, MODEL, ID), is(nullValue()));
+            String ancestor2 = simpleKey(MODEL, null, ID, T2);
+            assertHeaders(findByKey(client, ES_AUTH, REPO, ancestor2), stringMapBuilder().put(MODEL_FIELD, MODEL)
+                .put(ID_FIELD, ID).put(TIMESTAMP_FIELD, String.valueOf(T2)).put(USER_FIELD, Tester).put(UPDATER_FIELD, Tester)
+                .put(EXPIRY_FIELD, String.valueOf(T3)).put(STATUS_FIELD, "DELETED").build());
 
         } finally { admin.dropIndex(ES_AUTH, index2); }
     }
 
     @Test
     public void overrideSaveLifeCycle() {
-        String repo = "repo1", model = "User", id = "sam", tester = "tester";
-        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), repo);
+        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), REPO);
         try {
             MapResult user = simpleResult("name", "shankar", "age", 25, "title", "programmer");
-            String result = indexer.strictSave(ES_AUTH, createRecord(repo, model, id, user).timestamp(T1).user(tester).build(), STRICT);
+            String result = indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, user).userTs(Tester, T1).build(), STRICT);
             assertThat(result, result, is("{\"&model\":\"User\",\"&id\":\"sam\",\"&timestamp\":1000,\"&result\":\"created\"}"));
-            assertHeaders(findById(client, ES_AUTH, repo, id), immutableMap(MODEL_FIELD, model, ID_FIELD, id,
-                TIMESTAMP_FIELD, String.valueOf(T1), USER_FIELD, tester));
+            assertHeaders(findById(client, ES_AUTH, REPO, MODEL, ID), immutableMap(MODEL_FIELD, MODEL, ID_FIELD, ID,
+                TIMESTAMP_FIELD, String.valueOf(T1), USER_FIELD, Tester));
 
-            result = indexer.strictSave(ES_AUTH, createRecord(repo, model, id, user).timestamp(T1_5).user(tester).build(), STRICT);
+            result = indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, user).userTs(Tester, T1_5).build(), STRICT);
             assertThat(result, result, is("{\"&model\":\"User\",\"&id\":\"sam\",\"&timestamp\":1000,\"&result\":\"noop\"}"));
 
             MapResult user2 = simpleResult("name", "shankar", "age", 25, "title", "developer", "salary", 10000L);
-            result = indexer.strictSave(ES_AUTH, createRecord(repo, model, id, user2).timestamp(T2).user(tester).build(), OVERRIDE);
+            result = indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, user2).userTs(Tester, T2).build(), OVERRIDE);
             assertThat(result, result, is("{\"&model\":\"User\",\"&id\":\"sam\",\"&timestamp\":2000,\"&result\":\"updated\"}"));
-            String ancestor1 = simpleKey(model, null, id, T1);
-            assertHeaders(findById(client, ES_AUTH, repo, id), stringMapBuilder().put(MODEL_FIELD, model)
-                .put(ID_FIELD, id).put(TIMESTAMP_FIELD, String.valueOf(T2)).put(USER_FIELD, tester).put(ANCESTOR_FIELD, ancestor1).build());
-            assertHeaders(findByKey(client, ES_AUTH, repo, ancestor1), stringMapBuilder().put(MODEL_FIELD, model)
-                .put(ID_FIELD, id).put(TIMESTAMP_FIELD, String.valueOf(T1)).put(USER_FIELD, tester).put(UPDATER_FIELD, tester)
-                .put(EXPIRY_FIELD, String.valueOf(T2)).put(STATUS_FIELD, "updated").build());
+            String ancestor1 = simpleKey(MODEL, null, ID, T1);
+            assertHeaders(findById(client, ES_AUTH, REPO, MODEL, ID), stringMapBuilder().put(MODEL_FIELD, MODEL)
+                .put(ID_FIELD, ID).put(TIMESTAMP_FIELD, String.valueOf(T2)).put(USER_FIELD, Tester).put(ANCESTOR_FIELD, ancestor1).build());
+            assertHeaders(findByKey(client, ES_AUTH, REPO, ancestor1), stringMapBuilder().put(MODEL_FIELD, MODEL)
+                .put(ID_FIELD, ID).put(TIMESTAMP_FIELD, String.valueOf(T1)).put(USER_FIELD, Tester).put(UPDATER_FIELD, Tester)
+                .put(EXPIRY_FIELD, String.valueOf(T2)).put(STATUS_FIELD, "UPDATED").build());
 
-            result = indexer.strictSave(ES_AUTH, deleteRecord(repo, model, id, null).timestamp(T3).user(tester).build(), OVERRIDE);
+            result = indexer.strictSave(ES_AUTH, deleteRecord(REPO, MODEL, ID, null).userTs(Tester, T3).build(), OVERRIDE);
             assertThat(result, result, is("{\"&model\":\"User\",\"&id\":\"sam\",\"&timestamp\":3000,\"&result\":\"deleted\"}"));
-            assertThat(findById(client, ES_AUTH, repo, id), is(nullValue()));
-            String ancestor2 = simpleKey(model, null, id, T2);
-            assertHeaders(findByKey(client, ES_AUTH, repo, ancestor2), stringMapBuilder().put(MODEL_FIELD, model)
-                .put(ID_FIELD, id).put(TIMESTAMP_FIELD, String.valueOf(T2)).put(USER_FIELD, tester).put(UPDATER_FIELD, tester)
-                .put(EXPIRY_FIELD, String.valueOf(T3)).put(STATUS_FIELD, "deleted").build());
+            assertThat(findById(client, ES_AUTH, REPO, MODEL, ID), is(nullValue()));
+            String ancestor2 = simpleKey(MODEL, null, ID, T2);
+            assertHeaders(findByKey(client, ES_AUTH, REPO, ancestor2), stringMapBuilder().put(MODEL_FIELD, MODEL)
+                .put(ID_FIELD, ID).put(TIMESTAMP_FIELD, String.valueOf(T2)).put(USER_FIELD, Tester).put(UPDATER_FIELD, Tester)
+                .put(EXPIRY_FIELD, String.valueOf(T3)).put(STATUS_FIELD, "DELETED").build());
 
         } finally { admin.dropIndex(ES_AUTH, index2); }
     }
 
     @Test
     public void strictSaveFailureAlreadyExists() {
-        String repo = "repo1", model = "User", id = "sam", tester = "tester";
-        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), repo);
+        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), REPO);
         try {
-            MapResult user = simpleResult("name", "shankar", "age", 25, "title", "programmer");
-            indexer.strictSave(ES_AUTH, createRecord(repo, model, id, user).timestamp(T1).user(tester).build(), STRICT);
-
-            MapResult user2 = simpleResult("name", "shankar", "age", 25, "title", "developer", "salary", 10000L);
-            indexer.strictSave(ES_AUTH, createRecord(repo, model, id, user2).timestamp(T2).user(tester).build(), STRICT);
-
+            indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, simpleResult("name", "shankar", "age", 25,
+                "title", "programmer")).userTs(Tester, T1).build(), STRICT);
+            indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, simpleResult("name", "shankar", "age", 25,
+                "title", "developer", "salary", 10000L)).userTs(Tester, T2).build(), STRICT);
             fail("cannot come here");
         } catch (IndexerException iex) {
             assertThat(iex.getMessage(), is("User:sam - record already exists"));
@@ -153,11 +147,9 @@ public class IndexerIntegTest {
 
     @Test
     public void strictSaveFailureDeleteNonExistent() {
-        String repo = "repo1", model = "User", id = "sam", tester = "tester";
-        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), repo);
+        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), REPO);
         try {
-            indexer.strictSave(ES_AUTH, deleteRecord(repo, model, id, T2).timestamp(T3).user(tester).build(), STRICT);
-
+            indexer.strictSave(ES_AUTH, deleteRecord(REPO, MODEL, ID, T2).userTs(Tester, T3).build(), STRICT);
             fail("cannot come here");
         } catch (IndexerException iex) {
             assertThat(iex.getMessage(), is("User:sam - record not found for update"));
@@ -166,15 +158,12 @@ public class IndexerIntegTest {
 
     @Test
     public void strictSaveFailureBaseVersionNotFound() {
-        String repo = "repo1", model = "User", id = "sam", tester = "tester";
-        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), repo);
+        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), REPO);
         try {
-            MapResult user = simpleResult("name", "shankar", "age", 25, "title", "programmer");
-            indexer.strictSave(ES_AUTH, createRecord(repo, model, id, user).timestamp(T1).user(tester).build(), STRICT);
-
-            MapResult user2 = simpleResult("name", "shankar", "age", 25, "title", "developer", "salary", 10000L);
-            indexer.strictSave(ES_AUTH, expired(UPDATE, repo, model, id, null, null, user2).timestamp(T3).user(tester).build(), STRICT);
-
+            indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, simpleResult("name", "shankar", "age", 25,
+                "title", "programmer")).userTs(Tester, T1).build(), STRICT);
+            indexer.strictSave(ES_AUTH, expired(UPDATE, REPO, MODEL, ID, null, null, simpleResult("name", "shankar", "age", 25,
+                "title", "developer", "salary", 10000L)).userTs(Tester, T2).build(), STRICT);
             fail("cannot come here");
         } catch (IndexerException iex) {
             assertThat(iex.getMessage(), is("User:sam - baseVersion not found for update"));
@@ -183,18 +172,14 @@ public class IndexerIntegTest {
 
     @Test
     public void strictSaveFailureVersionMismatch() {
-        String repo = "repo1", model = "User", id = "sam", tester = "tester";
-        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), repo);
+        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), REPO);
         try {
-            MapResult user = simpleResult("name", "shankar", "age", 25, "title", "programmer");
-            indexer.strictSave(ES_AUTH, createRecord(repo, model, id, user).timestamp(T1).user(tester).build(), STRICT);
-
-            MapResult user2 = simpleResult("name", "shankar", "age", 25, "title", "developer", "salary", 10000L);
-            indexer.strictSave(ES_AUTH, updateRecord(repo, model, id, T1, user2).timestamp(T2).user(tester).build(), STRICT);
-
-            MapResult user2fail = simpleResult("name", "shankar", "age", 25, "title", "sr developer");
-            indexer.strictSave(ES_AUTH, updateRecord(repo, model, id, T1, user2fail).timestamp(T3).user(tester).build(), STRICT);
-
+            indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, simpleResult("name", "shankar", "age", 25,
+                "title", "programmer")).userTs(Tester, T1).build(), STRICT);
+            indexer.strictSave(ES_AUTH, updateRecord(REPO, MODEL, ID, T1, simpleResult("name", "shankar", "age", 25,
+                "title", "developer", "salary", 10000L)).userTs(Tester, T2).build(), STRICT);
+            indexer.strictSave(ES_AUTH, updateRecord(REPO, MODEL, ID, T1, simpleResult("name", "shankar", "age", 25,
+                "title", "sr developer")).userTs(Tester, T3).build(), STRICT);
             fail("cannot come here");
         } catch (IndexerException iex) {
             assertThat(iex.getMessage(), is("User:sam - version conflict for update"));
@@ -203,14 +188,15 @@ public class IndexerIntegTest {
 
     @Test
     public void failedValidation() {
+        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), REPO);
         try {
-            indexer.strictSave(ES_AUTH, createRecord("strict_repo", "User", "shankar",
-                simpleResult()).timestamp(T1).build(), new StrictValidator() {
+            indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, simpleResult()).userTs(Tester, T1).build(), new StrictValidator() {
                 @Override protected void preValidate(ElasticClient client, IndexRecord record) { throw new RuntimeException("induced validation"); }
             });
-
             fail("cannot come here");
-        } catch (IndexerException ie) { assertThat(ie.getMessage(), is("induced validation")); }
+        } catch (IndexerException ie) {
+            assertThat(ie.getMessage(), is("induced validation"));
+        } finally { admin.dropIndex(ES_AUTH, index2); }
     }
 
     private static void assertHeaders(DocResult result, Map<String, String> headers) {

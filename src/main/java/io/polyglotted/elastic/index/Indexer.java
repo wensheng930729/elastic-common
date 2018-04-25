@@ -39,7 +39,8 @@ public final class Indexer {
     public void lockTheIndexOrFail(EsAuth auth, String index, String keyString) { lockTheIndexOrFail(auth, index, keyString, false); }
 
     public void lockTheIndexOrFail(EsAuth auth, String index, String keyString, boolean refresh) {
-        IndexResponse response = client.index(auth, new IndexRequest(index, "_doc", keyString).opType(CREATE).source(immutableMap("i", 1)));
+        IndexResponse response = client.index(auth, new IndexRequest(index, "_doc", keyString)
+            .opType(CREATE).source(immutableMap(TIMESTAMP_FIELD, 1)));
         if (response.status() != CREATED) { throw new IndexerException("response failed while locking the keyString " + keyString); }
         if (refresh) { client.forceRefresh(auth, index); }
     }
@@ -54,17 +55,20 @@ public final class Indexer {
         return client.index(auth, new IndexRequest(index, "_doc", key).source(immutableMap())).getVersion();
     }
 
-    public boolean bulkIndex(EsAuth auth, BulkRecord bulkRecord) {
-        BulkRequest bulkRequest = validateRecords(bulkRecord.validator, auth, bulkRecord, new BulkRequest().setRefreshPolicy(IMMEDIATE));
-        if (bulkRequest.numberOfActions() <= 0) { return true; }
+    public boolean bulkSave(EsAuth auth, BulkRecord bulkRecord) {
         try {
+            BulkRequest bulkRequest = bulkRecord.validator.validateAll(client, auth, bulkRecord, new BulkRequest().setRefreshPolicy(IMMEDIATE));
+            if (bulkRequest.numberOfActions() <= 0) { return true; }
             BulkResponse responses = client.bulk(auth, bulkRequest);
             return checkResponse(responses, bulkRecord.ignoreErrors, bulkRecord::success, bulkRecord::failure);
         } catch (RuntimeException ex) { throw logError(ex); }
     }
 
-    public BulkRequest validateRecords(Validator validator, EsAuth auth, BulkRecord bulkRecord, BulkRequest bulkRequest) {
-        return validator.validateAll(client, auth, bulkRecord, bulkRequest);
+    public boolean strictSave(EsAuth auth, BulkRecord bulkRecord) {
+        lockTheIndexOrFail(auth, bulkRecord.repo, bulkRecord.model);
+        try {
+            return bulkSave(auth, bulkRecord);
+        } finally { unlockIndex(auth, bulkRecord.repo, bulkRecord.model); }
     }
 
     @SneakyThrows public String bulkSave(EsAuth auth, IndexRecord record) {
@@ -91,7 +95,7 @@ public final class Indexer {
 
     @SneakyThrows
     private String strictSave(EsAuth auth, IndexRecord primary, IndexRecord aux, Validator validator) {
-        String lockString = nonNull(aux, primary).simpleKey();
+        String lockString = nonNull(aux, primary).lockString();
         lockTheIndexOrFail(auth, primary.index, lockString);
         try {
             XContentBuilder result = XContentFactory.jsonBuilder().startObject();

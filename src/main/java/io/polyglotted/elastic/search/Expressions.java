@@ -44,7 +44,11 @@ public abstract class Expressions {
         private final List<Expression> shoulds = new ArrayList<>();
         private final List<Expression> mustNots = new ArrayList<>();
 
-        public BoolBuilder approvalRejected() { return filter(in(STATUS_FIELD, immutableList("REJECTED"))).not(exists(EXPIRY_FIELD)); }
+        public BoolBuilder allIndex() { return filter(exists(TIMESTAMP_FIELD)); }
+
+        public BoolBuilder rejected() { return filter(in(STATUS_FIELD, immutableList("REJECTED"))).not(exists(EXPIRY_FIELD)); }
+
+        public BoolBuilder discarded() { return filter(equalsTo(STATUS_FIELD, "DISCARDED")); }
 
         public BoolBuilder pendingApproval() { return filter(in(STATUS_FIELD, immutableList("PENDING", "PENDING_DELETE"))).not(exists(EXPIRY_FIELD)); }
 
@@ -52,13 +56,22 @@ public abstract class Expressions {
 
         public BoolBuilder liveIndex() { return filter(exists(TIMESTAMP_FIELD)).nots(exists(STATUS_FIELD), exists(EXPIRY_FIELD)); }
 
+        public BoolBuilder liveOrPending() {
+            return must(exists(TIMESTAMP_FIELD)).not(exists(EXPIRY_FIELD)).should(bool().not(exists(STATUS_FIELD)))
+                .should(in(STATUS_FIELD, immutableList("PENDING", "PENDING_DELETE")));
+        }
+
         public BoolBuilder must(Expression expr) { if (expr != null) { this.musts.add(expr); } return this; }
 
         public BoolBuilder musts(Expression... exprs) { for (Expression expr : exprs) { must(expr); } return this; }
 
+        public BoolBuilder filter(BoolBuilder builder) { return filter(builder.build()); }
+
         public BoolBuilder filter(Expression expr) { if (expr != null) { this.filters.add(expr); } return this; }
 
         public BoolBuilder filters(Expression... exprs) { for (Expression expr : exprs) { filter(expr); } return this; }
+
+        public BoolBuilder should(BoolBuilder builder) { return should(builder.build()); }
 
         public BoolBuilder should(Expression expr) { if (expr != null) { this.shoulds.add(expr); } return this; }
 

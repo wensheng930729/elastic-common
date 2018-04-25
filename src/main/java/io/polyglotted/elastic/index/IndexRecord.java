@@ -22,8 +22,10 @@ import static io.polyglotted.common.util.CollUtil.filterKeys;
 import static io.polyglotted.common.util.MapBuilder.immutableMap;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.common.util.StrUtil.notNullOrEmpty;
+import static io.polyglotted.common.util.StrUtil.safePrefix;
 import static io.polyglotted.common.util.UrnUtil.urnOf;
 import static io.polyglotted.common.util.UuidUtil.generateUuid;
+import static io.polyglotted.elastic.common.DocStatus.pendingStatus;
 import static io.polyglotted.elastic.common.MetaFields.ANCESTOR_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.APPROVAL_ROLES_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.BASE_TS_FIELD;
@@ -67,6 +69,8 @@ public final class IndexRecord {
 
     public String simpleKey() { return MetaFields.simpleKey(model, parent, id, timestamp); }
 
+    public String lockString() { return MetaFields.simpleKey(safePrefix(model, "$", model), parent, id, timestamp); }
+
     void update(String ancestorId, String ancestor, DocStatus status) {
         this.ancestorId = ancestorId; this.result = status.toString(); addMeta(source, ANCESTOR_FIELD, ancestor);
     }
@@ -76,7 +80,7 @@ public final class IndexRecord {
     DocWriteRequest<?> request() { addMeta(source, KEY_FIELD, simpleKey()); return action.request(this); }
 
     public static Builder saveRecord(String repo, String model, String id, String parent, Long version, Object source) {
-        return version == null ? createRecord(repo, model, id, parent, source) : updateRecord(repo, model, id, parent, version, source);
+        return expired(version == null ? CREATE : UPDATE, repo, model, id, parent, version, source);
     }
 
     public static Builder createRecord(String repo, String model, String id, Object source) { return createRecord(repo, model, id, null, source); }
@@ -142,6 +146,10 @@ public final class IndexRecord {
         @Override
         public int hashCode() { return Objects.hash(keyString, action); }
 
+        public Builder userTs(String user, long timestampVal) { return user(user).timestamp(timestampVal); }
+
+        public Builder approval(boolean hasApproval) { return hasApproval ? status(pendingStatus(action)).baseTimestamp(baseVersion) : this; }
+
         public Builder timestamp(long timestampVal) {
             this.timestamp = timestampVal; addMeta(source, TIMESTAMP_FIELD, String.valueOf(timestamp));
             ancillary.put(EXPIRY_FIELD, String.valueOf(timestamp)); return this;
@@ -152,8 +160,8 @@ public final class IndexRecord {
         }
 
         public Builder comment(String comment, boolean meta) {
-            if (meta) { addMeta(source, COMMENT_FIELD, requireNonNull(comment)); }
-            else { ancillary.put(COMMENT_FIELD, requireNonNull(comment)); } return this;
+            if (meta) { addMeta(source, COMMENT_FIELD, nonNull(comment, action::approvalComment)); }
+            else { ancillary.put(COMMENT_FIELD, nonNull(comment, action::approvalComment)); } return this;
         }
 
         public Builder traitFqn(String traitFqn) { addMeta(source, TRAITFQN_FIELD, traitFqn); return this; }
