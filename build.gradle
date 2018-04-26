@@ -23,7 +23,7 @@ repositories {
 }
 
 ext {
-    elasticSearchVersion = '6.2.3'
+    elasticSearchVersion = '6.2.4'
     hamcrestVersion = '1.3'
     hdrHistoVersion = '2.1.10'
     joptVersion = '5.0.2'
