@@ -23,12 +23,11 @@ import static io.polyglotted.common.util.MapBuilder.immutableMap;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.common.util.StrUtil.notNullOrEmpty;
 import static io.polyglotted.common.util.StrUtil.safePrefix;
+import static io.polyglotted.common.util.UrnUtil.safeUrnOf;
 import static io.polyglotted.common.util.UrnUtil.urnOf;
 import static io.polyglotted.common.util.UuidUtil.generateUuid;
-import static io.polyglotted.elastic.common.DocStatus.pendingStatus;
 import static io.polyglotted.elastic.common.MetaFields.ANCESTOR_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.APPROVAL_ROLES_FIELD;
-import static io.polyglotted.elastic.common.MetaFields.BASE_TS_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.COMMENT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.EXPIRY_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.ID_FIELD;
@@ -42,7 +41,6 @@ import static io.polyglotted.elastic.common.MetaFields.TRAITFQN_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.UPDATER_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.USER_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.addMeta;
-import static io.polyglotted.elastic.common.MetaFields.removeMeta;
 import static io.polyglotted.elastic.index.RecordAction.CREATE;
 import static io.polyglotted.elastic.index.RecordAction.DELETE;
 import static io.polyglotted.elastic.index.RecordAction.UPDATE;
@@ -67,9 +65,9 @@ public final class IndexRecord {
 
     public String keyString() { return urnOf(model, id); }
 
-    public String simpleKey() { return MetaFields.simpleKey(model, parent, id, timestamp); }
+    public String simpleKey() { return safeUrnOf(model, parent, id, timestamp); }
 
-    public String lockString() { return MetaFields.simpleKey(safePrefix(model, "$", model), parent, id, timestamp); }
+    public String lockString() { return safeUrnOf(safePrefix(model, "$", model), parent, id); }
 
     void update(String ancestorId, String ancestor, DocStatus status) {
         this.ancestorId = ancestorId; this.result = status.toString(); addMeta(source, ANCESTOR_FIELD, ancestor);
@@ -148,8 +146,6 @@ public final class IndexRecord {
 
         public Builder userTs(String user, long timestampVal) { return user(user).timestamp(timestampVal); }
 
-        public Builder approval(boolean hasApproval) { return hasApproval ? status(pendingStatus(action)).baseTimestamp(baseVersion) : this; }
-
         public Builder timestamp(long timestampVal) {
             this.timestamp = timestampVal; addMeta(source, TIMESTAMP_FIELD, String.valueOf(timestamp));
             ancillary.put(EXPIRY_FIELD, String.valueOf(timestamp)); return this;
@@ -170,11 +166,7 @@ public final class IndexRecord {
 
         public Builder baseVersion(Long baseVersion) { this.baseVersion = baseVersion; return this; }
 
-        public Builder baseTimestamp(Long baseTs) { if (baseTs != null) { addMeta(source, BASE_TS_FIELD, baseTs); } return this; }
-
         public Builder status(DocStatus status) { addMeta(source, STATUS_FIELD, status.name()); return this; }
-
-        public Builder noStatus() { removeMeta(source, STATUS_FIELD); removeMeta(source, BASE_TS_FIELD); return this; }
 
         public Builder approvalRoles(Set<String> roles) { if (notEmpty(roles)) { addMeta(source, APPROVAL_ROLES_FIELD, roles); } return this; }
 

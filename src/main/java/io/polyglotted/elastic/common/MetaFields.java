@@ -13,7 +13,6 @@ import static io.polyglotted.common.util.MapRetriever.optValue;
 import static io.polyglotted.common.util.MapRetriever.reqdValue;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.common.util.ReflectionUtil.safeFieldValue;
-import static io.polyglotted.common.util.UrnUtil.safeUrnOf;
 import static io.polyglotted.common.util.UrnUtil.urnOf;
 import static io.polyglotted.elastic.common.DocStatus.fromStatus;
 
@@ -23,7 +22,6 @@ public abstract class MetaFields {
     public static final String ANCESTOR_FIELD = "&ancestor";
     public static final String APPROVAL_ROLES_FIELD = "&approvalRoles";
     public static final String AUTO_COMPLETE_FIELD = "&autoComplete";
-    public static final String BASE_TS_FIELD = "&baseTimestamp";
     public static final String COMMENT_FIELD = "&comment";
     public static final String EXPIRY_FIELD = "&expiry";
     public static final String HIGHLTGHT_FIELD = "&highlight";
@@ -42,7 +40,7 @@ public abstract class MetaFields {
     public static final String UPDATER_FIELD = "&updater";
     public static final String USER_FIELD = "&user";
 
-    public static final String[] ALL_FIELDS = immutableList(ANCESTOR_FIELD, APPROVAL_ROLES_FIELD, BASE_TS_FIELD, COMMENT_FIELD, EXPIRY_FIELD,
+    public static final String[] ALL_FIELDS = immutableList(ANCESTOR_FIELD, APPROVAL_ROLES_FIELD, COMMENT_FIELD, EXPIRY_FIELD,
         INDEX_FIELD, ID_FIELD, KEY_FIELD, LINK_FIELD, MODEL_FIELD, PARENT_FIELD, SCHEMA_FIELD, STATUS_FIELD,
         TRAITFQN_FIELD, TIMESTAMP_FIELD, UPDATER_FIELD, USER_FIELD).toArray(new String[0]);
 
@@ -76,8 +74,6 @@ public abstract class MetaFields {
 
     public static DocStatus status(MapResult map) { return fromStatus(map.get(STATUS_FIELD).toString()); }
 
-    public static String simpleKey(String model, String parent, String id, long ts) { return safeUrnOf(model, parent, id, String.valueOf(ts)); }
-
     public static ImmutableMapBuilder<String, Object> readKey(MapResult map) {
         ImmutableMapBuilder<String, Object> builder = immutableMapBuilder();
         putVal(map, LINK_FIELD, builder);
@@ -94,7 +90,6 @@ public abstract class MetaFields {
         ImmutableMapBuilder<String, Object> builder = immutableResultBuilder();
         putVal(map, ANCESTOR_FIELD, builder);
         putVal(map, APPROVAL_ROLES_FIELD, builder);
-        putTs(map, BASE_TS_FIELD, builder);
         putVal(map, COMMENT_FIELD, builder);
         putTs(map, EXPIRY_FIELD, builder);
         putVal(map, INDEX_FIELD, builder);

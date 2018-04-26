@@ -95,6 +95,8 @@ public final class Indexer {
 
     @SneakyThrows
     private String strictSave(EsAuth auth, IndexRecord primary, IndexRecord aux, Validator validator) {
+        if (checkLock(auth, primary.index, primary.model)) { throw new IndexerException("index-model locked for write"); }
+
         String lockString = nonNull(aux, primary).lockString();
         lockTheIndexOrFail(auth, primary.index, lockString);
         try {

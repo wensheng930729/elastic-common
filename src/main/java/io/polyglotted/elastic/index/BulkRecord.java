@@ -17,10 +17,12 @@ import java.util.Objects;
 import static io.polyglotted.common.util.Assertions.checkBool;
 import static io.polyglotted.common.util.ListBuilder.immutableListBuilder;
 import static io.polyglotted.common.util.MapBuilder.simpleMap;
+import static io.polyglotted.elastic.common.DocStatus.PENDING;
 import static io.polyglotted.elastic.common.MetaFields.id;
 import static io.polyglotted.elastic.common.MetaFields.tstamp;
 import static io.polyglotted.elastic.common.Notification.notificationBuilder;
 import static io.polyglotted.elastic.index.ApprovalUtil.approvalModel;
+import static io.polyglotted.elastic.index.IndexRecord.createRecord;
 import static io.polyglotted.elastic.index.IndexRecord.saveRecord;
 import static java.util.Objects.requireNonNull;
 
@@ -70,8 +72,9 @@ public final class BulkRecord {
         public Builder objects(Iterable<MapResult> docs) { for (MapResult doc : docs) { this.record(indexRec(doc)); } return this; }
 
         private IndexRecord indexRec(MapResult doc) {
-            return checkParent(saveRecord(repo, hasApproval ? approvalModel(model) : model, id(doc),
-                MetaFields.parent(doc), tstamp(doc), doc).userTs(user, timestamp).approval(hasApproval).build());
+            IndexRecord.Builder builder = hasApproval ? createRecord(repo, approvalModel(model), id(doc), MetaFields.parent(doc), doc)
+                .status(PENDING) : saveRecord(repo, model, id(doc), MetaFields.parent(doc), tstamp(doc), doc);
+            return checkParent(builder.userTs(user, timestamp).build());
         }
 
         private IndexRecord checkParent(IndexRecord record) {

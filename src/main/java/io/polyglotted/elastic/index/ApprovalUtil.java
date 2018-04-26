@@ -14,14 +14,12 @@ import static io.polyglotted.elastic.common.DocStatus.DISCARDED;
 import static io.polyglotted.elastic.common.DocStatus.PENDING;
 import static io.polyglotted.elastic.common.DocStatus.PENDING_DELETE;
 import static io.polyglotted.elastic.common.DocStatus.REJECTED;
-import static io.polyglotted.elastic.common.MetaFields.BASE_TS_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.ID_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.MODEL_FIELD;
 import static io.polyglotted.elastic.common.Verbose.NONE;
 import static io.polyglotted.elastic.index.RecordAction.APPROVE;
 import static io.polyglotted.elastic.index.RecordAction.CREATE;
 import static io.polyglotted.elastic.index.RecordAction.DELETE;
-import static io.polyglotted.elastic.index.RecordAction.UPDATE;
 import static io.polyglotted.elastic.search.Expressions.bool;
 import static io.polyglotted.elastic.search.Expressions.equalsTo;
 import static io.polyglotted.elastic.search.QueryMaker.filterToRequest;
@@ -46,7 +44,7 @@ public abstract class ApprovalUtil {
         IndexRecord approvalRec = approvalDoc.recordOf(newStatus == PENDING ? APPROVE : DELETE)
             .userTs(user, millis).comment(comment, false).build();
 
-        RecordAction newAction = newStatus == PENDING_DELETE ? DELETE : (approvalDoc.hasMeta(BASE_TS_FIELD) ? UPDATE : CREATE);
+        RecordAction newAction = (newStatus == PENDING_DELETE) ? DELETE : CREATE;
         return Pair.pair(approvalRec, approvalDoc.recordOf(newAction, approvalDoc.nakedModel(), true).userTs(user, millis).build());
     }
 

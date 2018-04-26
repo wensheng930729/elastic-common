@@ -21,13 +21,11 @@ import static io.polyglotted.elastic.admin.Field.simpleField;
 import static io.polyglotted.elastic.admin.Field.textField;
 import static io.polyglotted.elastic.admin.FieldType.DATE;
 import static io.polyglotted.elastic.admin.FieldType.JOIN;
-import static io.polyglotted.elastic.admin.FieldType.LONG;
 import static io.polyglotted.elastic.admin.FieldType.OBJECT;
 import static io.polyglotted.elastic.common.MetaFields.ALL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.ANCESTOR_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.APPROVAL_ROLES_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.AUTO_COMPLETE_FIELD;
-import static io.polyglotted.elastic.common.MetaFields.BASE_TS_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.COMMENT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.EXPIRY_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.ID_FIELD;
@@ -97,8 +95,7 @@ public abstract class TypeSerializer {
         if (type.enableAll) { builder.add(textField(ALL_FIELD, "all").build()); }
         if (type.enableAutocomplete) { builder.add(textField(AUTO_COMPLETE_FIELD, "autocomplete").build()); }
         if (type.hasApproval) {
-            builder.add(keywordField(APPROVAL_ROLES_FIELD).build()).add(simpleField(BASE_TS_FIELD, LONG).build())
-                .add(textField(COMMENT_FIELD, "all").build());
+            builder.add(keywordField(APPROVAL_ROLES_FIELD).build()).add(textField(COMMENT_FIELD, "all").build());
         }
         builder.add(type.hasRelations() ? fieldBuilder(MODEL_FIELD, JOIN).arg("relations", type.relations).build()
             : keywordField(MODEL_FIELD).normalise().build());
