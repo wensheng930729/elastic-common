@@ -28,7 +28,7 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 
 abstract class TestTokenUtil {
 
-    static String testToken() { return testToken(currentTimeMillis(), currentTimeMillis() + (10 * 1000)); }
+    static String testToken() { return testToken(currentTimeMillis(), currentTimeMillis() + (24 * 60 * 60 * 1000)); }
 
     private static String testToken(long iat, long exp) {
         String contentBytes = encodeBase64String(header().getBytes(UTF_8)) + "." +
