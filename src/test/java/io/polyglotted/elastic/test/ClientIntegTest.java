@@ -2,7 +2,6 @@ package io.polyglotted.elastic.test;
 
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.elastic.client.ElasticClient;
-import io.polyglotted.elastic.common.EsAuth;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.junit.Ignore;
@@ -12,13 +11,12 @@ import static io.polyglotted.common.util.ResourceUtil.readResource;
 import static io.polyglotted.elastic.client.ElasticSettings.elasticSettings;
 import static io.polyglotted.elastic.client.HighLevelConnector.highLevelClient;
 import static io.polyglotted.elastic.common.EsAuth.basicAuth;
+import static io.polyglotted.elastic.test.ElasticTestUtil.testElasticClient;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 public class ClientIntegTest {
-    private static final EsAuth ES_AUTH = basicAuth("elastic", "SteelEye");
-
     @Test
     public void testHighLevelClient() throws Exception {
         checkClusterHealth();
@@ -27,8 +25,8 @@ public class ClientIntegTest {
     }
 
     private static void checkClusterHealth() throws Exception {
-        try (ElasticClient client = highLevelClient(elasticSettings())) {
-            assertHealth(client.clusterHealth(ES_AUTH));
+        try (ElasticClient client = testElasticClient()) {
+            assertHealth(client.clusterHealth());
         }
     }
 
@@ -40,24 +38,24 @@ public class ClientIntegTest {
 
     private static void checkCreateDeleteIndex() throws Exception {
         String index = "customer";
-        try (ElasticClient client = highLevelClient(elasticSettings())) {
-            assertThat(client.indexExists(ES_AUTH, index), is(false));
-            client.createIndex(ES_AUTH, new CreateIndexRequest(index)
+        try (ElasticClient client = testElasticClient()) {
+            assertThat(client.indexExists(index), is(false));
+            client.createIndex(new CreateIndexRequest(index)
                 .source(readResource(ClientIntegTest.class, "index-source.json"), XContentType.JSON));
-            assertThat(client.indexExists(ES_AUTH, index), is(true));
-            client.dropIndex(ES_AUTH, index);
-            assertThat(client.indexExists(ES_AUTH, index), is(false));
+            assertThat(client.indexExists(index), is(true));
+            client.dropIndex(index);
+            assertThat(client.indexExists(index), is(false));
         }
     }
 
     private void checkPipelineLifecycle() throws Exception {
         String pipeline = "mypipe";
-        try (ElasticClient client = highLevelClient(elasticSettings())) {
-            assertThat(client.pipelineExists(ES_AUTH, pipeline), is(false));
-            client.putPipeline(ES_AUTH, pipeline, readResource(ClientIntegTest.class, "pipeline-source.json"));
-            assertThat(client.pipelineExists(ES_AUTH, pipeline), is(true));
-            client.deletePipeline(ES_AUTH, pipeline);
-            assertThat(client.pipelineExists(ES_AUTH, pipeline), is(false));
+        try (ElasticClient client = testElasticClient()) {
+            assertThat(client.pipelineExists(pipeline), is(false));
+            client.putPipeline(pipeline, readResource(ClientIntegTest.class, "pipeline-source.json"));
+            assertThat(client.pipelineExists(pipeline), is(true));
+            client.deletePipeline(pipeline);
+            assertThat(client.pipelineExists(pipeline), is(false));
         }
     }
 

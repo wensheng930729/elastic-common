@@ -1,10 +1,9 @@
 package io.polyglotted.elastic.test;
 
 import io.polyglotted.common.model.MapResult;
-import io.polyglotted.elastic.admin.Admin;
 import io.polyglotted.elastic.admin.IndexSetting;
 import io.polyglotted.elastic.admin.Type;
-import io.polyglotted.elastic.common.EsAuth;
+import io.polyglotted.elastic.client.ElasticClient;
 import org.junit.Test;
 
 import java.util.Map;
@@ -41,44 +40,41 @@ import static io.polyglotted.elastic.admin.FieldType.SHORT;
 import static io.polyglotted.elastic.admin.FieldType.TEXT;
 import static io.polyglotted.elastic.admin.IndexSetting.settingBuilder;
 import static io.polyglotted.elastic.admin.Type.typeBuilder;
-import static io.polyglotted.elastic.client.ElasticSettings.elasticSettings;
-import static io.polyglotted.elastic.client.HighLevelConnector.highLevelClient;
-import static io.polyglotted.elastic.common.EsAuth.basicAuth;
+import static io.polyglotted.elastic.test.ElasticTestUtil.testElasticClient;
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 public class AdminIntegTest {
     private static final Map<String, String> MESSAGES = readResourceAsMap(AdminIntegTest.class, "admin-integ.txt");
-    private static final EsAuth ES_AUTH = basicAuth("elastic", "SteelEye");
 
     @Test
     public void createIndexSuccess() throws Exception {
-        try (Admin admin = new Admin(highLevelClient(elasticSettings(), ES_AUTH))) {
+        try (ElasticClient client = testElasticClient()) {
             IndexSetting setting = settingBuilder(5, 1).all(immutableResult("mapping.total_fields.limit", 5000)).build();
             Type completeType = completeTypeMapping().build();
-            String index = admin.createIndex(ES_AUTH, setting, completeType, "MyBigIndex");
+            String index = client.createIndex(setting, completeType, "MyBigIndex");
             try {
-                MapResult deserialized = deserialize(admin.getSettings(ES_AUTH, index));
+                MapResult deserialized = deserialize(client.getSettings(index));
 
                 Map<String, Object> settings = deepRetrieve(firstOf(deserialized.values(), immutableMap()), "settings.index");
                 String serSetting = serialize(filterKeys(settings, asList("number_of_shards", "number_of_replicas", "mapping", "analysis")::contains));
                 assertThat(serSetting, serSetting, is(MESSAGES.get("completeSetting")));
 
-                String serMapping = serialize(admin.getMapping(ES_AUTH, index));
+                String serMapping = serialize(client.getMapping(index));
                 assertThat(serMapping, serMapping, is(MESSAGES.get("completeMapping")));
-            } finally { admin.dropIndex(ES_AUTH, index); }
+            } finally { client.dropIndex(index); }
         }
     }
 
     @Test
     public void parentChildIndexSuccess() throws Exception {
-        try (Admin admin = new Admin(highLevelClient(elasticSettings(), ES_AUTH))) {
-            String index = admin.createIndex(ES_AUTH, IndexSetting.with(2, 0), parentChildTypeMapping().build(), "ParChilIndex");
+        try (ElasticClient client = testElasticClient()) {
+            String index = client.createIndex(IndexSetting.with(2, 0), parentChildTypeMapping().build(), "ParChilIndex");
             try {
-                String parChildMapping = serialize(admin.getMapping(ES_AUTH, index));
+                String parChildMapping = serialize(client.getMapping(index));
                 assertThat(parChildMapping, parChildMapping, is(MESSAGES.get("parentChildMapping")));
-            } finally { admin.dropIndex(ES_AUTH, index); }
+            } finally { client.dropIndex(index); }
         }
     }
 

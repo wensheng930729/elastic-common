@@ -1,9 +1,7 @@
 package io.polyglotted.elastic.test;
 
 import io.polyglotted.common.model.MapResult;
-import io.polyglotted.elastic.admin.Admin;
 import io.polyglotted.elastic.client.ElasticClient;
-import io.polyglotted.elastic.common.EsAuth;
 import io.polyglotted.elastic.common.Verbose;
 import io.polyglotted.elastic.index.BulkRecord;
 import io.polyglotted.elastic.index.Indexer;
@@ -29,10 +27,7 @@ import static io.polyglotted.common.util.BaseSerializer.serialize;
 import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.common.util.MapRetriever.deepRetrieve;
 import static io.polyglotted.common.util.ResourceUtil.readResourceAsMap;
-import static io.polyglotted.elastic.admin.Admin.uniqueIndexName;
-import static io.polyglotted.elastic.client.ElasticSettings.elasticSettings;
-import static io.polyglotted.elastic.client.HighLevelConnector.highLevelClient;
-import static io.polyglotted.elastic.common.EsAuth.basicAuth;
+import static io.polyglotted.common.util.TokenUtil.uniqueToken;
 import static io.polyglotted.elastic.common.Verbose.ID;
 import static io.polyglotted.elastic.common.Verbose.NONE;
 import static io.polyglotted.elastic.index.BulkRecord.bulkBuilder;
@@ -41,6 +36,8 @@ import static io.polyglotted.elastic.search.QueryMaker.copyFrom;
 import static io.polyglotted.elastic.search.QueryMaker.filterToScroller;
 import static io.polyglotted.elastic.search.ResultBuilder.NullBuilder;
 import static io.polyglotted.elastic.search.ResultBuilder.SourceBuilder;
+import static io.polyglotted.elastic.test.ElasticTestUtil.ES_AUTH;
+import static io.polyglotted.elastic.test.ElasticTestUtil.testElasticClient;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.elasticsearch.common.xcontent.XContentType.JSON;
@@ -49,21 +46,18 @@ import static org.junit.Assert.assertThat;
 
 public class SearchIntegTest {
     private static final Map<String, String> MESSAGES = readResourceAsMap(SearchIntegTest.class, "search-integ.txt");
-    private static final EsAuth ES_AUTH = basicAuth("elastic", "SteelEye");
     private ElasticClient client;
-    private Admin admin;
     private Indexer indexer;
     private Searcher searcher;
 
     @Before public void init() {
-        client = highLevelClient(elasticSettings(), ES_AUTH);
-        admin = new Admin(client); indexer = new Indexer(client); searcher = new Searcher(client);
+        client = testElasticClient(); indexer = new Indexer(client); searcher = new Searcher(client);
     }
 
     @After public void close() { client.close(); }
 
     @Test public void searchSuccess() throws Exception {
-        String agex = admin.createIndex(ES_AUTH, new CreateIndexRequest(uniqueIndexName()).source(MESSAGES.get("agex.source"), JSON));
+        String agex = client.createIndex(new CreateIndexRequest(uniqueToken()).source(MESSAGES.get("agex.source"), JSON));
         try {
             BulkRecord bulkRecord = bulkBuilder("agex", "Trade", currentTimeMillis(), "tester").objects(buildTradesJson()).build();
             boolean result = indexer.bulkSave(ES_AUTH, bulkRecord);
@@ -77,7 +71,7 @@ public class SearchIntegTest {
             }
             simpleSearchAndScroll();
 
-        } finally { admin.dropIndex(ES_AUTH, agex); }
+        } finally { client.dropIndex(agex); }
     }
 
     private void simpleAgg(String query, int hits, String result) throws Exception {

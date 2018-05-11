@@ -5,8 +5,10 @@ import io.polyglotted.common.model.MapResult.ImmutableResult;
 import io.polyglotted.common.util.HttpRequestBuilder.HttpReqType;
 import io.polyglotted.elastic.common.EsAuth;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.experimental.Accessors;
 import org.apache.http.ConnectionClosedException;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -36,6 +38,7 @@ import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.util.Map;
@@ -56,11 +59,12 @@ import static org.apache.http.HttpStatus.SC_MULTIPLE_CHOICES;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE) @Accessors(fluent = true)
 public class ElasticRestClient implements ElasticClient {
     private final RestHighLevelClient internalClient;
+    @Nullable @Getter private final EsAuth bootstrapAuth;
 
-    ElasticRestClient(RestClientBuilder builder) { this(new RestHighLevelClient(builder)); }
+    ElasticRestClient(RestClientBuilder builder, EsAuth bootstrapAuth) { this(new RestHighLevelClient(builder), bootstrapAuth); }
 
     @Override @SneakyThrows public void close() { internalClient.close(); }
 

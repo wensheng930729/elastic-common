@@ -2,10 +2,8 @@ package io.polyglotted.elastic.test;
 
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.util.MapBuilder;
-import io.polyglotted.elastic.admin.Admin;
 import io.polyglotted.elastic.client.ElasticClient;
 import io.polyglotted.elastic.common.DocResult;
-import io.polyglotted.elastic.common.EsAuth;
 import io.polyglotted.elastic.index.IndexRecord;
 import io.polyglotted.elastic.index.Indexer;
 import io.polyglotted.elastic.index.IndexerException;
@@ -22,9 +20,6 @@ import static io.polyglotted.common.util.MapBuilder.immutableMapBuilder;
 import static io.polyglotted.common.util.UrnUtil.safeUrnOf;
 import static io.polyglotted.elastic.admin.IndexSetting.with;
 import static io.polyglotted.elastic.admin.Type.typeBuilder;
-import static io.polyglotted.elastic.client.ElasticSettings.elasticSettings;
-import static io.polyglotted.elastic.client.HighLevelConnector.highLevelClient;
-import static io.polyglotted.elastic.common.EsAuth.basicAuth;
 import static io.polyglotted.elastic.common.MetaFields.ANCESTOR_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.EXPIRY_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.ID_FIELD;
@@ -42,6 +37,8 @@ import static io.polyglotted.elastic.index.Validator.OVERRIDE;
 import static io.polyglotted.elastic.index.Validator.STRICT;
 import static io.polyglotted.elastic.search.Finder.findById;
 import static io.polyglotted.elastic.search.Finder.findByKey;
+import static io.polyglotted.elastic.test.ElasticTestUtil.ES_AUTH;
+import static io.polyglotted.elastic.test.ElasticTestUtil.testElasticClient;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -49,23 +46,21 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.fail;
 
 public class IndexerIntegTest {
-    private static final EsAuth ES_AUTH = basicAuth("elastic", "SteelEye");
     private static final String Tester = "tester";
     private static final long T1 = 1000, T1_5 = 1500, T2 = 2000, T3 = 3000;
     private static final String REPO = "repo1", MODEL = "User", ID = "sam";
     private ElasticClient client;
-    private Admin admin;
     private Indexer indexer;
 
     @Before public void init() {
-        client = highLevelClient(elasticSettings(), ES_AUTH); admin = new Admin(client); indexer = new Indexer(client);
+        client = testElasticClient(); indexer = new Indexer(client);
     }
 
     @After public void close() { client.close(); }
 
     @Test
     public void strictSaveLifeCycle() throws Exception {
-        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
         try {
             MapResult user = simpleResult("name", "shankar", "age", 25, "title", "programmer");
             String result = indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, user).userTs(Tester, T1).build(), STRICT);
@@ -94,12 +89,12 @@ public class IndexerIntegTest {
                 .put(ID_FIELD, ID).put(TIMESTAMP_FIELD, String.valueOf(T2)).put(USER_FIELD, Tester).put(UPDATER_FIELD, Tester)
                 .put(EXPIRY_FIELD, String.valueOf(T3)).put(STATUS_FIELD, "DELETED").build());
 
-        } finally { admin.dropIndex(ES_AUTH, index2); }
+        } finally { client.dropIndex(index2); }
     }
 
     @Test
     public void overrideSaveLifeCycle() {
-        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
         try {
             MapResult user = simpleResult("name", "shankar", "age", 25, "title", "programmer");
             String result = indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, user).userTs(Tester, T1).build(), STRICT);
@@ -128,12 +123,12 @@ public class IndexerIntegTest {
                 .put(ID_FIELD, ID).put(TIMESTAMP_FIELD, String.valueOf(T2)).put(USER_FIELD, Tester).put(UPDATER_FIELD, Tester)
                 .put(EXPIRY_FIELD, String.valueOf(T3)).put(STATUS_FIELD, "DELETED").build());
 
-        } finally { admin.dropIndex(ES_AUTH, index2); }
+        } finally { client.dropIndex(index2); }
     }
 
     @Test
     public void strictSaveFailureAlreadyExists() {
-        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
         try {
             indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, simpleResult("name", "shankar", "age", 25,
                 "title", "programmer")).userTs(Tester, T1).build(), STRICT);
@@ -142,23 +137,23 @@ public class IndexerIntegTest {
             fail("cannot come here");
         } catch (IndexerException iex) {
             assertThat(iex.getMessage(), is("User:sam - record already exists"));
-        } finally { admin.dropIndex(ES_AUTH, index2); }
+        } finally { client.dropIndex(index2); }
     }
 
     @Test
     public void strictSaveFailureDeleteNonExistent() {
-        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
         try {
             indexer.strictSave(ES_AUTH, deleteRecord(REPO, MODEL, ID, T2).userTs(Tester, T3).build(), STRICT);
             fail("cannot come here");
         } catch (IndexerException iex) {
             assertThat(iex.getMessage(), is("User:sam - record not found for update"));
-        } finally { admin.dropIndex(ES_AUTH, index2); }
+        } finally { client.dropIndex(index2); }
     }
 
     @Test
     public void strictSaveFailureBaseVersionNotFound() {
-        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
         try {
             indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, simpleResult("name", "shankar", "age", 25,
                 "title", "programmer")).userTs(Tester, T1).build(), STRICT);
@@ -167,12 +162,12 @@ public class IndexerIntegTest {
             fail("cannot come here");
         } catch (IndexerException iex) {
             assertThat(iex.getMessage(), is("User:sam - baseVersion not found for update"));
-        } finally { admin.dropIndex(ES_AUTH, index2); }
+        } finally { client.dropIndex(index2); }
     }
 
     @Test
     public void strictSaveFailureVersionMismatch() {
-        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
         try {
             indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, simpleResult("name", "shankar", "age", 25,
                 "title", "programmer")).userTs(Tester, T1).build(), STRICT);
@@ -183,12 +178,12 @@ public class IndexerIntegTest {
             fail("cannot come here");
         } catch (IndexerException iex) {
             assertThat(iex.getMessage(), is("User:sam - version conflict for update"));
-        } finally { admin.dropIndex(ES_AUTH, index2); }
+        } finally { client.dropIndex(index2); }
     }
 
     @Test
     public void failedValidation() {
-        String index2 = admin.createIndex(ES_AUTH, with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
         try {
             indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, simpleResult()).userTs(Tester, T1).build(), new StrictValidator() {
                 @Override protected void preValidate(ElasticClient client, IndexRecord record) { throw new RuntimeException("induced validation"); }
@@ -196,7 +191,7 @@ public class IndexerIntegTest {
             fail("cannot come here");
         } catch (IndexerException ie) {
             assertThat(ie.getMessage(), is("induced validation"));
-        } finally { admin.dropIndex(ES_AUTH, index2); }
+        } finally { client.dropIndex(index2); }
     }
 
     private static void assertHeaders(DocResult result, Map<String, String> headers) {
