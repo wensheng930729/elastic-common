@@ -11,6 +11,6 @@ abstract class ElasticTestUtil {
     static final EsAuth ES_AUTH = basicAuth("elastic", "SteelEye");
 
     static ElasticClient testElasticClient() {
-        return highLevelClient(elasticSettings().setBootstrap("elastic", "SteelEye")).waitForYellow();
+        return highLevelClient(elasticSettings().setBootstrap("elastic", "SteelEye").setInsecure(true)).waitForYellow();
     }
 }

@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
       - image: circleci/openjdk:8-jdk
-      - image: steeleye/esdocker:6.2.4
+      - image: steeleye/esdocker:6.2.4.1
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS

@@ -8,7 +8,7 @@ import org.elasticsearch.client.RestClientBuilder;
 
 import static io.polyglotted.common.util.CollUtil.transform;
 import static io.polyglotted.common.util.CommaUtil.commaSplit;
-import static io.polyglotted.elastic.client.InsecureSslFactory.insecureSslContext;
+import static io.polyglotted.common.util.InsecureSslFactory.insecureSslContext;
 import static java.util.Objects.requireNonNull;
 
 public class HighLevelConnector {

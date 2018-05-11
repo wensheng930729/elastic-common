@@ -12,7 +12,7 @@ import static io.polyglotted.elastic.common.EsAuth.basicAuth;
 
 @NoArgsConstructor @Accessors(chain = true) @Getter @Setter
 public class ElasticSettings {
-    String scheme = "http";
+    String scheme = "https";
     String masterNodes = "localhost";
     int port = 9200;
     int retryTimeoutMillis = 300_000;

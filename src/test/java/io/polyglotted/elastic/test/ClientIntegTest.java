@@ -4,13 +4,9 @@ import io.polyglotted.common.model.MapResult;
 import io.polyglotted.elastic.client.ElasticClient;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static io.polyglotted.common.util.ResourceUtil.readResource;
-import static io.polyglotted.elastic.client.ElasticSettings.elasticSettings;
-import static io.polyglotted.elastic.client.HighLevelConnector.highLevelClient;
-import static io.polyglotted.elastic.common.EsAuth.basicAuth;
 import static io.polyglotted.elastic.test.ElasticTestUtil.testElasticClient;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
@@ -56,12 +52,6 @@ public class ClientIntegTest {
             assertThat(client.pipelineExists(pipeline), is(true));
             client.deletePipeline(pipeline);
             assertThat(client.pipelineExists(pipeline), is(false));
-        }
-    }
-
-    @Test @Ignore public void testSelfSignedServer() {
-        try (ElasticClient client = highLevelClient(elasticSettings().setScheme("https").setInsecure(true))) {
-            assertHealth(client.clusterHealth(basicAuth("elastic", "randompassword")));
         }
     }
 }
