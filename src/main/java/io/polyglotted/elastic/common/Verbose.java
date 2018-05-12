@@ -66,7 +66,10 @@ public enum Verbose {
     @SuppressWarnings("unchecked")
     private static <T> T addHeader(T result, MapResult header) {
         if (result instanceof MapResult) { ((MapResult) result).putAll(header); }
-        else { fieldValue(result, "_meta", header); }
+        else {
+            Object meta = fieldValue(result, "_meta");
+            if (meta instanceof MapResult) { ((MapResult) meta).putAll(header); }
+        }
         return result;
     }
 }
