@@ -8,6 +8,7 @@ import io.polyglotted.elastic.index.IndexRecord;
 import io.polyglotted.elastic.search.Expressions.BoolBuilder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
@@ -52,8 +53,10 @@ public abstract class Finder {
         return findBy(client, auth, repo, idBuilder(model, equalsTo(ID_FIELD, id), parent).build(), ctx);
     }
 
-    @SneakyThrows private static DocResult findBy(ElasticClient client, EsAuth auth, String repo, Expression expr, FetchSourceContext context) {
-        SearchResponse response = client.search(auth, filterToRequest(repo, expr, context, immutableList(), 1));
+    @SneakyThrows public static DocResult findBy(ElasticClient client, EsAuth auth, String repo, Expression expr, FetchSourceContext context) {
+        SearchRequest searchRequest = filterToRequest(repo, expr, context, immutableList(), 1);
+        SearchResponse response = auth == null ? client.search(searchRequest) : client.search(auth, searchRequest);
+
         return getReturnedHits(response) > 0 ? DocResultBuilder.buildFrom(response, NONE).get(0) : null;
     }
 
