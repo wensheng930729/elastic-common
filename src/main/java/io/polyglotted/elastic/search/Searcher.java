@@ -8,6 +8,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -49,17 +50,18 @@ public final class Searcher {
     }
 
     public <T> SimpleResponse searchBy(EsAuth auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {
-        return responseBuilder(client.search(auth, request), resultBuilder, verbose).build();
+        return responseBuilder(auth == null ? client.search(request) : client.search(auth, request), resultBuilder, verbose).build();
     }
 
     public <T> SimpleResponse scroll(EsAuth auth, String scrollId, TimeValue scrollTime, ResponseBuilder<T> resultBuilder, Verbose verbose) {
-        return responseBuilder(client.searchScroll(auth, scrollRequest(scrollId, scrollTime)), resultBuilder, verbose).build();
+        SearchScrollRequest request = scrollRequest(scrollId, scrollTime);
+        return responseBuilder(auth == null ? client.searchScroll(request) : client.searchScroll(auth, request), resultBuilder, verbose).build();
     }
 
     @SneakyThrows
     public <T> String searchNative(EsAuth auth, SearchRequest request, ResponseBuilder<T> resultBuilder, boolean flattenAgg, Verbose verbose) {
         XContentBuilder result = XContentFactory.jsonBuilder().startObject();
-        SearchResponse response = client.search(auth, request);
+        SearchResponse response = auth == null ? client.search(request) : client.search(auth, request);
         headerFrom(response, result);
         if (getReturnedHits(response) > 0) {
             List<T> values = resultBuilder.buildFrom(response, verbose);
@@ -70,7 +72,7 @@ public final class Searcher {
 
     public <T> boolean simpleScroll(EsAuth auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose, ScrollWalker<T> walker) {
         boolean errored = false;
-        SearchResponse response = client.search(auth, request);
+        SearchResponse response = auth == null ? client.search(request) : client.search(auth, request);
         log.info("performing scroll on " + getTotalHits(response) + " items");
         while (getReturnedHits(response) > 0) {
             errored = walker.walk(resultBuilder.buildFrom(response, verbose));
