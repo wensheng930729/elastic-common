@@ -36,12 +36,24 @@ import static org.elasticsearch.search.fetch.subphase.FetchSourceContext.FETCH_S
 public final class Searcher {
     private final ElasticClient client;
 
+    public <T> T getById(String index, String model, String id, ResultBuilder<T> resultBuilder, Verbose verbose) {
+        return getById(null, index, model, id, null, FETCH_SOURCE, resultBuilder, verbose);
+    }
+
     public <T> T getById(EsAuth auth, String index, String model, String id, ResultBuilder<T> resultBuilder, Verbose verbose) {
         return getById(auth, index, model, id, null, FETCH_SOURCE, resultBuilder, verbose);
     }
 
+    public <T> T getById(String index, String model, String id, String parent, ResultBuilder<T> resultBuilder, Verbose verbose) {
+        return getById(null, index, model, id, parent, resultBuilder, verbose);
+    }
+
     public <T> T getById(EsAuth auth, String index, String model, String id, String parent, ResultBuilder<T> resultBuilder, Verbose verbose) {
         return getById(auth, index, model, id, parent, FETCH_SOURCE, resultBuilder, verbose);
+    }
+
+    public <T> T getById(String index, String model, String id, String parent, FetchSourceContext ctx, ResultBuilder<T> builder, Verbose verbose) {
+        return getById(null, index, model, id, parent, ctx, builder, verbose);
     }
 
     public <T> T getById(EsAuth auth, String index, String model, String id, String parent,
@@ -49,13 +61,25 @@ public final class Searcher {
         return builder.buildVerbose(docSource(findById(client, auth, index, model, id, parent, ctx)), verbose);
     }
 
+    public <T> SimpleResponse searchBy(SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {
+        return searchBy(null, request, resultBuilder, verbose);
+    }
+
     public <T> SimpleResponse searchBy(EsAuth auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {
         return responseBuilder(auth == null ? client.search(request) : client.search(auth, request), resultBuilder, verbose).build();
+    }
+
+    public <T> SimpleResponse scroll(String scrollId, TimeValue scrollTime, ResponseBuilder<T> resultBuilder, Verbose verbose) {
+        return scroll(null, scrollId, scrollTime, resultBuilder, verbose);
     }
 
     public <T> SimpleResponse scroll(EsAuth auth, String scrollId, TimeValue scrollTime, ResponseBuilder<T> resultBuilder, Verbose verbose) {
         SearchScrollRequest request = scrollRequest(scrollId, scrollTime);
         return responseBuilder(auth == null ? client.searchScroll(request) : client.searchScroll(auth, request), resultBuilder, verbose).build();
+    }
+
+    public <T> String searchNative(SearchRequest request, ResponseBuilder<T> resultBuilder, boolean flattenAgg, Verbose verbose) {
+        return searchNative(null, request, resultBuilder, flattenAgg, verbose);
     }
 
     @SneakyThrows
@@ -68,6 +92,10 @@ public final class Searcher {
             result.rawField("results", new BytesArray(MAPPER.writeValueAsBytes(values)), JSON);
         }
         return buildAggs(response, flattenAgg, result).endObject().string();
+    }
+
+    public <T> boolean simpleScroll(SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose, ScrollWalker<T> walker) {
+        return simpleScroll(null, request, resultBuilder, verbose, walker);
     }
 
     public <T> boolean simpleScroll(EsAuth auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose, ScrollWalker<T> walker) {
