@@ -8,11 +8,11 @@ import org.junit.Test;
 
 import java.util.Map;
 
+import static io.polyglotted.common.model.AuthHeader.bearerToken;
 import static io.polyglotted.common.util.ResourceUtil.readResourceAsMap;
 import static io.polyglotted.elastic.client.XPackApi.ROLE;
 import static io.polyglotted.elastic.client.XPackApi.TOKEN;
 import static io.polyglotted.elastic.client.XPackApi.USER;
-import static io.polyglotted.elastic.common.EsAuth.bearerToken;
 import static io.polyglotted.elastic.test.ElasticTestUtil.testElasticClient;
 import static io.polyglotted.elastic.test.TestTokenUtil.testToken;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -40,7 +40,7 @@ public class BearerIntegTest {
         client.xpackPut(USER, "jacknich", MESSAGES.get("user.put"));
         MapResult result = client.xpackPut(TOKEN, "", MESSAGES.get("token.post"));
         String accessToken = result.reqdStr("access_token");
-        client.xpackDelete(TOKEN, "", "{\"token\":\"" + accessToken+ "\"}");
+        client.xpackDelete(TOKEN, "", "{\"token\":\"" + accessToken + "\"}");
         client.xpackDelete(USER, "jacknich");
     }
 }

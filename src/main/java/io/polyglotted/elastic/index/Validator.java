@@ -1,9 +1,9 @@
 package io.polyglotted.elastic.index;
 
+import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.elastic.client.ElasticClient;
 import io.polyglotted.elastic.common.DocResult;
-import io.polyglotted.elastic.common.EsAuth;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
@@ -22,9 +22,9 @@ public interface Validator {
     Validator STRICT = new StrictValidator();
     Validator OVERRIDE = new OverwriteValidator();
 
-    BulkRequest validateAll(ElasticClient client, EsAuth auth, BulkRecord bulkRecord, BulkRequest bulkRequest);
+    BulkRequest validateAll(ElasticClient client, AuthHeader auth, BulkRecord bulkRecord, BulkRequest bulkRequest);
 
-    IndexRequest validate(ElasticClient client, EsAuth auth, IndexRecord record);
+    IndexRequest validate(ElasticClient client, AuthHeader auth, IndexRecord record);
 
     @Slf4j class StrictValidator extends OverwriteValidator {
         @Override protected void validateCurrent(IndexRecord record, MapResult current) {
@@ -39,7 +39,7 @@ public interface Validator {
     }
 
     @Slf4j @SuppressWarnings({"unused", "WeakerAccess"}) class OverwriteValidator implements Validator {
-        @Override public BulkRequest validateAll(ElasticClient client, EsAuth auth, BulkRecord bulkRecord, BulkRequest bulkRequest) {
+        @Override public BulkRequest validateAll(ElasticClient client, AuthHeader auth, BulkRecord bulkRecord, BulkRequest bulkRequest) {
             Map<String, DocResult> docs = findAll(client, auth, bulkRecord);
             for (IndexRecord record : bulkRecord.records) {
                 try {
@@ -55,7 +55,7 @@ public interface Validator {
             return bulkRequest;
         }
 
-        @Override public final IndexRequest validate(ElasticClient client, EsAuth auth, IndexRecord record) {
+        @Override public final IndexRequest validate(ElasticClient client, AuthHeader auth, IndexRecord record) {
             preValidate(client, record);
             DocResult existing = findById(client, auth, record.index, record.model, record.id, record.parent, FETCH_SOURCE);
             return checkRecordWithDoc(record, existing);

@@ -1,8 +1,8 @@
 package io.polyglotted.elastic.search;
 
+import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.elastic.client.ElasticClient;
 import io.polyglotted.elastic.common.DocResult;
-import io.polyglotted.elastic.common.EsAuth;
 import io.polyglotted.elastic.index.BulkRecord;
 import io.polyglotted.elastic.index.IndexRecord;
 import io.polyglotted.elastic.search.Expressions.BoolBuilder;
@@ -33,27 +33,27 @@ import static org.elasticsearch.search.fetch.subphase.FetchSourceContext.FETCH_S
 @Slf4j @SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class Finder {
 
-    public static Map<String, DocResult> findAll(ElasticClient client, EsAuth auth, BulkRecord record) {
+    public static Map<String, DocResult> findAll(ElasticClient client, AuthHeader auth, BulkRecord record) {
         BoolBuilder idBuilder = idBuilder(record.model, in(ID_FIELD, transform(record.records, IndexRecord::getId)), record.parent);
         SearchResponse response = client.search(auth, filterToRequest(record.repo, idBuilder.build(), FETCH_SOURCE, immutableList(), record.size()));
         return uniqueIndex(DocResultBuilder.buildFrom(response, NONE), DocResult::keyString);
     }
 
-    public static DocResult findByKey(ElasticClient client, EsAuth auth, String repo, String key) { return findByKey(client, auth, repo, key, null); }
+    public static DocResult findByKey(ElasticClient client, AuthHeader auth, String repo, String key) { return findByKey(client, auth, repo, key, null); }
 
-    public static DocResult findByKey(ElasticClient client, EsAuth auth, String repo, String key, FetchSourceContext context) {
+    public static DocResult findByKey(ElasticClient client, AuthHeader auth, String repo, String key, FetchSourceContext context) {
         return findBy(client, auth, repo, equalsTo(KEY_FIELD, key), context);
     }
 
-    public static DocResult findById(ElasticClient client, EsAuth auth, String repo, String model, String id) {
+    public static DocResult findById(ElasticClient client, AuthHeader auth, String repo, String model, String id) {
         return findById(client, auth, repo, model, id, null, null);
     }
 
-    public static DocResult findById(ElasticClient client, EsAuth auth, String repo, String model, String id, String parent, FetchSourceContext ctx) {
+    public static DocResult findById(ElasticClient client, AuthHeader auth, String repo, String model, String id, String parent, FetchSourceContext ctx) {
         return findBy(client, auth, repo, idBuilder(model, equalsTo(ID_FIELD, id), parent).build(), ctx);
     }
 
-    @SneakyThrows public static DocResult findBy(ElasticClient client, EsAuth auth, String repo, Expression expr, FetchSourceContext context) {
+    @SneakyThrows public static DocResult findBy(ElasticClient client, AuthHeader auth, String repo, Expression expr, FetchSourceContext context) {
         SearchRequest searchRequest = filterToRequest(repo, expr, context, immutableList(), 1);
         SearchResponse response = auth == null ? client.search(searchRequest) : client.search(auth, searchRequest);
 

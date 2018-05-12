@@ -1,8 +1,8 @@
 package io.polyglotted.elastic.search;
 
+import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.elastic.client.ElasticClient;
-import io.polyglotted.elastic.common.EsAuth;
 import io.polyglotted.elastic.common.Verbose;
 import org.elasticsearch.action.search.ClearScrollRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -31,12 +31,12 @@ abstract class SearchUtil {
         return responseBuilder;
     }
 
-    static SearchResponse performScroll(ElasticClient client, EsAuth auth, SearchResponse response) {
+    static SearchResponse performScroll(ElasticClient client, AuthHeader auth, SearchResponse response) {
         SearchScrollRequest scrollRequest = new SearchScrollRequest(response.getScrollId()).scroll(DEFAULT_KEEP_ALIVE);
         return client.searchScroll(auth, scrollRequest);
     }
 
-    static void clearScroll(ElasticClient client, EsAuth auth, SearchResponse response) {
+    static void clearScroll(ElasticClient client, AuthHeader auth, SearchResponse response) {
         ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
         clearScrollRequest.addScrollId(response.getScrollId());
         client.clearScroll(auth, clearScrollRequest);

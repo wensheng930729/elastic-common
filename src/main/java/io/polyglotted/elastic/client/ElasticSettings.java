@@ -1,14 +1,14 @@
 package io.polyglotted.elastic.client;
 
-import io.polyglotted.elastic.common.EsAuth;
+import io.polyglotted.common.model.AuthHeader;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import static io.polyglotted.common.model.AuthHeader.basicAuth;
 import static io.polyglotted.common.util.StrUtil.notNullOrEmpty;
-import static io.polyglotted.elastic.common.EsAuth.basicAuth;
 
 @NoArgsConstructor @Accessors(chain = true) @Getter @Setter
 public class ElasticSettings {
@@ -21,7 +21,7 @@ public class ElasticSettings {
 
     public ElasticSettings setBootstrap(String user, String password) { return setBootstrap(new BootstrapAuth(user, password)); }
 
-    EsAuth bootstrapAuth() { return bootstrap.bootstrapAuth(); }
+    AuthHeader bootstrapAuth() { return bootstrap.bootstrapAuth(); }
 
     public static ElasticSettings elasticSettings() { return new ElasticSettings(); }
 
@@ -30,6 +30,6 @@ public class ElasticSettings {
         String username = null;
         String password = null;
 
-        EsAuth bootstrapAuth() { return notNullOrEmpty(username) && notNullOrEmpty(password) ? basicAuth(username, password) : null; }
+        AuthHeader bootstrapAuth() { return notNullOrEmpty(username) && notNullOrEmpty(password) ? basicAuth(username, password) : null; }
     }
 }

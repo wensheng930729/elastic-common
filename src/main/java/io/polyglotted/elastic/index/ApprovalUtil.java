@@ -1,9 +1,9 @@
 package io.polyglotted.elastic.index;
 
+import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.common.model.Pair;
 import io.polyglotted.elastic.common.DocResult;
 import io.polyglotted.elastic.common.DocStatus;
-import io.polyglotted.elastic.common.EsAuth;
 import io.polyglotted.elastic.search.Searcher;
 import org.elasticsearch.action.search.SearchRequest;
 
@@ -30,7 +30,7 @@ import static org.elasticsearch.search.fetch.subphase.FetchSourceContext.FETCH_S
 public abstract class ApprovalUtil {
     public static String approvalModel(String model) { return model + "$approval"; }
 
-    public static DocResult fetchApprovalDoc(Searcher searcher, EsAuth esAuth, String repo, String model, String id) {
+    public static DocResult fetchApprovalDoc(Searcher searcher, AuthHeader esAuth, String repo, String model, String id) {
         SearchRequest searchRequest = filterToRequest(repo, bool().pendingApproval().musts(equalsTo(MODEL_FIELD, approvalModel(model)),
             equalsTo(ID_FIELD, id)).build(), FETCH_SOURCE, immutableList(), 1);
 

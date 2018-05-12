@@ -1,8 +1,8 @@
 package io.polyglotted.elastic.index;
 
+import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.common.model.Pair;
 import io.polyglotted.elastic.client.ElasticClient;
-import io.polyglotted.elastic.common.EsAuth;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -36,26 +36,26 @@ import static org.elasticsearch.rest.RestStatus.CREATED;
 public final class Indexer {
     private final ElasticClient client;
 
-    public void lockTheIndexOrFail(EsAuth auth, String index, String keyString) { lockTheIndexOrFail(auth, index, keyString, false); }
+    public void lockTheIndexOrFail(AuthHeader auth, String index, String keyString) { lockTheIndexOrFail(auth, index, keyString, false); }
 
-    public void lockTheIndexOrFail(EsAuth auth, String index, String keyString, boolean refresh) {
+    public void lockTheIndexOrFail(AuthHeader auth, String index, String keyString, boolean refresh) {
         IndexResponse response = client.index(auth, new IndexRequest(index, "_doc", keyString)
             .opType(CREATE).source(immutableMap(TIMESTAMP_FIELD, 1)));
         if (response.status() != CREATED) { throw new IndexerException("response failed while locking the keyString " + keyString); }
         if (refresh) { client.forceRefresh(auth, index); }
     }
 
-    public boolean checkLock(EsAuth auth, String index, String key) { return client.exists(auth, new GetRequest(index, "_doc", key)); }
+    public boolean checkLock(AuthHeader auth, String index, String key) { return client.exists(auth, new GetRequest(index, "_doc", key)); }
 
-    public void unlockIndex(EsAuth auth, String index, String key) {
+    public void unlockIndex(AuthHeader auth, String index, String key) {
         client.delete(auth, new DeleteRequest(index, "_doc", key)); client.forceRefresh(auth, index);
     }
 
-    public long generateSequence(EsAuth auth, String index, String key) {
+    public long generateSequence(AuthHeader auth, String index, String key) {
         return client.index(auth, new IndexRequest(index, "_doc", key).source(immutableMap())).getVersion();
     }
 
-    public boolean bulkSave(EsAuth auth, BulkRecord bulkRecord) {
+    public boolean bulkSave(AuthHeader auth, BulkRecord bulkRecord) {
         try {
             BulkRequest bulkRequest = bulkRecord.validator.validateAll(client, auth, bulkRecord, new BulkRequest().setRefreshPolicy(IMMEDIATE));
             if (bulkRequest.numberOfActions() <= 0) { return true; }
@@ -64,14 +64,14 @@ public final class Indexer {
         } catch (RuntimeException ex) { throw logError(ex); }
     }
 
-    public boolean strictSave(EsAuth auth, BulkRecord bulkRecord) {
+    public boolean strictSave(AuthHeader auth, BulkRecord bulkRecord) {
         lockTheIndexOrFail(auth, bulkRecord.repo, bulkRecord.model);
         try {
             return bulkSave(auth, bulkRecord);
         } finally { unlockIndex(auth, bulkRecord.repo, bulkRecord.model); }
     }
 
-    @SneakyThrows public String bulkSave(EsAuth auth, IndexRecord record) {
+    @SneakyThrows public String bulkSave(AuthHeader auth, IndexRecord record) {
         try {
             XContentBuilder result = XContentFactory.jsonBuilder().startObject();
             save(auth, record, result);
@@ -83,18 +83,18 @@ public final class Indexer {
         } catch (RuntimeException ex) { throw logError(ex); }
     }
 
-    public void validateRecord(EsAuth auth, IndexRecord record, BulkRequest bulkRequest, Validator validator) {
+    public void validateRecord(AuthHeader auth, IndexRecord record, BulkRequest bulkRequest, Validator validator) {
         IndexRequest archiveRequest = validator.validate(client, auth, record);
         bulkRequest.add(record.request());
         if (archiveRequest != null) { bulkRequest.add(archiveRequest); }
     }
 
-    public String strictSave(EsAuth auth, Pair<IndexRecord, IndexRecord> pair) { return strictSave(auth, pair._a, pair._b, STRICT); }
+    public String strictSave(AuthHeader auth, Pair<IndexRecord, IndexRecord> pair) { return strictSave(auth, pair._a, pair._b, STRICT); }
 
-    public String strictSave(EsAuth auth, IndexRecord record, Validator validator) { return strictSave(auth, record, null, validator); }
+    public String strictSave(AuthHeader auth, IndexRecord record, Validator validator) { return strictSave(auth, record, null, validator); }
 
     @SneakyThrows
-    private String strictSave(EsAuth auth, IndexRecord primary, IndexRecord aux, Validator validator) {
+    private String strictSave(AuthHeader auth, IndexRecord primary, IndexRecord aux, Validator validator) {
         if (checkLock(auth, primary.index, primary.model)) { throw new IndexerException("index-model locked for write"); }
 
         String lockString = nonNull(aux, primary).lockString();
@@ -112,13 +112,13 @@ public final class Indexer {
         } finally { unlockIndex(auth, primary.index, lockString); }
     }
 
-    private void writeStrict(EsAuth auth, IndexRecord record, Validator validator, XContentBuilder result) {
+    private void writeStrict(AuthHeader auth, IndexRecord record, Validator validator, XContentBuilder result) {
         IndexRequest archiveRequest = validator.validate(client, auth, record);
         save(auth, record, result);
         if (archiveRequest != null) { client.index(auth, archiveRequest); }
     }
 
-    @SneakyThrows private void save(EsAuth auth, IndexRecord record, XContentBuilder result) {
+    @SneakyThrows private void save(AuthHeader auth, IndexRecord record, XContentBuilder result) {
         DocWriteRequest<?> request = record.request();
         DocWriteResponse response = (request instanceof IndexRequest) ? client.index(auth, (IndexRequest) request) :
             ((request instanceof DeleteRequest) ? client.delete(auth, (DeleteRequest) request) : null);

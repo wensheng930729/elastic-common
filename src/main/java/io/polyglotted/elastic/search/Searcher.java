@@ -1,7 +1,7 @@
 package io.polyglotted.elastic.search;
 
+import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.elastic.client.ElasticClient;
-import io.polyglotted.elastic.common.EsAuth;
 import io.polyglotted.elastic.common.Verbose;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -40,7 +40,7 @@ public final class Searcher {
         return getById(null, index, model, id, null, FETCH_SOURCE, resultBuilder, verbose);
     }
 
-    public <T> T getById(EsAuth auth, String index, String model, String id, ResultBuilder<T> resultBuilder, Verbose verbose) {
+    public <T> T getById(AuthHeader auth, String index, String model, String id, ResultBuilder<T> resultBuilder, Verbose verbose) {
         return getById(auth, index, model, id, null, FETCH_SOURCE, resultBuilder, verbose);
     }
 
@@ -48,7 +48,7 @@ public final class Searcher {
         return getById(null, index, model, id, parent, resultBuilder, verbose);
     }
 
-    public <T> T getById(EsAuth auth, String index, String model, String id, String parent, ResultBuilder<T> resultBuilder, Verbose verbose) {
+    public <T> T getById(AuthHeader auth, String index, String model, String id, String parent, ResultBuilder<T> resultBuilder, Verbose verbose) {
         return getById(auth, index, model, id, parent, FETCH_SOURCE, resultBuilder, verbose);
     }
 
@@ -56,7 +56,7 @@ public final class Searcher {
         return getById(null, index, model, id, parent, ctx, builder, verbose);
     }
 
-    public <T> T getById(EsAuth auth, String index, String model, String id, String parent,
+    public <T> T getById(AuthHeader auth, String index, String model, String id, String parent,
                          FetchSourceContext ctx, ResultBuilder<T> builder, Verbose verbose) {
         return builder.buildVerbose(docSource(findById(client, auth, index, model, id, parent, ctx)), verbose);
     }
@@ -65,7 +65,7 @@ public final class Searcher {
         return searchBy(null, request, resultBuilder, verbose);
     }
 
-    public <T> SimpleResponse searchBy(EsAuth auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {
+    public <T> SimpleResponse searchBy(AuthHeader auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {
         return responseBuilder(auth == null ? client.search(request) : client.search(auth, request), resultBuilder, verbose).build();
     }
 
@@ -73,7 +73,7 @@ public final class Searcher {
         return scroll(null, scrollId, scrollTime, resultBuilder, verbose);
     }
 
-    public <T> SimpleResponse scroll(EsAuth auth, String scrollId, TimeValue scrollTime, ResponseBuilder<T> resultBuilder, Verbose verbose) {
+    public <T> SimpleResponse scroll(AuthHeader auth, String scrollId, TimeValue scrollTime, ResponseBuilder<T> resultBuilder, Verbose verbose) {
         SearchScrollRequest request = scrollRequest(scrollId, scrollTime);
         return responseBuilder(auth == null ? client.searchScroll(request) : client.searchScroll(auth, request), resultBuilder, verbose).build();
     }
@@ -83,7 +83,7 @@ public final class Searcher {
     }
 
     @SneakyThrows
-    public <T> String searchNative(EsAuth auth, SearchRequest request, ResponseBuilder<T> resultBuilder, boolean flattenAgg, Verbose verbose) {
+    public <T> String searchNative(AuthHeader auth, SearchRequest request, ResponseBuilder<T> resultBuilder, boolean flattenAgg, Verbose verbose) {
         XContentBuilder result = XContentFactory.jsonBuilder().startObject();
         SearchResponse response = auth == null ? client.search(request) : client.search(auth, request);
         headerFrom(response, result);
@@ -98,7 +98,7 @@ public final class Searcher {
         return simpleScroll(null, request, resultBuilder, verbose, walker);
     }
 
-    public <T> boolean simpleScroll(EsAuth auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose, ScrollWalker<T> walker) {
+    public <T> boolean simpleScroll(AuthHeader auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose, ScrollWalker<T> walker) {
         boolean errored = false;
         SearchResponse response = auth == null ? client.search(request) : client.search(auth, request);
         log.info("performing scroll on " + getTotalHits(response) + " items");
