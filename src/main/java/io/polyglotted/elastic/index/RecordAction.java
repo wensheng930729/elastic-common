@@ -1,6 +1,7 @@
 package io.polyglotted.elastic.index;
 
 import io.polyglotted.common.model.HasMeta;
+import io.polyglotted.common.model.Jsoner;
 import io.polyglotted.elastic.common.DocStatus;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public enum RecordAction {
 
     @SuppressWarnings("unchecked") private static IndexRequest detectSource(IndexRequest request, String pipeline, Object source) {
         if (source instanceof Map) { request.source((Map) source, (pipeline == null ? XContentType.JSON : XContentType.CBOR)); }
+        else if (source instanceof Jsoner) { request.source(((Jsoner) source).toJson(), XContentType.JSON); }
         else if (source instanceof HasMeta) { request.source(serializeMeta((HasMeta) source), XContentType.JSON); }
         else { throw new IllegalArgumentException("unknown source for indexing"); }
         return request.setPipeline(pipeline);
