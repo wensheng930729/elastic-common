@@ -61,19 +61,19 @@ public final class Searcher {
         return builder.buildVerbose(docSource(findById(client, auth, index, model, id, parent, ctx)), verbose);
     }
 
-    public <T> SimpleResponse searchBy(SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {
+    public <T> QueryResponse searchBy(SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {
         return searchBy(null, request, resultBuilder, verbose);
     }
 
-    public <T> SimpleResponse searchBy(AuthHeader auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {
+    public <T> QueryResponse searchBy(AuthHeader auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {
         return responseBuilder(auth == null ? client.search(request) : client.search(auth, request), resultBuilder, verbose).build();
     }
 
-    public <T> SimpleResponse scroll(String scrollId, TimeValue scrollTime, ResponseBuilder<T> resultBuilder, Verbose verbose) {
+    public <T> QueryResponse scroll(String scrollId, TimeValue scrollTime, ResponseBuilder<T> resultBuilder, Verbose verbose) {
         return scroll(null, scrollId, scrollTime, resultBuilder, verbose);
     }
 
-    public <T> SimpleResponse scroll(AuthHeader auth, String scrollId, TimeValue scrollTime, ResponseBuilder<T> resultBuilder, Verbose verbose) {
+    public <T> QueryResponse scroll(AuthHeader auth, String scrollId, TimeValue scrollTime, ResponseBuilder<T> resultBuilder, Verbose verbose) {
         SearchScrollRequest request = scrollRequest(scrollId, scrollTime);
         return responseBuilder(auth == null ? client.searchScroll(request) : client.searchScroll(auth, request), resultBuilder, verbose).build();
     }

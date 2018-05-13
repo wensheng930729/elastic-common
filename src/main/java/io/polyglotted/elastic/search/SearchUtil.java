@@ -24,8 +24,8 @@ import static org.elasticsearch.common.xcontent.ToXContent.EMPTY_PARAMS;
 
 abstract class SearchUtil {
 
-    static <T> SimpleResponse.Builder responseBuilder(SearchResponse searchResponse, ResponseBuilder<T> resultBuilder, Verbose verbose) {
-        SimpleResponse.Builder responseBuilder = SimpleResponse.responseBuilder();
+    static <T> QueryResponse.Builder responseBuilder(SearchResponse searchResponse, ResponseBuilder<T> resultBuilder, Verbose verbose) {
+        QueryResponse.Builder responseBuilder = QueryResponse.responseBuilder();
         responseBuilder.header(headerFrom(searchResponse));
         if (getReturnedHits(searchResponse) > 0) responseBuilder.results(resultBuilder.buildFrom(searchResponse, verbose));
         return responseBuilder;

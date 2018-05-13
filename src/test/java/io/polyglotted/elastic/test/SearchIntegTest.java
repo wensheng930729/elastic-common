@@ -6,7 +6,7 @@ import io.polyglotted.elastic.common.Verbose;
 import io.polyglotted.elastic.index.BulkRecord;
 import io.polyglotted.elastic.index.Indexer;
 import io.polyglotted.elastic.search.Searcher;
-import io.polyglotted.elastic.search.SimpleResponse;
+import io.polyglotted.elastic.search.QueryResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.junit.After;
 import org.junit.Before;
@@ -89,7 +89,7 @@ public class SearchIntegTest {
         assertThat(textResponse, textResponse, is(MESSAGES.get("text.response")));
 
         int totalHits = 0;
-        SimpleResponse response = searcher.searchBy(ES_AUTH, filterToScroller("agex", null, 8), NullBuilder, NONE);
+        QueryResponse response = searcher.searchBy(ES_AUTH, filterToScroller("agex", null, 8), NullBuilder, NONE);
         long returnedHits = response.header.returnedHits;
         while (response.hasNextScroll()) {
             totalHits += returnedHits;

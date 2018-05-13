@@ -15,7 +15,7 @@ import static java.util.Objects.requireNonNull;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 @RequiredArgsConstructor
-public final class SimpleResponse {
+public final class QueryResponse {
     public final ResponseHeader header;
     public final List<Object> results;
     public final List<Aggregation> aggregations;
@@ -43,8 +43,8 @@ public final class SimpleResponse {
 
         public void aggregation(Aggregation.Builder builder) { this.aggregations.add(builder.build()); }
 
-        public SimpleResponse build() {
-            return new SimpleResponse(requireNonNull(header, "header is required"), results.build(), aggregations.build());
+        public QueryResponse build() {
+            return new QueryResponse(requireNonNull(header, "header is required"), results.build(), aggregations.build());
         }
     }
 }
