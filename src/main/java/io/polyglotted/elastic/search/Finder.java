@@ -34,8 +34,8 @@ import static org.elasticsearch.search.fetch.subphase.FetchSourceContext.FETCH_S
 public abstract class Finder {
 
     public static Map<String, DocResult> findAll(ElasticClient client, AuthHeader auth, BulkRecord record) {
-        BoolBuilder idBuilder = idBuilder(record.model, in(ID_FIELD, transform(record.records, IndexRecord::getId)), record.parent);
-        SearchResponse response = client.search(auth, filterToRequest(record.repo, idBuilder.build(), FETCH_SOURCE, immutableList(), record.size()));
+        BoolBuilder builder = idBuilder(record.model, record.parent, in(ID_FIELD, transform(record.records, IndexRecord::getId))).liveOrPending();
+        SearchResponse response = client.search(auth, filterToRequest(record.repo, builder.build(), FETCH_SOURCE, immutableList(), record.size()));
         return uniqueIndex(DocResultBuilder.buildFrom(response, NONE), DocResult::keyString);
     }
 
@@ -50,10 +50,8 @@ public abstract class Finder {
     }
 
     public static DocResult findById(ElasticClient client, AuthHeader auth, String repo, String model, String id, String parent, FetchSourceContext ctx) {
-        return findBy(client, auth, repo, idBuilder(model, equalsTo(ID_FIELD, id), parent).build(), ctx);
+        return findBy(client, auth, repo, idBuilder(model, parent, equalsTo(ID_FIELD, id)).liveOrPending().build(), ctx);
     }
-
-    public static DocResult findBy(ElasticClient cl, String repo, Expression ex, FetchSourceContext ctx) { return findBy(cl, null, repo, ex, ctx); }
 
     @SneakyThrows public static DocResult findBy(ElasticClient client, AuthHeader auth, String repo, Expression expr, FetchSourceContext context) {
         SearchRequest searchRequest = filterToRequest(repo, expr, context, immutableList(), 1);
@@ -62,8 +60,10 @@ public abstract class Finder {
         return getReturnedHits(response) > 0 ? DocResultBuilder.buildFrom(response, NONE).get(0) : null;
     }
 
-    public static BoolBuilder idBuilder(String model, Expression must, String parent) {
-        BoolBuilder idBuilder = bool().liveOrPending().must(equalsTo(MODEL_FIELD, model)).must(must);
+    public static BoolBuilder idBuilder(String model, Expression... musts) { return idBuilder(model, null, musts); }
+
+    public static BoolBuilder idBuilder(String model, String parent, Expression... musts) {
+        BoolBuilder idBuilder = bool().must(equalsTo(MODEL_FIELD, model)).musts(musts);
         if (parent != null) { idBuilder.filter(equalsTo(PARENT_FIELD, parent)); }
         return idBuilder;
     }

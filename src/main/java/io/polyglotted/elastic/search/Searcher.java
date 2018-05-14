@@ -19,6 +19,7 @@ import java.util.List;
 
 import static io.polyglotted.common.util.BaseSerializer.MAPPER;
 import static io.polyglotted.elastic.common.DocResult.docSource;
+import static io.polyglotted.elastic.search.Finder.findBy;
 import static io.polyglotted.elastic.search.Finder.findById;
 import static io.polyglotted.elastic.search.QueryMaker.scrollRequest;
 import static io.polyglotted.elastic.search.SearchUtil.buildAggs;
@@ -59,6 +60,14 @@ public final class Searcher {
     public <T> T getById(AuthHeader auth, String index, String model, String id, String parent,
                          FetchSourceContext ctx, ResultBuilder<T> builder, Verbose verbose) {
         return builder.buildVerbose(docSource(findById(client, auth, index, model, id, parent, ctx)), verbose);
+    }
+
+    public <T> T getByExpr(String repo, Expression expr, FetchSourceContext ctx, ResultBuilder<T> builder, Verbose verbose) {
+        return getByExpr(null, repo, expr, ctx, builder, verbose);
+    }
+
+    public <T> T getByExpr(AuthHeader auth, String repo, Expression expr, FetchSourceContext ctx, ResultBuilder<T> builder, Verbose verbose) {
+        return builder.buildVerbose(docSource(findBy(client, auth, repo, expr, ctx)), verbose);
     }
 
     public <T> QueryResponse searchBy(SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {

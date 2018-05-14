@@ -29,6 +29,16 @@ public abstract class Expressions {
 
     public static Expression all() { return withLabel("All", ""); }
 
+    public static Expression allIndex() { return bool().allIndex().build(); }
+
+    public static Expression archiveIndex() { return bool().archiveIndex().build(); }
+
+    public static Expression pendingApproval() { return bool().pendingApproval().build(); }
+
+    public static Expression approvalRejected() { return bool().rejected().build(); }
+
+    public static Expression liveIndex() { return bool().liveIndex().build(); }
+
     public static Expression equalsTo(String field, Object value) { return value == null ? missing(field) : withValue("Eq", field, value); }
 
     public static Expression notEquals(String field, Object value) { return value == null ? exists(field) : withValue("Ne", field, value); }
