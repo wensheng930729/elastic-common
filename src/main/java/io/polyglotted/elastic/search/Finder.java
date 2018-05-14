@@ -53,6 +53,8 @@ public abstract class Finder {
         return findBy(client, auth, repo, idBuilder(model, equalsTo(ID_FIELD, id), parent).build(), ctx);
     }
 
+    public static DocResult findBy(ElasticClient cl, String repo, Expression ex, FetchSourceContext ctx) { return findBy(cl, null, repo, ex, ctx); }
+
     @SneakyThrows public static DocResult findBy(ElasticClient client, AuthHeader auth, String repo, Expression expr, FetchSourceContext context) {
         SearchRequest searchRequest = filterToRequest(repo, expr, context, immutableList(), 1);
         SearchResponse response = auth == null ? client.search(searchRequest) : client.search(auth, searchRequest);
@@ -60,7 +62,7 @@ public abstract class Finder {
         return getReturnedHits(response) > 0 ? DocResultBuilder.buildFrom(response, NONE).get(0) : null;
     }
 
-    private static BoolBuilder idBuilder(String model, Expression must, String parent) {
+    public static BoolBuilder idBuilder(String model, Expression must, String parent) {
         BoolBuilder idBuilder = bool().liveOrPending().must(equalsTo(MODEL_FIELD, model)).must(must);
         if (parent != null) { idBuilder.filter(equalsTo(PARENT_FIELD, parent)); }
         return idBuilder;
