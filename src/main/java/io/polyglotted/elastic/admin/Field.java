@@ -72,7 +72,7 @@ public final class Field implements Comparable<Field> {
 
     @Accessors(fluent = true, chain = true)
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-    public static class FieldBuilder {
+    public static class FieldBuilder implements Comparable<FieldBuilder> {
         @NonNull @Getter private final String field;
         @NonNull @Getter private final FieldType type;
         @Setter(AccessLevel.PRIVATE) private String analyzer = null;
@@ -84,6 +84,8 @@ public final class Field implements Comparable<Field> {
         private final ImmutableListBuilder<String> copyToFields = immutableListBuilder();
         private final ImmutableMapBuilder<String, FieldBuilder> properties = immutableMapBuilder();
         @Setter private boolean excludeFromSrc = false;
+
+        @Override public int compareTo(FieldBuilder other) { return (other == null) ? -1 : field.compareTo(other.field); }
 
         public FieldBuilder mapping(FieldBuilder mapping) { this.properties.put(mapping.field, mapping); return this; }
 
