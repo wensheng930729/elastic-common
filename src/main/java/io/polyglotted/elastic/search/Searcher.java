@@ -18,7 +18,9 @@ import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import java.util.List;
 
 import static io.polyglotted.common.util.BaseSerializer.MAPPER;
+import static io.polyglotted.common.util.CollUtil.transformList;
 import static io.polyglotted.elastic.common.DocResult.docSource;
+import static io.polyglotted.elastic.search.Finder.findAllBy;
 import static io.polyglotted.elastic.search.Finder.findBy;
 import static io.polyglotted.elastic.search.Finder.findById;
 import static io.polyglotted.elastic.search.QueryMaker.scrollRequest;
@@ -37,29 +39,37 @@ import static org.elasticsearch.search.fetch.subphase.FetchSourceContext.FETCH_S
 public final class Searcher {
     private final ElasticClient client;
 
-    public <T> T getById(String index, String model, String id, ResultBuilder<T> resultBuilder, Verbose verbose) {
-        return getById(null, index, model, id, null, FETCH_SOURCE, resultBuilder, verbose);
+    public <T> List<T> getAllBy(String repo, String model, Expression expr, int size, ResultBuilder<T> resultBuilder, Verbose verbose) {
+        return getAllBy(null, repo, model, expr, size, resultBuilder, verbose);
     }
 
-    public <T> T getById(AuthHeader auth, String index, String model, String id, ResultBuilder<T> resultBuilder, Verbose verbose) {
-        return getById(auth, index, model, id, null, FETCH_SOURCE, resultBuilder, verbose);
+    public <T> List<T> getAllBy(AuthHeader auth, String repo, String model, Expression expr, int size, ResultBuilder<T> builder, Verbose verbose) {
+        return transformList(findAllBy(client, auth, repo, expr, size), docResult -> builder.buildVerbose(docSource(docResult), verbose));
     }
 
-    public <T> T getById(String index, String model, String id, String parent, ResultBuilder<T> resultBuilder, Verbose verbose) {
-        return getById(null, index, model, id, parent, resultBuilder, verbose);
+    public <T> T getById(String repo, String model, String id, ResultBuilder<T> resultBuilder, Verbose verbose) {
+        return getById(null, repo, model, id, null, FETCH_SOURCE, resultBuilder, verbose);
     }
 
-    public <T> T getById(AuthHeader auth, String index, String model, String id, String parent, ResultBuilder<T> resultBuilder, Verbose verbose) {
-        return getById(auth, index, model, id, parent, FETCH_SOURCE, resultBuilder, verbose);
+    public <T> T getById(AuthHeader auth, String repo, String model, String id, ResultBuilder<T> resultBuilder, Verbose verbose) {
+        return getById(auth, repo, model, id, null, FETCH_SOURCE, resultBuilder, verbose);
     }
 
-    public <T> T getById(String index, String model, String id, String parent, FetchSourceContext ctx, ResultBuilder<T> builder, Verbose verbose) {
-        return getById(null, index, model, id, parent, ctx, builder, verbose);
+    public <T> T getById(String repo, String model, String id, String parent, ResultBuilder<T> resultBuilder, Verbose verbose) {
+        return getById(null, repo, model, id, parent, resultBuilder, verbose);
     }
 
-    public <T> T getById(AuthHeader auth, String index, String model, String id, String parent,
+    public <T> T getById(AuthHeader auth, String repo, String model, String id, String parent, ResultBuilder<T> resultBuilder, Verbose verbose) {
+        return getById(auth, repo, model, id, parent, FETCH_SOURCE, resultBuilder, verbose);
+    }
+
+    public <T> T getById(String repo, String model, String id, String parent, FetchSourceContext ctx, ResultBuilder<T> builder, Verbose verbose) {
+        return getById(null, repo, model, id, parent, ctx, builder, verbose);
+    }
+
+    public <T> T getById(AuthHeader auth, String repo, String model, String id, String parent,
                          FetchSourceContext ctx, ResultBuilder<T> builder, Verbose verbose) {
-        return builder.buildVerbose(docSource(findById(client, auth, index, model, id, parent, ctx)), verbose);
+        return builder.buildVerbose(docSource(findById(client, auth, repo, model, id, parent, ctx)), verbose);
     }
 
     public <T> T getByExpr(String repo, Expression expr, FetchSourceContext ctx, ResultBuilder<T> builder, Verbose verbose) {

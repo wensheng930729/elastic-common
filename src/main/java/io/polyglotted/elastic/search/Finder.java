@@ -11,6 +11,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
+import java.util.List;
 import java.util.Map;
 
 import static io.polyglotted.common.util.CollUtil.transform;
@@ -34,13 +35,13 @@ public abstract class Finder {
 
     public static Map<String, DocResult> findAll(ElasticClient client, AuthHeader auth, BulkRecord record) {
         BoolBuilder builder = idBuilder(record.model, record.parent, in(ID_FIELD, transform(record.records, IndexRecord::getId))).liveOrPending();
-        return findAllBy(client, auth, record.repo, builder.build(), record.size());
+        return uniqueIndex(findAllBy(client, auth, record.repo, builder.build(), record.size()), DocResult::keyString);
     }
 
-    public static Map<String, DocResult> findAllBy(ElasticClient client, AuthHeader auth, String repo, Expression expr, int size) {
+    public static List<DocResult> findAllBy(ElasticClient client, AuthHeader auth, String repo, Expression expr, int size) {
         SearchRequest searchRequest = filterToRequest(repo, expr, FETCH_SOURCE, immutableList(), size);
         SearchResponse response = auth == null ? client.search(searchRequest) : client.search(auth, searchRequest);
-        return uniqueIndex(DocResultBuilder.buildFrom(response, NONE), DocResult::keyString);
+        return DocResultBuilder.buildFrom(response, NONE);
     }
 
     public static DocResult findByKey(ElasticClient client, AuthHeader auth, String repo, String key) { return findByKey(client, auth, repo, key, null); }
