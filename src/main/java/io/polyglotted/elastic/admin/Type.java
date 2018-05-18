@@ -2,6 +2,7 @@ package io.polyglotted.elastic.admin;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import io.polyglotted.common.model.Jsoner;
 import io.polyglotted.common.model.MapResult.ImmutableResult;
 import io.polyglotted.common.util.ListBuilder;
 import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
@@ -33,7 +34,7 @@ import static java.util.Collections.singleton;
 @SuppressWarnings({"unused", "WeakerAccess"})
 @ToString(includeFieldNames = false, doNotUseGetters = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public final class Type {
+public final class Type implements Jsoner {
     public final String type = "_doc";
     public final boolean strict;
     public final boolean enabled;
@@ -49,14 +50,14 @@ public final class Type {
     public final Map<String, List<String>> relations;
 
     @Override public boolean equals(Object o) {
-        return this == o || (!(o == null || getClass() != o.getClass()) && mappingJson().equals(((Type) o).mappingJson()));
+        return this == o || (!(o == null || getClass() != o.getClass()) && toJson().equals(((Type) o).toJson()));
     }
 
-    @Override public int hashCode() { return 29 * mappingJson().hashCode(); }
+    @Override public int hashCode() { return 29 * toJson().hashCode(); }
 
     public boolean hasRelations() { return relations.size() > 0; }
 
-    public String mappingJson() { return serializeType(this); }
+    @Override public String toJson() { return serializeType(this); }
 
     List<String> sourceExcludes() {
         return ListBuilder.<String>immutableListBuilder().addAll(srcExcludes)

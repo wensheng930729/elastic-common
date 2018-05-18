@@ -76,6 +76,6 @@ public class ExpressionsTest {
 
     @Test
     public void indexSettingSuccess() throws Exception {
-        assertThat(autoReplicate().createJson(), is(notNullValue()));
+        assertThat(autoReplicate().toJson(), is(notNullValue()));
     }
 }

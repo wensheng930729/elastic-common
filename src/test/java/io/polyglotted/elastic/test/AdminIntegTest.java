@@ -38,6 +38,7 @@ import static io.polyglotted.elastic.admin.FieldType.LONG;
 import static io.polyglotted.elastic.admin.FieldType.SCALED_FLOAT;
 import static io.polyglotted.elastic.admin.FieldType.SHORT;
 import static io.polyglotted.elastic.admin.FieldType.TEXT;
+import static io.polyglotted.elastic.admin.IndexRequestor.indexFile;
 import static io.polyglotted.elastic.admin.IndexSetting.settingBuilder;
 import static io.polyglotted.elastic.admin.Type.typeBuilder;
 import static io.polyglotted.elastic.test.ElasticTestUtil.testElasticClient;
@@ -52,8 +53,7 @@ public class AdminIntegTest {
     public void createIndexSuccess() throws Exception {
         try (ElasticClient client = testElasticClient()) {
             IndexSetting setting = settingBuilder(5, 1).all(immutableResult("mapping.total_fields.limit", 5000)).build();
-            Type completeType = completeTypeMapping().build();
-            String index = client.createIndex(setting, completeType, "MyBigIndex");
+            String index = client.createIndex(indexFile(setting, completeTypeMapping().build(), "MyBigIndex"));
             try {
                 MapResult deserialized = deserialize(client.getSettings(index));
 
@@ -70,7 +70,7 @@ public class AdminIntegTest {
     @Test
     public void parentChildIndexSuccess() throws Exception {
         try (ElasticClient client = testElasticClient()) {
-            String index = client.createIndex(IndexSetting.with(2, 0), parentChildTypeMapping().build(), "ParChilIndex");
+            String index = client.createIndex(indexFile(IndexSetting.with(2, 0), parentChildTypeMapping().build(), "ParChilIndex"));
             try {
                 String parChildMapping = serialize(client.getMapping(index));
                 assertThat(parChildMapping, parChildMapping, is(MESSAGES.get("parentChildMapping")));
@@ -83,7 +83,7 @@ public class AdminIntegTest {
             .field(simpleField("val", KEYWORD));
     }
 
-    private static Type.Builder completeTypeMapping() {
+    static Type.Builder completeTypeMapping() {
         return typeBuilder().strict()
             .metaData("myName", "myVal")
             .field(simpleField("binField", BINARY))

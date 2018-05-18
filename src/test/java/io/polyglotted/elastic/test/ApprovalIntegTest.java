@@ -19,6 +19,7 @@ import static io.polyglotted.common.model.MapResult.simpleResult;
 import static io.polyglotted.common.util.BaseSerializer.serialize;
 import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.common.util.ResourceUtil.readResourceAsMap;
+import static io.polyglotted.elastic.admin.IndexRequestor.indexFile;
 import static io.polyglotted.elastic.admin.IndexSetting.with;
 import static io.polyglotted.elastic.admin.Type.typeBuilder;
 import static io.polyglotted.elastic.common.DocStatus.PENDING;
@@ -66,7 +67,7 @@ public class ApprovalIntegTest {
 
     @Test
     public void approvalLifeCycle() throws Exception {
-        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(indexFile(with(3, 0), typeBuilder().build(), REPO));
         try {
             indexer.strictSave(ES_AUTH, createRecord(REPO, approvalModel(MODEL), "neon", simpleResult("name", "Neon"))
                 .status(PENDING).userTs(Tester, T1).build(), STRICT);
@@ -102,7 +103,7 @@ public class ApprovalIntegTest {
 
     @Test
     public void approvalRejectDiscard() throws Exception {
-        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(indexFile(with(3, 0), typeBuilder().build(), REPO));
         try {
             BulkRecord bulkRecord = BulkRecord.bulkBuilder(REPO, MODEL, T1, Tester).hasApproval(true).objects(immutableList(
                 simpleResult("&id", "aqua", "name", "Aqua"), simpleResult("&id", "beige", "name", "Beige"),
@@ -129,7 +130,7 @@ public class ApprovalIntegTest {
 
     @Test
     public void approvalStrictFailure() {
-        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(indexFile(with(3, 0), typeBuilder().build(), REPO));
         try {
             indexer.strictSave(ES_AUTH, createRecord(REPO, approvalModel(MODEL), "neon", simpleResult("name", "Neon1"))
                 .status(PENDING).userTs(Tester, T1).build(), STRICT);

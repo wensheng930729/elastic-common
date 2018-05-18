@@ -1,5 +1,6 @@
 package io.polyglotted.elastic.admin;
 
+import io.polyglotted.common.model.Jsoner;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.model.MapResult.ImmutableResult;
 import io.polyglotted.common.model.SortedMapResult;
@@ -7,6 +8,9 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Map;
+
+import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.model.SortedMapResult.treeResult;
 import static io.polyglotted.common.util.BaseSerializer.deserialize;
 import static io.polyglotted.common.util.BaseSerializer.serialize;
@@ -16,11 +20,13 @@ import static io.polyglotted.common.util.ResourceUtil.readResource;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 @RequiredArgsConstructor @EqualsAndHashCode
-public final class IndexSetting {
+public final class IndexSetting implements Jsoner {
     private static final String DEF_ANALYSIS = readResource(IndexSetting.class, "def-analysis.json");
     public final ImmutableResult mapResult;
 
-    public String createJson() { return serialize(filterKeysNeg(mapResult, "index_name"::equals)); }
+    @Override public String toJson() { return serialize(filterKeysNeg(mapResult, "index_name"::equals)); }
+
+    public static IndexSetting settingFrom(Map<String, Object> map) { return new IndexSetting(immutableResult(map)); }
 
     public static IndexSetting with(int numberOfShards, int numberOfReplicas) { return settingBuilder(numberOfShards, numberOfReplicas).build(); }
 

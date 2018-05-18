@@ -3,11 +3,7 @@ package io.polyglotted.elastic.client;
 import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.model.MapResult.ImmutableResult;
-import io.polyglotted.common.util.TokenUtil;
-import io.polyglotted.elastic.admin.IndexSetting;
-import io.polyglotted.elastic.admin.Type;
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -23,13 +19,12 @@ import org.elasticsearch.action.search.ClearScrollResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.common.xcontent.XContentType;
 
 import java.io.Closeable;
 
-import static io.polyglotted.common.util.MapRetriever.optStr;
-import static io.polyglotted.common.util.NullUtil.nonNull;
-import static org.elasticsearch.client.Requests.createIndexRequest;
-import static org.elasticsearch.common.xcontent.XContentType.JSON;
+import static io.polyglotted.common.util.TokenUtil.uniqueToken;
+import static org.apache.commons.codec.binary.Base64.decodeBase64;
 
 @SuppressWarnings("unused")
 public interface ElasticClient extends Closeable {
@@ -51,13 +46,12 @@ public interface ElasticClient extends Closeable {
 
     boolean indexExists(AuthHeader auth, String index);
 
-    default String createIndex(IndexSetting setting, Type type, String alias) { return createIndex(bootstrapAuth(), setting, type, alias); }
+    default String createIndex(String indexFile) { return createIndex(uniqueToken(), indexFile); }
 
-    default String createIndex(AuthHeader auth, IndexSetting setting, Type type, String alias) {
-        CreateIndexRequest request = createIndexRequest(nonNull(optStr(setting.mapResult, "index_name"), TokenUtil::uniqueToken))
-            .updateAllTypes(true).settings(setting.createJson(), JSON).mapping(type.type, type.mappingJson(), JSON);
-        if (alias != null) { request.alias(new Alias(alias)); }
-        return createIndex(auth, request);
+    default String createIndex(String indexName, String indexFile) { return createIndex(bootstrapAuth(), indexName, indexFile); }
+
+    default String createIndex(AuthHeader auth, String indexName, String indexFile) {
+        return createIndex(auth, new CreateIndexRequest(indexName).source(decodeBase64(indexFile), XContentType.JSON));
     }
 
     default String createIndex(CreateIndexRequest request) { return createIndex(bootstrapAuth(), request); }

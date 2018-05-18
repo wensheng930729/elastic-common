@@ -18,6 +18,7 @@ import static io.polyglotted.common.model.MapResult.simpleResult;
 import static io.polyglotted.common.util.MapBuilder.immutableMap;
 import static io.polyglotted.common.util.MapBuilder.immutableMapBuilder;
 import static io.polyglotted.common.util.UrnUtil.safeUrnOf;
+import static io.polyglotted.elastic.admin.IndexRequestor.indexFile;
 import static io.polyglotted.elastic.admin.IndexSetting.with;
 import static io.polyglotted.elastic.admin.Type.typeBuilder;
 import static io.polyglotted.elastic.common.MetaFields.ANCESTOR_FIELD;
@@ -60,7 +61,7 @@ public class IndexerIntegTest {
 
     @Test
     public void strictSaveLifeCycle() throws Exception {
-        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(indexFile(with(3, 0), typeBuilder().build(), REPO));
         try {
             MapResult user = simpleResult("name", "shankar", "age", 25, "title", "programmer");
             String result = indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, user).userTs(Tester, T1).build(), STRICT);
@@ -94,7 +95,7 @@ public class IndexerIntegTest {
 
     @Test
     public void overrideSaveLifeCycle() {
-        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(indexFile(with(3, 0), typeBuilder().build(), REPO));
         try {
             MapResult user = simpleResult("name", "shankar", "age", 25, "title", "programmer");
             String result = indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, user).userTs(Tester, T1).build(), STRICT);
@@ -128,7 +129,7 @@ public class IndexerIntegTest {
 
     @Test
     public void strictSaveFailureAlreadyExists() {
-        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(indexFile(with(3, 0), typeBuilder().build(), REPO));
         try {
             indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, simpleResult("name", "shankar", "age", 25,
                 "title", "programmer")).userTs(Tester, T1).build(), STRICT);
@@ -142,7 +143,7 @@ public class IndexerIntegTest {
 
     @Test
     public void strictSaveFailureDeleteNonExistent() {
-        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(indexFile(with(3, 0), typeBuilder().build(), REPO));
         try {
             indexer.strictSave(ES_AUTH, deleteRecord(REPO, MODEL, ID, T2).userTs(Tester, T3).build(), STRICT);
             fail("cannot come here");
@@ -153,7 +154,7 @@ public class IndexerIntegTest {
 
     @Test
     public void strictSaveFailureBaseVersionNotFound() {
-        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(indexFile(with(3, 0), typeBuilder().build(), REPO));
         try {
             indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, simpleResult("name", "shankar", "age", 25,
                 "title", "programmer")).userTs(Tester, T1).build(), STRICT);
@@ -167,7 +168,7 @@ public class IndexerIntegTest {
 
     @Test
     public void strictSaveFailureVersionMismatch() {
-        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(indexFile(with(3, 0), typeBuilder().build(), REPO));
         try {
             indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, simpleResult("name", "shankar", "age", 25,
                 "title", "programmer")).userTs(Tester, T1).build(), STRICT);
@@ -183,7 +184,7 @@ public class IndexerIntegTest {
 
     @Test
     public void failedValidation() {
-        String index2 = client.createIndex(with(3, 0), typeBuilder().build(), REPO);
+        String index2 = client.createIndex(indexFile(with(3, 0), typeBuilder().build(), REPO));
         try {
             indexer.strictSave(ES_AUTH, createRecord(REPO, MODEL, ID, simpleResult()).userTs(Tester, T1).build(), new StrictValidator() {
                 @Override protected void preValidate(ElasticClient client, IndexRecord record) { throw new RuntimeException("induced validation"); }
