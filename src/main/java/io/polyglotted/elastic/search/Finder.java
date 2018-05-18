@@ -6,7 +6,6 @@ import io.polyglotted.elastic.common.DocResult;
 import io.polyglotted.elastic.index.BulkRecord;
 import io.polyglotted.elastic.index.IndexRecord;
 import io.polyglotted.elastic.search.Expressions.BoolBuilder;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -35,7 +34,12 @@ public abstract class Finder {
 
     public static Map<String, DocResult> findAll(ElasticClient client, AuthHeader auth, BulkRecord record) {
         BoolBuilder builder = idBuilder(record.model, record.parent, in(ID_FIELD, transform(record.records, IndexRecord::getId))).liveOrPending();
-        SearchResponse response = client.search(auth, filterToRequest(record.repo, builder.build(), FETCH_SOURCE, immutableList(), record.size()));
+        return findAllBy(client, auth, record.repo, builder.build(), record.size());
+    }
+
+    public static Map<String, DocResult> findAllBy(ElasticClient client, AuthHeader auth, String repo, Expression expr, int size) {
+        SearchRequest searchRequest = filterToRequest(repo, expr, FETCH_SOURCE, immutableList(), size);
+        SearchResponse response = auth == null ? client.search(searchRequest) : client.search(auth, searchRequest);
         return uniqueIndex(DocResultBuilder.buildFrom(response, NONE), DocResult::keyString);
     }
 
@@ -53,10 +57,9 @@ public abstract class Finder {
         return findBy(client, auth, repo, idBuilder(model, parent, equalsTo(ID_FIELD, id)).liveOrPending().build(), ctx);
     }
 
-    @SneakyThrows public static DocResult findBy(ElasticClient client, AuthHeader auth, String repo, Expression expr, FetchSourceContext context) {
+    public static DocResult findBy(ElasticClient client, AuthHeader auth, String repo, Expression expr, FetchSourceContext context) {
         SearchRequest searchRequest = filterToRequest(repo, expr, context, immutableList(), 1);
         SearchResponse response = auth == null ? client.search(searchRequest) : client.search(auth, searchRequest);
-
         return getReturnedHits(response) > 0 ? DocResultBuilder.buildFrom(response, NONE).get(0) : null;
     }
 
