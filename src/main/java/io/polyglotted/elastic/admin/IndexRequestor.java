@@ -22,7 +22,6 @@ import static io.polyglotted.elastic.search.Expressions.approvalRejected;
 import static io.polyglotted.elastic.search.Expressions.archiveIndex;
 import static io.polyglotted.elastic.search.Expressions.liveIndex;
 import static io.polyglotted.elastic.search.Expressions.pendingApproval;
-import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.elasticsearch.client.Requests.createIndexRequest;
 import static org.elasticsearch.common.xcontent.XContentType.JSON;
 
@@ -45,7 +44,7 @@ public abstract class IndexRequestor {
         XContentBuilder builder = XContentFactory.jsonBuilder();
         request.toXContent(builder, ToXContent.EMPTY_PARAMS);
         builder.close();
-        return encodeBase64String(builder.bytes().toBytesRef().bytes);
+        return builder.string();
     }
 
     public static Alias aliasFrom(String name, String filter) { return new Alias(name).filter(FILTER_BUILDERS.get(filter)); }

@@ -24,7 +24,6 @@ import org.elasticsearch.common.xcontent.XContentType;
 import java.io.Closeable;
 
 import static io.polyglotted.common.util.TokenUtil.uniqueToken;
-import static org.apache.commons.codec.binary.Base64.decodeBase64;
 
 @SuppressWarnings("unused")
 public interface ElasticClient extends Closeable {
@@ -51,7 +50,7 @@ public interface ElasticClient extends Closeable {
     default String createIndex(String indexName, String indexFile) { return createIndex(bootstrapAuth(), indexName, indexFile); }
 
     default String createIndex(AuthHeader auth, String indexName, String indexFile) {
-        return createIndex(auth, new CreateIndexRequest(indexName).source(decodeBase64(indexFile), XContentType.JSON));
+        return createIndex(auth, new CreateIndexRequest(indexName).source(indexFile, XContentType.JSON));
     }
 
     default String createIndex(CreateIndexRequest request) { return createIndex(bootstrapAuth(), request); }
