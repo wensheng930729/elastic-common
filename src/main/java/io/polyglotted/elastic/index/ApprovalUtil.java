@@ -4,6 +4,7 @@ import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.common.model.Pair;
 import io.polyglotted.elastic.common.DocResult;
 import io.polyglotted.elastic.common.DocStatus;
+import io.polyglotted.elastic.search.Expressions.BoolBuilder;
 import io.polyglotted.elastic.search.Searcher;
 import org.elasticsearch.action.search.SearchRequest;
 
@@ -22,13 +23,16 @@ import static io.polyglotted.elastic.index.RecordAction.CREATE;
 import static io.polyglotted.elastic.index.RecordAction.DELETE;
 import static io.polyglotted.elastic.search.Expressions.bool;
 import static io.polyglotted.elastic.search.Expressions.equalsTo;
+import static io.polyglotted.elastic.search.Finder.idBuilder;
 import static io.polyglotted.elastic.search.QueryMaker.filterToRequest;
 import static io.polyglotted.elastic.search.ResponseBuilder.DocResultBuilder;
 import static org.elasticsearch.search.fetch.subphase.FetchSourceContext.FETCH_SOURCE;
 
-@SuppressWarnings({"WeakerAccess"})
+@SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class ApprovalUtil {
     public static String approvalModel(String model) { return model + "$approval"; }
+
+    public static BoolBuilder pendingBuilder(String m, String id) { return idBuilder(approvalModel(m), equalsTo(ID_FIELD, id)).pendingApproval(); }
 
     public static DocResult fetchApprovalDoc(Searcher searcher, AuthHeader esAuth, String repo, String model, String id) {
         SearchRequest searchRequest = filterToRequest(repo, bool().pendingApproval().musts(equalsTo(MODEL_FIELD, approvalModel(model)),

@@ -1,5 +1,9 @@
 package io.polyglotted.elastic.search;
 
+import lombok.SneakyThrows;
+import org.elasticsearch.common.xcontent.ToXContent;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -93,5 +97,11 @@ public enum ExprConverter {
 
     @SuppressWarnings("ConstantConditions") private static QueryBuilder[] aggregateFilters(Collection<Expression> expressions) {
         return transform(expressions, ExprConverter::buildFilter).filter(Objects::nonNull).toArray(QueryBuilder.class);
+    }
+
+    @SneakyThrows public static String filterAsStr(Expression expr) {
+        XContentBuilder result = XContentFactory.jsonBuilder();
+        buildFilter(expr).toXContent(result, ToXContent.EMPTY_PARAMS);
+        return result.string();
     }
 }

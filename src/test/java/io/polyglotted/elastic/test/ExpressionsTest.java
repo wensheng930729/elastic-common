@@ -3,16 +3,12 @@ package io.polyglotted.elastic.test;
 import io.polyglotted.elastic.search.Expression;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.elasticsearch.common.xcontent.ToXContent;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.elastic.admin.IndexSetting.autoReplicate;
-import static io.polyglotted.elastic.search.ExprConverter.buildFilter;
+import static io.polyglotted.elastic.search.ExprConverter.filterAsStr;
 import static io.polyglotted.elastic.search.Expressions.all;
 import static io.polyglotted.elastic.search.Expressions.allIndex;
 import static io.polyglotted.elastic.search.Expressions.approvalRejected;
@@ -67,15 +63,8 @@ public class ExpressionsTest {
     }
 
     @Test @Parameters(method = "expressionInputs")
-    public void expressionBuildFrom(Expression expression, String json) throws Exception {
-        QueryBuilder query = buildFilter(expression);
-        XContentBuilder result = XContentFactory.jsonBuilder();
-        query.toXContent(result, ToXContent.EMPTY_PARAMS);
-        assertThat(result.string(), result.string(), is(json));
-    }
+    public void expressionBuildFrom(Expression expression, String json) { assertThat(filterAsStr(expression), filterAsStr(expression), is(json)); }
 
     @Test
-    public void indexSettingSuccess() throws Exception {
-        assertThat(autoReplicate().toJson(), is(notNullValue()));
-    }
+    public void indexSettingSuccess() { assertThat(autoReplicate().toJson(), is(notNullValue())); }
 }

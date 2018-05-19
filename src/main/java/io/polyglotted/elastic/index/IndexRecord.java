@@ -35,7 +35,6 @@ import static io.polyglotted.elastic.common.MetaFields.KEY_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.MODEL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.PARENT_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.REALM_FIELD;
-import static io.polyglotted.elastic.common.MetaFields.SCHEMA_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.STATUS_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TIMESTAMP_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.TRAITFQN_FIELD;
@@ -164,8 +163,6 @@ public final class IndexRecord {
         public Builder realm(String realm) { addMeta(source, REALM_FIELD, realm); return this; }
 
         public Builder traitFqn(String traitFqn) { addMeta(source, TRAITFQN_FIELD, traitFqn); return this; }
-
-        public Builder schema(String schema) { addMeta(source, SCHEMA_FIELD, schema); return this; }
 
         public Builder baseVersion(Long baseVersion) { this.baseVersion = baseVersion; return this; }
 

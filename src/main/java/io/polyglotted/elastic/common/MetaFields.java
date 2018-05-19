@@ -25,7 +25,6 @@ public abstract class MetaFields {
     public static final String COMMENT_FIELD = "&comment";
     public static final String EXPIRY_FIELD = "&expiry";
     public static final String HIGHLTGHT_FIELD = "&highlight";
-    public static final String INDEX_FIELD = "&index";
     public static final String ID_FIELD = "&id";
     public static final String KEY_FIELD = "&key";
     public static final String LINK_FIELD = "&link";
@@ -33,7 +32,6 @@ public abstract class MetaFields {
     public static final String PARENT_FIELD = "&parent";
     public static final String REALM_FIELD = "&realm";
     public static final String RESULT_FIELD = "&result";
-    public static final String SCHEMA_FIELD = "&schema";
     public static final String STATUS_FIELD = "&status";
     public static final String TIMESTAMP_FIELD = "&timestamp";
     public static final String TRAITFQN_FIELD = "&traitFqn";
@@ -41,8 +39,8 @@ public abstract class MetaFields {
     public static final String UPDATER_FIELD = "&updater";
     public static final String USER_FIELD = "&user";
 
-    public static final String[] ALL_FIELDS = immutableList(ANCESTOR_FIELD, APPROVAL_ROLES_FIELD, COMMENT_FIELD, EXPIRY_FIELD,
-        INDEX_FIELD, ID_FIELD, KEY_FIELD, LINK_FIELD, MODEL_FIELD, PARENT_FIELD, REALM_FIELD, SCHEMA_FIELD, STATUS_FIELD,
+    public static final String[] ALL_FIELDS = immutableList(ANCESTOR_FIELD, APPROVAL_ROLES_FIELD, COMMENT_FIELD,
+        EXPIRY_FIELD, ID_FIELD, KEY_FIELD, LINK_FIELD, MODEL_FIELD, PARENT_FIELD, REALM_FIELD, STATUS_FIELD,
         TRAITFQN_FIELD, TIMESTAMP_FIELD, UPDATER_FIELD, USER_FIELD).toArray(new String[0]);
 
     public static void addMeta(Object item, String field, Object value) { addMetaField(mapValue(item), field, value); }
@@ -54,8 +52,6 @@ public abstract class MetaFields {
     public static <T> T reqdMeta(Object object, String field) { return reqdValue(mapValue(object), field); }
 
     public static boolean isNotMeta(String field) { return field.indexOf('&') != 0; }
-
-    public static String index(Object object) { return reqdMeta(object, INDEX_FIELD); }
 
     public static String model(Object object) { return reqdMeta(object, MODEL_FIELD); }
 
@@ -93,14 +89,12 @@ public abstract class MetaFields {
         putVal(map, APPROVAL_ROLES_FIELD, builder);
         putVal(map, COMMENT_FIELD, builder);
         putTs(map, EXPIRY_FIELD, builder);
-        putVal(map, INDEX_FIELD, builder);
         putVal(map, mandatory ? checkContains(map, ID_FIELD) : ID_FIELD, builder);
         putVal(map, mandatory ? checkContains(map, KEY_FIELD) : KEY_FIELD, builder);
         putVal(map, LINK_FIELD, builder);
         putVal(map, mandatory ? checkContains(map, MODEL_FIELD) : MODEL_FIELD, builder);
         putVal(map, PARENT_FIELD, builder);
         putVal(map, REALM_FIELD, builder);
-        putVal(map, SCHEMA_FIELD, builder);
         if (map.containsKey(STATUS_FIELD)) { builder.put(STATUS_FIELD, status(map));}
         putVal(map, TRAITFQN_FIELD, builder);
         putTs(map, mandatory ? checkContains(map, TIMESTAMP_FIELD) : TIMESTAMP_FIELD, builder);

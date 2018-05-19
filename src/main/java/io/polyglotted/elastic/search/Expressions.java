@@ -66,8 +66,6 @@ public abstract class Expressions {
 
         public BoolBuilder liveIndex() { return filter(exists(TIMESTAMP_FIELD)).nots(exists(STATUS_FIELD), exists(EXPIRY_FIELD)); }
 
-        public BoolBuilder liveOrPending(boolean apply) { return apply ? liveOrPending() : this; }
-
         public BoolBuilder liveOrPending() {
             return must(exists(TIMESTAMP_FIELD)).not(exists(EXPIRY_FIELD)).should(bool().not(exists(STATUS_FIELD)))
                 .should(in(STATUS_FIELD, immutableList("PENDING", "PENDING_DELETE")));
