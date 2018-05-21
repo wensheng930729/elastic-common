@@ -21,6 +21,7 @@ import static io.polyglotted.elastic.common.Verbose.NONE;
 import static io.polyglotted.elastic.index.RecordAction.APPROVE;
 import static io.polyglotted.elastic.index.RecordAction.CREATE;
 import static io.polyglotted.elastic.index.RecordAction.DELETE;
+import static io.polyglotted.elastic.index.ValidateException.validateNotNull;
 import static io.polyglotted.elastic.search.Expressions.bool;
 import static io.polyglotted.elastic.search.Expressions.equalsTo;
 import static io.polyglotted.elastic.search.Finder.idBuilder;
@@ -35,12 +36,15 @@ public abstract class ApprovalUtil {
     public static BoolBuilder pendingBuilder(String m, String id) { return idBuilder(approvalModel(m), equalsTo(ID_FIELD, id)).pendingApproval(); }
 
     public static DocResult fetchApprovalDoc(Searcher searcher, AuthHeader esAuth, String repo, String model, String id) {
-        SearchRequest searchRequest = filterToRequest(repo, bool().pendingApproval().musts(equalsTo(MODEL_FIELD, approvalModel(model)),
-            equalsTo(ID_FIELD, id)).build(), FETCH_SOURCE, immutableList(), 1);
+        return validateNotNull(fetchPendingDoc(searcher, esAuth, repo, model, id, bool().pendingApproval()),
+            "cannot find approval document " + id + " for model " + model);
+    }
 
+    public static DocResult fetchPendingDoc(Searcher searcher, AuthHeader esAuth, String repo, String model, String id, BoolBuilder boolBuilder) {
+        SearchRequest searchRequest = filterToRequest(repo, boolBuilder.musts(equalsTo(MODEL_FIELD, approvalModel(model)),
+            equalsTo(ID_FIELD, id)).build(), FETCH_SOURCE, immutableList(), 1);
         List<DocResult> response = searcher.searchBy(esAuth, searchRequest, DocResultBuilder, NONE).resultsAs(DocResult.class);
-        if (response.isEmpty()) { throw new ValidateException(404, "cannot find approval document " + id + " for model " + model); }
-        return response.get(0);
+        return response.size() > 0 ? response.get(0) : null;
     }
 
     public static Pair<IndexRecord, IndexRecord> approvePair(DocResult approvalDoc, String comment, long millis, String user) {

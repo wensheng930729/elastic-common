@@ -31,7 +31,7 @@ import static org.hamcrest.Matchers.notNullValue;
 public class ExpressionsTest {
     public static Object[][] expressionInputs() {
         return new Object[][]{
-            {approvalRejected(), "{\"bool\":{\"filter\":[{\"terms\":{\"&status\":[\"REJECTED\"],\"boost\":1.0}}]," +
+            {approvalRejected(), "{\"bool\":{\"filter\":[{\"term\":{\"&status\":{\"value\":\"REJECTED\",\"boost\":1.0}}}]," +
                 "\"must_not\":[{\"exists\":{\"field\":\"&expiry\",\"boost\":1.0}}],\"adjust_pure_negative\":true,\"boost\":1.0}}"},
             {archiveIndex(), "{\"bool\":{\"filter\":[{\"exists\":{\"field\":\"&status\",\"boost\":1.0}}," +
                 "{\"exists\":{\"field\":\"&expiry\",\"boost\":1.0}}],\"adjust_pure_negative\":true,\"boost\":1.0}}"},
@@ -52,8 +52,8 @@ public class ExpressionsTest {
             {text("foo", "bar"), "{\"match_phrase_prefix\":{\"foo\":{\"query\":\"bar\",\"slop\":0,\"max_expansions\":50,\"boost\":1.0}}}"},
             {bool().liveOrPending().build(), "{\"bool\":{\"must\":[{\"exists\":{\"field\":\"&timestamp\",\"boost\":1.0}}],\"must_not\":" +
                 "[{\"exists\":{\"field\":\"&expiry\",\"boost\":1.0}}],\"should\":[{\"bool\":{\"must_not\":[{\"exists\":{\"field\":\"&status\"," +
-                "\"boost\":1.0}}],\"adjust_pure_negative\":true,\"boost\":1.0}},{\"terms\":{\"&status\":[\"PENDING\",\"PENDING_DELETE\"]," +
-                "\"boost\":1.0}}],\"adjust_pure_negative\":true,\"boost\":1.0}}"},
+                "\"boost\":1.0}}],\"adjust_pure_negative\":true,\"boost\":1.0}},{\"terms\":{\"&status\":[\"PENDING\",\"PENDING_DELETE\"" +
+                ",\"REJECTED\"],\"boost\":1.0}}],\"adjust_pure_negative\":true,\"boost\":1.0}}"},
             {idBuilder("foo", equalsTo("a", 1), null).build(), "{\"bool\":{\"must\":[{\"term\":{\"&model\":{\"value\":\"foo\",\"boost\":1.0}}}," +
                 "{\"term\":{\"a\":{\"value\":1,\"boost\":1.0}}}],\"adjust_pure_negative\":true,\"boost\":1.0}}"},
             {idBuilder("foo", "bar", equalsTo("a", 1), equalsTo("b", false)).build(), "{\"bool\":{\"must\":[{\"term\":{\"&model\":{\"value\":" +

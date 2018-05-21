@@ -56,9 +56,13 @@ public abstract class Expressions {
 
         public BoolBuilder allIndex() { return filter(exists(TIMESTAMP_FIELD)); }
 
-        public BoolBuilder rejected() { return filter(in(STATUS_FIELD, immutableList("REJECTED"))).not(exists(EXPIRY_FIELD)); }
-
         public BoolBuilder discarded() { return filter(equalsTo(STATUS_FIELD, "DISCARDED")); }
+
+        public BoolBuilder rejected() { return filter(equalsTo(STATUS_FIELD, "REJECTED")).not(exists(EXPIRY_FIELD)); }
+
+        public BoolBuilder pendingOrRejected() {
+            return filter(in(STATUS_FIELD, immutableList("PENDING", "PENDING_DELETE", "REJECTED"))).not(exists(EXPIRY_FIELD));
+        }
 
         public BoolBuilder pendingApproval() { return filter(in(STATUS_FIELD, immutableList("PENDING", "PENDING_DELETE"))).not(exists(EXPIRY_FIELD)); }
 
@@ -68,7 +72,7 @@ public abstract class Expressions {
 
         public BoolBuilder liveOrPending() {
             return must(exists(TIMESTAMP_FIELD)).not(exists(EXPIRY_FIELD)).should(bool().not(exists(STATUS_FIELD)))
-                .should(in(STATUS_FIELD, immutableList("PENDING", "PENDING_DELETE")));
+                .should(in(STATUS_FIELD, immutableList("PENDING", "PENDING_DELETE", "REJECTED")));
         }
 
         public BoolBuilder must(Expression expr) { if (expr != null) { this.musts.add(expr); } return this; }

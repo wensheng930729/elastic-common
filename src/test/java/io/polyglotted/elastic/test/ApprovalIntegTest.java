@@ -31,6 +31,7 @@ import static io.polyglotted.elastic.index.ApprovalUtil.approvalModel;
 import static io.polyglotted.elastic.index.ApprovalUtil.approvePair;
 import static io.polyglotted.elastic.index.ApprovalUtil.discard;
 import static io.polyglotted.elastic.index.ApprovalUtil.fetchApprovalDoc;
+import static io.polyglotted.elastic.index.ApprovalUtil.fetchPendingDoc;
 import static io.polyglotted.elastic.index.ApprovalUtil.reject;
 import static io.polyglotted.elastic.index.IndexRecord.createRecord;
 import static io.polyglotted.elastic.index.IndexRecord.updateRecord;
@@ -48,6 +49,7 @@ import static org.elasticsearch.search.sort.SortBuilders.fieldSort;
 import static org.elasticsearch.search.sort.SortOrder.DESC;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 public class ApprovalIntegTest {
@@ -116,7 +118,7 @@ public class ApprovalIntegTest {
             checkStatusObjects(searcher, bool().liveIndex().build(), 1);
             indexer.strictSave(ES_AUTH, reject(fetchApprovalDoc(searcher, ES_AUTH, REPO, MODEL, "beige"),
                 REJECT, null, T3, Approver), STRICT);
-            checkStatusObjects(searcher, bool().rejected().build(), 1);
+            assertNotNull(fetchPendingDoc(searcher, ES_AUTH, REPO, MODEL, "beige", bool().pendingOrRejected()));
             indexer.strictSave(ES_AUTH, discard(fetchApprovalDoc(searcher, ES_AUTH, REPO, MODEL, "cherry"),
                 DISCARD, null, T4, Approver), STRICT);
             checkStatusObjects(searcher, bool().pendingApproval().build(), 0);
