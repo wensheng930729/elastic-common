@@ -75,7 +75,7 @@ public class ApprovalIntegTest {
                 .status(PENDING).userTs(Tester, T1).build(), STRICT);
             checkStatusObjects(searcher, bool().liveIndex().build(), 0);
             checkStatusObjects(searcher, bool().pendingApproval().build(), 1);
-            indexer.strictSave(ES_AUTH, approvePair(fetchApprovalDoc(searcher, ES_AUTH, REPO, MODEL, "neon"), null, T2, Approver));
+            indexer.strictSave(ES_AUTH, approvePair(REPO, fetchApprovalDoc(searcher, ES_AUTH, REPO, MODEL, "neon"), null, T2, Approver));
             checkStatusObjects(searcher, bool().liveIndex().build(), 1);
             checkStatusObjects(searcher, bool().pendingApproval().build(), 0);
 
@@ -86,14 +86,14 @@ public class ApprovalIntegTest {
             indexer.strictSave(ES_AUTH, updateRecord(REPO, approvalModel(MODEL), "neon", T3, simpleResult("name", "Neonite"))
                 .status(PENDING).userTs(Tester, T4).build(), STRICT);
             checkStatusObjects(searcher, bool().pendingApproval().build(), 1);
-            indexer.strictSave(ES_AUTH, approvePair(fetchApprovalDoc(searcher, ES_AUTH, REPO, MODEL, "neon"), null, T5, Approver));
+            indexer.strictSave(ES_AUTH, approvePair(REPO, fetchApprovalDoc(searcher, ES_AUTH, REPO, MODEL, "neon"), null, T5, Approver));
             checkStatusObjects(searcher, bool().liveIndex().build(), 1);
             checkStatusObjects(searcher, bool().pendingApproval().build(), 0);
 
             indexer.strictSave(ES_AUTH, createRecord(REPO, approvalModel(MODEL), "neon", simpleResult("name", "Neon2"))
                 .status(PENDING_DELETE).userTs(Tester, T6).build(), STRICT);
             checkStatusObjects(searcher, bool().pendingApproval().build(), 1);
-            indexer.strictSave(ES_AUTH, approvePair(fetchApprovalDoc(searcher, ES_AUTH, REPO, MODEL, "neon"), null, T7, Approver));
+            indexer.strictSave(ES_AUTH, approvePair(REPO, fetchApprovalDoc(searcher, ES_AUTH, REPO, MODEL, "neon"), null, T7, Approver));
             checkStatusObjects(searcher, bool().liveIndex().build(), 0);
             checkStatusObjects(searcher, bool().pendingApproval().build(), 0);
 
@@ -114,12 +114,12 @@ public class ApprovalIntegTest {
             checkStatusObjects(searcher, bool().liveIndex().build(), 0);
             checkStatusObjects(searcher, bool().pendingApproval().build(), 3);
 
-            indexer.strictSave(ES_AUTH, approvePair(fetchApprovalDoc(searcher, ES_AUTH, REPO, MODEL, "aqua"), null, T2, Approver));
+            indexer.strictSave(ES_AUTH, approvePair(REPO, fetchApprovalDoc(searcher, ES_AUTH, REPO, MODEL, "aqua"), null, T2, Approver));
             checkStatusObjects(searcher, bool().liveIndex().build(), 1);
-            indexer.strictSave(ES_AUTH, reject(fetchApprovalDoc(searcher, ES_AUTH, REPO, MODEL, "beige"),
+            indexer.strictSave(ES_AUTH, reject(REPO, fetchApprovalDoc(searcher, ES_AUTH, REPO, MODEL, "beige"),
                 REJECT, null, T3, Approver), STRICT);
             assertNotNull(fetchPendingDoc(searcher, ES_AUTH, REPO, MODEL, "beige", bool().pendingOrRejected()));
-            indexer.strictSave(ES_AUTH, discard(fetchApprovalDoc(searcher, ES_AUTH, REPO, MODEL, "cherry"),
+            indexer.strictSave(ES_AUTH, discard(REPO, fetchApprovalDoc(searcher, ES_AUTH, REPO, MODEL, "cherry"),
                 DISCARD, null, T4, Approver), STRICT);
             checkStatusObjects(searcher, bool().pendingApproval().build(), 0);
             checkStatusObjects(searcher, bool().discarded().build(), 1);

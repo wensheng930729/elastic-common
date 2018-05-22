@@ -47,21 +47,21 @@ public abstract class ApprovalUtil {
         return response.size() > 0 ? response.get(0) : null;
     }
 
-    public static Pair<IndexRecord, IndexRecord> approvePair(DocResult approvalDoc, String comment, long millis, String user) {
+    public static Pair<IndexRecord, IndexRecord> approvePair(String repo, DocResult approvalDoc, String comment, long millis, String user) {
         DocStatus newStatus = checkStatus(approvalDoc);
-        IndexRecord approvalRec = approvalDoc.recordOf(newStatus == PENDING ? APPROVE : DELETE)
+        IndexRecord approvalRec = approvalDoc.recordOf(newStatus == PENDING ? APPROVE : DELETE, repo)
             .userTs(user, millis).comment(comment, false).build();
 
         RecordAction newAction = (newStatus == PENDING_DELETE) ? DELETE : CREATE;
-        return Pair.pair(approvalRec, approvalDoc.recordOf(newAction, approvalDoc.nakedModel(), true).userTs(user, millis).build());
+        return Pair.pair(approvalRec, approvalDoc.recordOf(newAction, repo, approvalDoc.nakedModel(), true).userTs(user, millis).build());
     }
 
-    public static IndexRecord reject(DocResult approvalDoc, RecordAction action, String comment, long millis, String user) {
-        checkStatus(approvalDoc); return approvalDoc.recordOf(action).status(REJECTED).userTs(user, millis).comment(comment, true).build();
+    public static IndexRecord reject(String repo, DocResult approvalDoc, RecordAction action, String comment, long millis, String user) {
+        checkStatus(approvalDoc); return approvalDoc.recordOf(action, repo).status(REJECTED).userTs(user, millis).comment(comment, true).build();
     }
 
-    public static IndexRecord discard(DocResult approvalDoc, RecordAction action, String comment, long millis, String user) {
-        checkStatus(approvalDoc); return approvalDoc.recordOf(action).status(DISCARDED).userTs(user, millis).comment(comment, true).build();
+    public static IndexRecord discard(String repo, DocResult approvalDoc, RecordAction action, String comment, long millis, String user) {
+        checkStatus(approvalDoc); return approvalDoc.recordOf(action, repo).status(DISCARDED).userTs(user, millis).comment(comment, true).build();
     }
 
     private static DocStatus checkStatus(DocResult existing) {

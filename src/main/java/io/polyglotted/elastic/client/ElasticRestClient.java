@@ -88,9 +88,9 @@ public class ElasticRestClient implements ElasticClient {
 
     @Override public MapResult clusterHealth(AuthHeader auth) { return deserialize(simpleGet(auth, "/_cluster/health", "clusterHealth")); }
 
-    @Override public boolean indexExists(AuthHeader auth, String index) {
+    @Override public boolean indexExists(AuthHeader auth, String repo) {
         try {
-            return internalClient.getLowLevelClient().performRequest("HEAD", "/" + index, auth.headers())
+            return internalClient.getLowLevelClient().performRequest("HEAD", "/" + repo, auth.headers())
                 .getStatusLine().getStatusCode() == SC_OK;
         } catch (Exception ioe) { throw throwEx("indexExists failed", ioe); }
     }
@@ -98,7 +98,7 @@ public class ElasticRestClient implements ElasticClient {
     @Override public MapResult indexNameFor(AuthHeader auth, String alias) {
         ImmutableMapBuilder<String, String> result = immutableMapBuilder();
         try {
-            List<Map<String, Object>> list = deserializeToList(performCliRequest(auth, POST, "/_cat/aliases"
+            List<Map<String, Object>> list = deserializeToList(performCliRequest(auth, GET, "/_cat/aliases"
                 + (notNullOrEmpty(alias) ? "/" + alias : "") + "?h=index,alias&format=json"));
             for (Map<String, Object> map : list) { result.put(reqdStr(map, "alias"), reqdStr(map, "index")); }
             return result.result();
@@ -120,17 +120,17 @@ public class ElasticRestClient implements ElasticClient {
         } catch (Exception ioe) { throw throwEx("dropIndex failed", ioe); }
     }
 
-    @Override public void forceRefresh(AuthHeader auth, String index) {
+    @Override public void forceRefresh(AuthHeader auth, String repo) {
         try {
-            performCliRequest(auth, POST, "/" + index + "/_refresh");
+            performCliRequest(auth, POST, "/" + repo + "/_refresh");
         } catch (Exception ioe) { throw throwEx("forceRefresh failed", ioe); }
     }
 
-    @Override public String getSettings(AuthHeader auth, String index) { return simpleGet(auth, "/" + index + "/_settings", "getSettings"); }
+    @Override public String getSettings(AuthHeader auth, String repo) { return simpleGet(auth, "/" + repo + "/_settings", "getSettings"); }
 
-    @Override public ImmutableResult getMapping(AuthHeader auth, String index) {
+    @Override public ImmutableResult getMapping(AuthHeader auth, String repo) {
         try {
-            MapResult result = deserialize(performCliRequest(auth, GET, "/" + index + "/_mapping/_doc"));
+            MapResult result = deserialize(performCliRequest(auth, GET, "/" + repo + "/_mapping/_doc"));
             return immutableResult(mapVal(asMap(result.first()), "mappings"));
         } catch (Exception e) { throw throwEx("getMapping failed", e); }
     }

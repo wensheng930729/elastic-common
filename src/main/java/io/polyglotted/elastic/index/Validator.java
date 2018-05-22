@@ -57,7 +57,7 @@ public interface Validator {
 
         @Override public final IndexRequest validate(ElasticClient client, AuthHeader auth, IndexRecord record) {
             preValidate(client, record);
-            DocResult existing = findById(client, auth, record.index, record.model, record.id, record.parent, FETCH_SOURCE);
+            DocResult existing = findById(client, auth, record.repo, record.model, record.id, record.parent, FETCH_SOURCE);
             return checkRecordWithDoc(record, existing);
         }
 
@@ -77,7 +77,7 @@ public interface Validator {
         public static IndexRequest createParentRequest(IndexRecord record, DocResult ancestor) {
             record.update(ancestor.id, reqdKey(ancestor.source), record.action.status);
             if (log.isTraceEnabled()) { log.trace("creating archive record for " + record.simpleKey()); }
-            return ancestor.ancestorRequest(record.ancillary, record.parent, record.action.status);
+            return ancestor.ancestorRequest(record.repo, record.ancillary, record.parent, record.action.status);
         }
     }
 

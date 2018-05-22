@@ -22,7 +22,6 @@ import static java.util.Objects.requireNonNull;
 
 @RequiredArgsConstructor
 public final class DocResult {
-    @NonNull private final String index;
     @NonNull public final String id;
     @NonNull public final MapResult source;
 
@@ -36,15 +35,15 @@ public final class DocResult {
 
     public static MapResult docSource(DocResult result) { return result == null ? null : result.source; }
 
-    public IndexRequest ancestorRequest(MapResult ancillary, String parent, DocStatus status) {
+    public IndexRequest ancestorRequest(String repo, MapResult ancillary, String parent, DocStatus status) {
         source.putAll(ancillary); source.put(STATUS_FIELD, status.name());
-        return new IndexRequest(index, "_doc", id).create(false).routing(parent).source(source);
+        return new IndexRequest(repo, "_doc", id).create(false).routing(parent).source(source);
     }
 
-    public IndexRecord.Builder recordOf(RecordAction action) { return recordOf(action, model(source), false); }
+    public IndexRecord.Builder recordOf(RecordAction action, String repo) { return recordOf(action, repo, model(source), false); }
 
-    public IndexRecord.Builder recordOf(RecordAction action, String model, boolean filter) {
-        return expired(action, index, requireNonNull(model), reqdId(source), parent(source),
+    public IndexRecord.Builder recordOf(RecordAction action, String repo, String model, boolean filter) {
+        return expired(action, repo, requireNonNull(model), reqdId(source), parent(source),
             timestamp(source), filter ? simpleResult(filtered(source)) : source);
     }
 

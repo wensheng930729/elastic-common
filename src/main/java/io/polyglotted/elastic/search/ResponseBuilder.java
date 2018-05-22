@@ -17,5 +17,5 @@ public interface ResponseBuilder<T> {
     ResponseBuilder<DeleteRequest> DeleteReqBuilder = (resp, v) -> transform(resp.getHits(),
         h -> new DeleteRequest(h.getIndex(), h.getType(), h.getId())).toList();
     ResponseBuilder<DocResult> DocResultBuilder = (resp, v) -> transform(resp.getHits(),
-        h -> new DocResult(h.getIndex(), h.getId(), hitSource(h))).toList();
+        h -> new DocResult(h.getId(), hitSource(h))).toList();
 }

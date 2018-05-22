@@ -50,7 +50,7 @@ import static lombok.AccessLevel.PRIVATE;
 @SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue"})
 @RequiredArgsConstructor(access = PRIVATE)
 public final class IndexRecord {
-    public final String index;
+    public final String repo;
     public final String model;
     @Getter public final String id;
     public final String parent;
@@ -107,7 +107,7 @@ public final class IndexRecord {
 
     @Accessors(fluent = true, chain = true)
     public static class Builder {
-        public final String index;
+        public final String repo;
         public final String model;
         public final String id;
         public final String parent;
@@ -119,8 +119,8 @@ public final class IndexRecord {
         private Long baseVersion = null;
         @Setter private String pipeline = null;
 
-        private Builder(RecordAction action, String index, String modelName, String idStr, String parent, Object object) {
-            this.index = requireNonNull(index);
+        private Builder(RecordAction action, String repo, String modelName, String idStr, String parent, Object object) {
+            this.repo = requireNonNull(repo);
             this.model = requireNonNull(modelName);
             byte[] bytes = getBytes(object);
             this.id = nonNull(idStr, () -> generateUuid(bytes).toString().toLowerCase());
@@ -171,7 +171,7 @@ public final class IndexRecord {
         public Builder approvalRoles(Set<String> roles) { if (notEmpty(roles)) { addMeta(source, APPROVAL_ROLES_FIELD, roles); } return this; }
 
         public IndexRecord build() {
-            return new IndexRecord(index, model, id, parent, requireNonNull(timestamp), action, baseVersion, source, ancillary.immutable(), pipeline);
+            return new IndexRecord(repo, model, id, parent, requireNonNull(timestamp), action, baseVersion, source, ancillary.immutable(), pipeline);
         }
     }
 

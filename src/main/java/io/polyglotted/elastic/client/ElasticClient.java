@@ -41,9 +41,9 @@ public interface ElasticClient extends Closeable {
 
     MapResult clusterHealth(AuthHeader auth);
 
-    default boolean indexExists(String index) { return indexExists(bootstrapAuth(), index); }
+    default boolean indexExists(String repo) { return indexExists(bootstrapAuth(), repo); }
 
-    boolean indexExists(AuthHeader auth, String index);
+    boolean indexExists(AuthHeader auth, String repo);
 
     default MapResult indexNameFor(String alias) { return indexNameFor(bootstrapAuth(), alias); }
 
@@ -65,17 +65,17 @@ public interface ElasticClient extends Closeable {
 
     void dropIndex(AuthHeader auth, String index);
 
-    default void forceRefresh(String index) { forceRefresh(bootstrapAuth(), index); }
+    default void forceRefresh(String repo) { forceRefresh(bootstrapAuth(), repo); }
 
-    void forceRefresh(AuthHeader auth, String index);
+    void forceRefresh(AuthHeader auth, String repo);
 
-    default String getSettings(String index) { return getSettings(bootstrapAuth(), index); }
+    default String getSettings(String repo) { return getSettings(bootstrapAuth(), repo); }
 
-    String getSettings(AuthHeader auth, String index);
+    String getSettings(AuthHeader auth, String repo);
 
-    default ImmutableResult getMapping(String index) { return getMapping(bootstrapAuth(), index); }
+    default ImmutableResult getMapping(String repo) { return getMapping(bootstrapAuth(), repo); }
 
-    ImmutableResult getMapping(AuthHeader auth, String index);
+    ImmutableResult getMapping(AuthHeader auth, String repo);
 
     default void putPipeline(String id, String resource) { putPipeline(bootstrapAuth(), id, resource); }
 
