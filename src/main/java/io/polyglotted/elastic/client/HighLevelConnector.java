@@ -17,13 +17,13 @@ public class HighLevelConnector {
         RestClientBuilder restClientBuilder = RestClient.builder(buildHosts(settings)).setMaxRetryTimeoutMillis(settings.retryTimeoutMillis);
         if (settings.insecure) {
             restClientBuilder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder
-                .setSSLContext(insecureSslContext(settings.masterNodes, settings.port)).setSSLHostnameVerifier(new NoopHostnameVerifier()));
+                .setSSLContext(insecureSslContext(settings.host, settings.port)).setSSLHostnameVerifier(new NoopHostnameVerifier()));
         }
         return new ElasticRestClient(restClientBuilder, settings.bootstrapAuth());
     }
 
     @SuppressWarnings("StaticPseudoFunctionalStyleMethod") private static HttpHost[] buildHosts(ElasticSettings settings) {
-        Iterable<String> masterNodes = commaSplit(settings.masterNodes);
-        return transform(masterNodes, node -> new HttpHost(requireNonNull(node), settings.port, settings.scheme)).toArray(HttpHost.class);
+        Iterable<String> hosts = commaSplit(settings.host);
+        return transform(hosts, node -> new HttpHost(requireNonNull(node), settings.port, settings.scheme)).toArray(HttpHost.class);
     }
 }

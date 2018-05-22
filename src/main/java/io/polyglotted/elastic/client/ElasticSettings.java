@@ -13,7 +13,7 @@ import static io.polyglotted.common.util.StrUtil.notNullOrEmpty;
 @NoArgsConstructor @Accessors(chain = true) @Getter @Setter
 public class ElasticSettings {
     String scheme = "https";
-    String masterNodes = "localhost";
+    String host = "localhost";
     int port = 9200;
     int retryTimeoutMillis = 300_000;
     boolean insecure = false;
