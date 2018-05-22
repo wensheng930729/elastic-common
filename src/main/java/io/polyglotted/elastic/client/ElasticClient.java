@@ -45,6 +45,10 @@ public interface ElasticClient extends Closeable {
 
     boolean indexExists(AuthHeader auth, String index);
 
+    default MapResult indexNameFor(String alias) { return indexNameFor(bootstrapAuth(), alias); }
+
+    MapResult indexNameFor(AuthHeader auth, String alias);
+
     default String createIndex(String indexFile) { return createIndex(uniqueToken(), indexFile); }
 
     default String createIndex(String indexName, String indexFile) { return createIndex(bootstrapAuth(), indexName, indexFile); }

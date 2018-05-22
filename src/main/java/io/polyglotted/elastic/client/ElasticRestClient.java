@@ -4,6 +4,7 @@ import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.model.MapResult.ImmutableResult;
 import io.polyglotted.common.util.HttpRequestBuilder.HttpReqType;
+import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -41,16 +42,21 @@ import org.elasticsearch.client.RestHighLevelClient;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.ConnectException;
+import java.util.List;
 import java.util.Map;
 
 import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.util.BaseSerializer.deserialize;
+import static io.polyglotted.common.util.BaseSerializer.deserializeToList;
 import static io.polyglotted.common.util.HttpRequestBuilder.HttpReqType.DELETE;
 import static io.polyglotted.common.util.HttpRequestBuilder.HttpReqType.GET;
 import static io.polyglotted.common.util.HttpRequestBuilder.HttpReqType.POST;
 import static io.polyglotted.common.util.HttpRequestBuilder.HttpReqType.PUT;
+import static io.polyglotted.common.util.MapBuilder.immutableMapBuilder;
 import static io.polyglotted.common.util.MapRetriever.asMap;
 import static io.polyglotted.common.util.MapRetriever.mapVal;
+import static io.polyglotted.common.util.MapRetriever.reqdStr;
+import static io.polyglotted.common.util.StrUtil.notNullOrEmpty;
 import static io.polyglotted.common.util.ThreadUtil.safeSleep;
 import static io.polyglotted.elastic.client.ElasticException.checkState;
 import static io.polyglotted.elastic.client.ElasticException.throwEx;
@@ -87,6 +93,16 @@ public class ElasticRestClient implements ElasticClient {
             return internalClient.getLowLevelClient().performRequest("HEAD", "/" + index, auth.headers())
                 .getStatusLine().getStatusCode() == SC_OK;
         } catch (Exception ioe) { throw throwEx("indexExists failed", ioe); }
+    }
+
+    @Override public MapResult indexNameFor(AuthHeader auth, String alias) {
+        ImmutableMapBuilder<String, String> result = immutableMapBuilder();
+        try {
+            List<Map<String, Object>> list = deserializeToList(performCliRequest(auth, POST, "/_cat/aliases"
+                + (notNullOrEmpty(alias) ? "/" + alias : "") + "?h=index,alias&format=json"));
+            for (Map<String, Object> map : list) { result.put(reqdStr(map, "alias"), reqdStr(map, "index")); }
+            return result.result();
+        } catch (Exception ioe) { throw throwEx("indexNameFor failed", ioe); }
     }
 
     @Override public String createIndex(AuthHeader auth, CreateIndexRequest request) {

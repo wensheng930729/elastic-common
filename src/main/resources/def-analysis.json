@@ -45,7 +45,7 @@
         "asciifolding"
       ]
     },
-    "alpha": {
+    "alphaonly": {
       "type": "custom",
       "tokenizer": "keyword",
       "char_filter": [
@@ -83,7 +83,7 @@
         "asciifolding"
       ]
     },
-    "num": {
+    "numonly": {
       "type": "custom",
       "tokenizer": "keyword",
       "char_filter": [
