@@ -29,7 +29,7 @@ public class ElasticSettings {
 
     @NoArgsConstructor @AllArgsConstructor @Accessors(chain = true) @Getter @Setter
     public static class BootstrapAuth {
-        String username = null;
+        String username = "elastic";
         String password = null;
 
         AuthHeader bootstrapAuth() { return notNullOrEmpty(username) && notNullOrEmpty(password) ? basicAuth(username, password) : null; }
