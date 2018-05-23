@@ -36,23 +36,21 @@ import static org.elasticsearch.rest.RestStatus.CREATED;
 public final class Indexer {
     private final ElasticClient client;
 
-    public void lockTheIndexOrFail(AuthHeader auth, String repo, String keyString) { lockTheIndexOrFail(auth, repo, keyString, false); }
+    public void lockTheIndexOrFail(String repo, String keyString) { lockTheIndexOrFail(repo, keyString, false); }
 
-    public void lockTheIndexOrFail(AuthHeader auth, String repo, String keyString, boolean refresh) {
-        IndexResponse response = client.index(auth, new IndexRequest(repo, "_doc", keyString)
+    public void lockTheIndexOrFail(String repo, String keyString, boolean refresh) {
+        IndexResponse response = client.index(new IndexRequest(repo, "_doc", keyString)
             .opType(CREATE).source(immutableMap(TIMESTAMP_FIELD, 1)));
         if (response.status() != CREATED) { throw new IndexerException("response failed while locking the keyString " + keyString); }
-        if (refresh) { client.forceRefresh(auth, repo); }
+        if (refresh) { client.forceRefresh(repo); }
     }
 
-    public boolean checkLock(AuthHeader auth, String repo, String key) { return client.exists(auth, new GetRequest(repo, "_doc", key)); }
+    public boolean checkLock(String repo, String key) { return client.exists(new GetRequest(repo, "_doc", key)); }
 
-    public void unlockIndex(AuthHeader auth, String repo, String key) {
-        client.delete(auth, new DeleteRequest(repo, "_doc", key)); client.forceRefresh(auth, repo);
-    }
+    public void unlockIndex(String repo, String key) { client.delete(new DeleteRequest(repo, "_doc", key)); client.forceRefresh(repo); }
 
-    public long generateSequence(AuthHeader auth, String repo, String key) {
-        return client.index(auth, new IndexRequest(repo, "_doc", key).source(immutableMap())).getVersion();
+    public long generateSequence(String repo, String key) {
+        return client.index(new IndexRequest(repo, "_doc", key).source(immutableMap())).getVersion();
     }
 
     public boolean bulkSave(AuthHeader auth, BulkRecord bulkRecord) {
@@ -65,10 +63,10 @@ public final class Indexer {
     }
 
     public boolean strictSave(AuthHeader auth, BulkRecord bulkRecord) {
-        lockTheIndexOrFail(auth, bulkRecord.repo, bulkRecord.model);
+        lockTheIndexOrFail(bulkRecord.repo, bulkRecord.model);
         try {
             return bulkSave(auth, bulkRecord);
-        } finally { unlockIndex(auth, bulkRecord.repo, bulkRecord.model); }
+        } finally { unlockIndex(bulkRecord.repo, bulkRecord.model); }
     }
 
     @SneakyThrows public String bulkSave(AuthHeader auth, IndexRecord record) {
@@ -95,10 +93,10 @@ public final class Indexer {
 
     @SneakyThrows
     private String strictSave(AuthHeader auth, IndexRecord primary, IndexRecord aux, Validator validator) {
-        if (checkLock(auth, primary.repo, primary.model)) { throw new IndexerException("index-model locked for write"); }
+        if (checkLock(primary.repo, primary.model)) { throw new IndexerException("index-model locked for write"); }
 
         String lockString = nonNull(aux, primary).lockString();
-        lockTheIndexOrFail(auth, primary.repo, lockString);
+        lockTheIndexOrFail(primary.repo, lockString);
         try {
             XContentBuilder result = XContentFactory.jsonBuilder().startObject();
             writeStrict(auth, primary, validator, aux == null ? result : null);
@@ -109,7 +107,7 @@ public final class Indexer {
             return nex.getMessage();
         } catch (RuntimeException ex) {
             throw logError(ex);
-        } finally { unlockIndex(auth, primary.repo, lockString); }
+        } finally { unlockIndex(primary.repo, lockString); }
     }
 
     private void writeStrict(AuthHeader auth, IndexRecord record, Validator validator, XContentBuilder result) {
