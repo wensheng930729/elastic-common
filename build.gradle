@@ -5,7 +5,7 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 
 group = 'io.polyglotted'
-version = '6.2.4.1-SNAPSHOT'
+version = '6.2.4.1'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
@@ -33,7 +33,7 @@ ext {
     log4jVersion = '2.10.0'
     lombokVersion = '1.16.20'
     spatial4jVersion = '0.6'
-    utilsCommonVersion='1.0.23'
+    utilsCommonVersion='1.0.24'
 }
 dependencies {
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
