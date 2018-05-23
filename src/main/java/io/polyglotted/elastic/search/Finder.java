@@ -35,11 +35,11 @@ public abstract class Finder {
 
     public static Map<String, DocResult> findAll(ElasticClient client, AuthHeader auth, BulkRecord record) {
         BoolBuilder builder = idBuilder(record.model, record.parent, in(ID_FIELD, transform(record.records, IndexRecord::getId))).liveOrPending();
-        return uniqueIndex(findAllBy(client, auth, record.repo, builder.build(), record.size()), DocResult::keyString);
+        return uniqueIndex(findAllBy(client, auth, record.repo, builder.build(), record.size(), FETCH_SOURCE), DocResult::keyString);
     }
 
-    public static List<DocResult> findAllBy(ElasticClient client, AuthHeader auth, String repo, Expression expr, int size) {
-        SearchRequest searchRequest = filterToRequest(repo, expr, FETCH_SOURCE, immutableList(), size);
+    public static List<DocResult> findAllBy(ElasticClient client, AuthHeader auth, String repo, Expression expr, int size, FetchSourceContext ctx) {
+        SearchRequest searchRequest = filterToRequest(repo, expr, ctx, immutableList(), size);
         SearchResponse response = auth == null ? client.search(searchRequest) : client.search(auth, searchRequest);
         return DocResultBuilder.buildFrom(response, NONE);
     }

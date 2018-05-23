@@ -3,6 +3,8 @@ package io.polyglotted.elastic.common;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
 
+import java.util.List;
+
 import static io.polyglotted.common.model.MapResult.immutableResultBuilder;
 import static io.polyglotted.common.model.MapResult.simpleResult;
 import static io.polyglotted.common.util.Assertions.checkContains;
@@ -39,9 +41,9 @@ public abstract class MetaFields {
     public static final String UPDATER_FIELD = "&updater";
     public static final String USER_FIELD = "&user";
 
-    public static final String[] ALL_FIELDS = immutableList(ANCESTOR_FIELD, APPROVAL_ROLES_FIELD, COMMENT_FIELD,
+    public static final List<String> ALL_FIELDS = immutableList(ANCESTOR_FIELD, APPROVAL_ROLES_FIELD, COMMENT_FIELD,
         EXPIRY_FIELD, ID_FIELD, KEY_FIELD, LINK_FIELD, MODEL_FIELD, PARENT_FIELD, REALM_FIELD, STATUS_FIELD,
-        TRAITFQN_FIELD, TIMESTAMP_FIELD, UPDATER_FIELD, USER_FIELD).toArray(new String[0]);
+        TRAITFQN_FIELD, TIMESTAMP_FIELD, UPDATER_FIELD, USER_FIELD);
 
     public static void addMeta(Object item, String field, Object value) { addMetaField(mapValue(item), field, value); }
 

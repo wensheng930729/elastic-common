@@ -39,12 +39,14 @@ import static org.elasticsearch.search.fetch.subphase.FetchSourceContext.FETCH_S
 public final class Searcher {
     private final ElasticClient client;
 
-    public <T> List<T> getAllBy(String repo, String model, Expression expr, int size, ResultBuilder<T> resultBuilder, Verbose verbose) {
-        return getAllBy(null, repo, model, expr, size, resultBuilder, verbose);
+    public <T> List<T> getAllBy(String repo, String model, Expression expr, int size, FetchSourceContext context,
+                                ResultBuilder<T> resultBuilder, Verbose verbose) {
+        return getAllBy(null, repo, model, expr, size, context, resultBuilder, verbose);
     }
 
-    public <T> List<T> getAllBy(AuthHeader auth, String repo, String model, Expression expr, int size, ResultBuilder<T> builder, Verbose verbose) {
-        return transformList(findAllBy(client, auth, repo, expr, size), docResult -> builder.buildVerbose(docSource(docResult), verbose));
+    public <T> List<T> getAllBy(AuthHeader auth, String repo, String model, Expression expr, int size,
+                                FetchSourceContext context, ResultBuilder<T> builder, Verbose verbose) {
+        return transformList(findAllBy(client, auth, repo, expr, size, context), docResult -> builder.buildVerbose(docSource(docResult), verbose));
     }
 
     public <T> T getById(String repo, String model, String id, ResultBuilder<T> resultBuilder, Verbose verbose) {

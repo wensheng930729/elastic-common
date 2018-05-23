@@ -1,8 +1,13 @@
 package io.polyglotted.elastic.common;
 
 import io.polyglotted.common.model.MapResult;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
+
+import java.util.List;
 
 import static io.polyglotted.common.model.MapResult.immutableResult;
+import static io.polyglotted.common.util.ListBuilder.immutableList;
+import static io.polyglotted.common.util.ListBuilder.simpleList;
 import static io.polyglotted.common.util.ReflectionUtil.fieldValue;
 import static io.polyglotted.elastic.common.MetaFields.ALL_FIELDS;
 import static io.polyglotted.elastic.common.MetaFields.ID_FIELD;
@@ -16,25 +21,26 @@ import static io.polyglotted.elastic.common.MetaFields.readHeader;
 import static io.polyglotted.elastic.common.MetaFields.readKey;
 import static io.polyglotted.elastic.common.MetaFields.reqdId;
 import static io.polyglotted.elastic.common.MetaFields.reqdKey;
+import static org.elasticsearch.common.Strings.EMPTY_ARRAY;
 
 @SuppressWarnings("unused")
 public enum Verbose {
-    NONE() {
+    NONE(immutableList()) {
         @Override public <T> T buildFrom(MapResult source, T result) { return result; }
     },
-    ID(ID_FIELD) {
+    ID(immutableList(ID_FIELD)) {
         @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, immutableResult(ID_FIELD, reqdId(source))); }
     },
-    KEY(KEY_FIELD) {
+    KEY(immutableList(KEY_FIELD)) {
         @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, immutableResult(KEY_FIELD, reqdKey(source))); }
     },
-    MINIMAL(LINK_FIELD, MODEL_FIELD, PARENT_FIELD, ID_FIELD, TIMESTAMP_FIELD) {
+    MINIMAL(immutableList(LINK_FIELD, MODEL_FIELD, PARENT_FIELD, ID_FIELD, TIMESTAMP_FIELD)) {
         @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, readKey(source).result()); }
     },
-    PARENT(PARENT_FIELD) {
+    PARENT(immutableList(PARENT_FIELD)) {
         @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, immutableResult(PARENT_FIELD, parent(source))); }
     },
-    UNIQUE(ID_FIELD, KEY_FIELD) {
+    UNIQUE(immutableList(ID_FIELD, KEY_FIELD)) {
         @Override public <T> T buildFrom(MapResult source, T result) {
             return addHeader(result, immutableResult(ID_FIELD, reqdId(source), KEY_FIELD, reqdKey(source)));
         }
@@ -44,8 +50,12 @@ public enum Verbose {
     };
 
     public final String[] fields;
+    public final FetchSourceContext fetchContext;
 
-    Verbose(String... array) { this.fields = array; }
+    Verbose(List<String> fields) {
+        this.fields = fields.toArray(new String[0]);
+        this.fetchContext = new FetchSourceContext(true, EMPTY_ARRAY, excludeFromAll(fields));
+    }
 
     public abstract <T> T buildFrom(MapResult source, T result);
 
@@ -63,13 +73,16 @@ public enum Verbose {
 
     public static Verbose fromVerb(String verb) { return verb == null ? NONE : verb.isEmpty() ? META : Verbose.valueOf(verb.toUpperCase()); }
 
-    @SuppressWarnings("unchecked")
-    private static <T> T addHeader(T result, MapResult header) {
+    @SuppressWarnings("unchecked") private static <T> T addHeader(T result, MapResult header) {
         if (result instanceof MapResult) { ((MapResult) result).putAll(header); }
         else {
             Object meta = fieldValue(result, "_meta");
             if (meta instanceof MapResult) { ((MapResult) meta).putAll(header); }
         }
         return result;
+    }
+
+    private static String[] excludeFromAll(List<String> fields) {
+        List<String> excludes = simpleList(ALL_FIELDS); excludes.removeAll(fields); return excludes.toArray(new String[0]);
     }
 }
