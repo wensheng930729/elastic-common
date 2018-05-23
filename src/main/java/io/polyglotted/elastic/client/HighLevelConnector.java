@@ -15,6 +15,8 @@ public class HighLevelConnector {
 
     @SneakyThrows public static ElasticClient highLevelClient(ElasticSettings settings) {
         RestClientBuilder restClientBuilder = RestClient.builder(buildHosts(settings)).setMaxRetryTimeoutMillis(settings.retryTimeoutMillis);
+        restClientBuilder.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
+            .setConnectTimeout(settings.connectTimeoutMillis).setSocketTimeout(settings.socketTimeoutMillis));
         if (settings.insecure) {
             restClientBuilder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder
                 .setSSLContext(insecureSslContext(settings.host, settings.port)).setSSLHostnameVerifier(new NoopHostnameVerifier()));

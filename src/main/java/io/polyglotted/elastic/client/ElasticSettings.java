@@ -15,7 +15,9 @@ public class ElasticSettings {
     String scheme = "https";
     String host = "localhost";
     int port = 9200;
+    int connectTimeoutMillis = 5000;
     int retryTimeoutMillis = 300_000;
+    int socketTimeoutMillis = 300_000;
     boolean insecure = false;
     BootstrapAuth bootstrap = new BootstrapAuth();
 
