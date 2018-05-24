@@ -18,7 +18,7 @@ import static io.polyglotted.common.util.ReflectionUtil.safeFieldValue;
 import static io.polyglotted.common.util.UrnUtil.urnOf;
 import static io.polyglotted.elastic.common.DocStatus.fromStatus;
 
-@SuppressWarnings({"WeakerAccess"})
+@SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class MetaFields {
     public static final String ALL_FIELD = "&all";
     public static final String ANCESTOR_FIELD = "&ancestor";
@@ -52,6 +52,8 @@ public abstract class MetaFields {
     public static void removeMeta(Object item, String field) { mapValue(item).remove(field); }
 
     public static <T> T reqdMeta(Object object, String field) { return reqdValue(mapValue(object), field); }
+
+    public static boolean isMeta(String field) { return field.indexOf('&') == 0; }
 
     public static boolean isNotMeta(String field) { return field.indexOf('&') != 0; }
 
