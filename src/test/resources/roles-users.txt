@@ -1,3 +1,4 @@
 jwtUser.role={"cluster":["monitor"]}
 token.post={"grant_type":"password","username":"jacknich","password":"j@rV1s"}
-user.put={"password":"j@rV1s","roles":["admin","manage_security"],"full_name":"Jack Nicholson","email":"jacknich@example.com","metadata":{"intelligence":7}}
+user.put={"password":"dummy1234","roles":["admin","manage_security"],"full_name":"Jack Nicholson","email":"jacknich@example.com","metadata":{"intelligence":7}}
+user.passwd={"password":"j@rV1s"}

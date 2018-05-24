@@ -10,6 +10,7 @@ import java.util.Map;
 
 import static io.polyglotted.common.model.AuthHeader.bearerToken;
 import static io.polyglotted.common.util.ResourceUtil.readResourceAsMap;
+import static io.polyglotted.elastic.client.XPackApi.PASSWD;
 import static io.polyglotted.elastic.client.XPackApi.ROLE;
 import static io.polyglotted.elastic.client.XPackApi.TOKEN;
 import static io.polyglotted.elastic.client.XPackApi.USER;
@@ -18,6 +19,7 @@ import static io.polyglotted.elastic.test.TestTokenUtil.testToken;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertNotNull;
 
 public class BearerIntegTest {
     private static final Map<String, String> MESSAGES = readResourceAsMap(BearerIntegTest.class, "roles-users.txt");
@@ -38,6 +40,8 @@ public class BearerIntegTest {
         assertThat(client.clusterHealth(bearerToken(testToken())), is(notNullValue()));
 
         client.xpackPut(USER, "jacknich", MESSAGES.get("user.put"));
+        client.xpackPut(PASSWD, "jacknich", MESSAGES.get("user.passwd"));
+        assertNotNull(client.xpackGet(USER, "jacknich"));
         MapResult result = client.xpackPut(TOKEN, "", MESSAGES.get("token.post"));
         String accessToken = result.reqdStr("access_token");
         client.xpackDelete(TOKEN, "", "{\"token\":\"" + accessToken + "\"}");

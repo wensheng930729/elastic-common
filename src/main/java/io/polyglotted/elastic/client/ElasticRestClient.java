@@ -178,22 +178,22 @@ public class ElasticRestClient implements ElasticClient {
     }
 
     @Override public MapResult xpackPut(AuthHeader auth, XPackApi api, String id, String body) {
-        String putNotFound = simplePut(auth, api.type, api.endpoint + id, body, api.name().toLowerCase() + "Put");
+        String putNotFound = simplePut(auth, api.type, api.endpointWith(id), body, api.name().toLowerCase() + "Put");
         return putNotFound == null ? immutableResult() : deserialize(putNotFound);
     }
 
     @Override public MapResult xpackGet(AuthHeader auth, XPackApi api, String id) {
-        String getNotFound = simpleGet(auth, api.endpoint + id, api.name().toLowerCase() + "Get");
+        String getNotFound = simpleGet(auth, api.endpointWith(id), api.name().toLowerCase() + "Get");
         return getNotFound == null ? immutableResult() : deserialize(getNotFound);
     }
 
     @Override public void xpackDelete(AuthHeader auth, XPackApi api, String id) {
-        simpleDelete(auth, api.endpoint + id, api.name().toLowerCase() + "Delete");
+        simpleDelete(auth, api.endpointWith(id), api.name().toLowerCase() + "Delete");
     }
 
     @Override public void xpackDelete(AuthHeader auth, XPackApi api, String id, String body) {
         try {
-            performCliRequest(DELETE, api.endpoint + id, emptyMap(), new StringEntity(body, APPLICATION_JSON), auth.headers());
+            performCliRequest(DELETE, api.endpointWith(id), emptyMap(), new StringEntity(body, APPLICATION_JSON), auth.headers());
         } catch (Exception ioe) { throw throwEx(api.name().toLowerCase() + "Delete failed", ioe); }
     }
 
