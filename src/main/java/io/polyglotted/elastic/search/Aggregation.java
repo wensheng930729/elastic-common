@@ -29,10 +29,9 @@ import static io.polyglotted.common.util.MapRetriever.reqdValue;
 import static io.polyglotted.elastic.search.Bucket.deserializeBucket;
 import static java.util.Objects.requireNonNull;
 
-@ToString(includeFieldNames = false, doNotUseGetters = true, of = {"label", "type", "value"})
-@EqualsAndHashCode
 @SuppressWarnings({"unused", "WeakerAccess"})
-@RequiredArgsConstructor
+@ToString(includeFieldNames = false, doNotUseGetters = true, of = {"label", "type", "value"})
+@RequiredArgsConstructor @EqualsAndHashCode
 public final class Aggregation {
     public final String label;
     public final String type;

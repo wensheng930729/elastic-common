@@ -7,6 +7,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.sort.SortBuilder;
@@ -42,6 +43,11 @@ public abstract class QueryMaker {
         }
         request.source(src);
         return trace(request);
+    }
+
+    public static SearchRequest aggregationToRequest(String repo, AggregationBuilder builder) {
+        SearchSourceBuilder source = new SearchSourceBuilder().size(0).query(matchAllQuery()).aggregation(builder);
+        return trace(new SearchRequest(repo).indicesOptions(lenientExpandOpen()).source(source));
     }
 
     public static SearchRequest filterToScroller(String repo, Expression filter, int size) {

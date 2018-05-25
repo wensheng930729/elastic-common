@@ -13,6 +13,7 @@ import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
 import java.util.List;
@@ -23,6 +24,7 @@ import static io.polyglotted.elastic.common.DocResult.docSource;
 import static io.polyglotted.elastic.search.Finder.findAllBy;
 import static io.polyglotted.elastic.search.Finder.findBy;
 import static io.polyglotted.elastic.search.Finder.findById;
+import static io.polyglotted.elastic.search.QueryMaker.aggregationToRequest;
 import static io.polyglotted.elastic.search.QueryMaker.scrollRequest;
 import static io.polyglotted.elastic.search.SearchUtil.buildAggs;
 import static io.polyglotted.elastic.search.SearchUtil.clearScroll;
@@ -80,6 +82,10 @@ public final class Searcher {
 
     public <T> T getByExpr(AuthHeader auth, String repo, Expression expr, FetchSourceContext ctx, ResultBuilder<T> builder, Verbose verbose) {
         return builder.buildVerbose(docSource(findBy(client, auth, repo, expr, ctx)), verbose);
+    }
+
+    public Aggregation aggregate(String repo, AggregationBuilder builder) {
+        return buildAggs(client.search(aggregationToRequest(repo, builder))).get(0);
     }
 
     public <T> QueryResponse searchBy(SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {

@@ -2,6 +2,7 @@ package io.polyglotted.elastic.search;
 
 import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.common.model.MapResult;
+import io.polyglotted.common.util.ListBuilder.ImmutableListBuilder;
 import io.polyglotted.elastic.client.ElasticClient;
 import io.polyglotted.elastic.common.Verbose;
 import org.elasticsearch.action.search.ClearScrollRequest;
@@ -16,6 +17,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static io.polyglotted.common.model.MapResult.simpleResult;
+import static io.polyglotted.common.util.ListBuilder.immutableListBuilder;
 import static io.polyglotted.elastic.search.AggsConverter.detectAgg;
 import static io.polyglotted.elastic.search.AggsFlattener.flattenAggs;
 import static io.polyglotted.elastic.search.QueryMaker.DEFAULT_KEEP_ALIVE;
@@ -56,6 +58,17 @@ abstract class SearchUtil {
     static long getTotalHits(SearchResponse response) { return response.getHits().getTotalHits(); }
 
     static MapResult hitSource(SearchHit hit) { return requireNonNull(hit).hasSource() ? simpleResult(hit.getSourceAsMap()) : simpleResult(); }
+
+    static List<Aggregation> buildAggs(SearchResponse response) {
+        ImmutableListBuilder<Aggregation> result = immutableListBuilder();
+        Aggregations aggregations = response.getAggregations();
+        if (aggregations != null) {
+            for (org.elasticsearch.search.aggregations.Aggregation agg : aggregations) {
+                result.add(detectAgg(agg).build());
+            }
+        }
+        return result.build();
+    }
 
     static XContentBuilder buildAggs(SearchResponse response, boolean flattenAgg, XContentBuilder result) throws IOException {
         Aggregations aggregations = response.getAggregations();
