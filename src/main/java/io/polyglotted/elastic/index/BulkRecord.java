@@ -38,6 +38,8 @@ public final class BulkRecord {
     private final Notification.Builder notification;
     public final Map<String, String> failures = simpleMap();
 
+    public Notification notification() { return notification.build(); }
+
     public int size() { return records.size(); }
 
     void success(String id, String result) { if (notification != null) { notification.keyAction(id, result); } }
@@ -63,18 +65,24 @@ public final class BulkRecord {
 
         public Builder withNotification() { return notification(notificationBuilder()); }
 
+        public Builder withNotification(String realm) { return notification(notificationBuilder().realm(realm)); }
+
         public Builder hasApproval() { return hasApproval(true); }
 
         public Builder record(IndexRecord record) { this.records.add(checkParent(record)); return this; }
 
         public Builder records(Iterable<IndexRecord> records) { for (IndexRecord rec : records) { this.record(rec); } return this; }
 
-        public Builder objects(Iterable<MapResult> docs) { for (MapResult doc : docs) { this.record(indexRec(doc)); } return this; }
+        public Builder objects(Iterable<MapResult> docs) { for (MapResult doc : docs) { this.record(indexRec(doc).build()); } return this; }
 
-        private IndexRecord indexRec(MapResult doc) {
+        public Builder objectsWith(Iterable<MapResult> docs, String pipeline) {
+            for (MapResult doc : docs) { this.record(indexRec(doc).pipeline(pipeline).build()); } return this;
+        }
+
+        private IndexRecord.Builder indexRec(MapResult doc) {
             IndexRecord.Builder builder = hasApproval ? createRecord(repo, approvalModel(model), id(doc), MetaFields.parent(doc), doc)
                 .status(PENDING) : saveRecord(repo, model, id(doc), MetaFields.parent(doc), tstamp(doc), doc);
-            return checkParent(builder.userTs(user, timestamp).build());
+            return builder.userTs(user, timestamp);
         }
 
         private IndexRecord checkParent(IndexRecord record) {
