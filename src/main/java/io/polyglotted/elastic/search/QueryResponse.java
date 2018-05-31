@@ -1,5 +1,6 @@
 package io.polyglotted.elastic.search;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.util.ListBuilder.ImmutableListBuilder;
 import lombok.AccessLevel;
@@ -9,6 +10,7 @@ import lombok.experimental.Accessors;
 
 import java.util.List;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static io.polyglotted.common.util.CollUtil.transformList;
 import static io.polyglotted.common.util.ListBuilder.immutableListBuilder;
 import static java.util.Objects.requireNonNull;
@@ -17,8 +19,8 @@ import static java.util.Objects.requireNonNull;
 @RequiredArgsConstructor
 public final class QueryResponse {
     public final ResponseHeader header;
-    public final List<Object> results;
-    public final List<Aggregation> aggregations;
+    @JsonInclude(NON_EMPTY) public final List<Object> results;
+    @JsonInclude(NON_EMPTY) public final List<Aggregation> aggregations;
 
     public List<MapResult> results() { return resultsAs(MapResult.class); }
 
