@@ -1,6 +1,5 @@
 package io.polyglotted.elastic.search;
 
-import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.util.ListBuilder.ImmutableListBuilder;
 import io.polyglotted.elastic.client.ElasticClient;
@@ -33,15 +32,14 @@ abstract class SearchUtil {
         return responseBuilder;
     }
 
-    static SearchResponse performScroll(ElasticClient client, AuthHeader auth, SearchResponse response) {
-        SearchScrollRequest scrollRequest = new SearchScrollRequest(response.getScrollId()).scroll(DEFAULT_KEEP_ALIVE);
-        return client.searchScroll(auth, scrollRequest);
+    static SearchResponse performScroll(ElasticClient client, SearchResponse response) {
+        return client.searchScroll(new SearchScrollRequest(response.getScrollId()).scroll(DEFAULT_KEEP_ALIVE));
     }
 
-    static void clearScroll(ElasticClient client, AuthHeader auth, SearchResponse response) {
+    static void clearScroll(ElasticClient client, SearchResponse response) {
         ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
         clearScrollRequest.addScrollId(response.getScrollId());
-        client.clearScroll(auth, clearScrollRequest);
+        client.clearScroll(clearScrollRequest);
     }
 
     static ResponseHeader headerFrom(SearchResponse response) {

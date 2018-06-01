@@ -131,8 +131,8 @@ public final class Searcher {
         log.info("performing scroll on " + getTotalHits(response) + " items");
         while (getReturnedHits(response) > 0) {
             errored = walker.walk(resultBuilder.buildFrom(response, verbose));
-            if (errored) { clearScroll(client, auth, response); break; }
-            response = performScroll(client, auth, response);
+            if (errored) { clearScroll(client, response); break; }
+            response = performScroll(client, response);
         }
         return errored;
     }

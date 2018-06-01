@@ -70,6 +70,7 @@ public class SearchIntegTest {
                 flattenAgg(MESSAGES.get("agg" + i + ".query"), expectedHits, MESSAGES.get("agg" + i + ".flat"));
             }
             simpleSearchAndScroll();
+            simpleScrollFail();
 
         } finally { client.dropIndex(agex); }
     }
@@ -97,6 +98,10 @@ public class SearchIntegTest {
             returnedHits = response.header.returnedHits;
         }
         assertThat(totalHits, is(16));
+    }
+
+    private void simpleScrollFail() {
+        searcher.simpleScroll(filterToScroller("agex", null, 100), NullBuilder, NONE, (r) -> true);
     }
 
     private String searchNative(String query, boolean flatten, Verbose verb, int totalHits, String resultKey) throws IOException {
