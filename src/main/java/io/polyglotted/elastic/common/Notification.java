@@ -1,5 +1,6 @@
 package io.polyglotted.elastic.common;
 
+import com.google.common.collect.Iterables;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -46,10 +47,12 @@ public class Notification {
         private final Map<String, String> idKeys = new LinkedHashMap<>();
         private final List<KeyAction> keyActions = new LinkedList<>();
 
+        public String idOf(int index) { return Iterables.get(idKeys.keySet(), index); }
+
         public Builder key(String id, String key) { idKeys.put(id, key); return this; }
 
         public Builder keyAction(String id, String action) {
-            if (idKeys.containsKey(id)) { keyActions.add(new KeyAction(id, idKeys.get(id), action)); } return this;
+            if (id != null) { keyActions.add(new KeyAction(id, idKeys.get(id), action)); } return this;
         }
 
         public Notification build() { return new Notification(realm, immutableList(keyActions)); }

@@ -47,9 +47,9 @@ public interface Validator {
                     bulkRequest.add(record.request());
                     if (ancestor != null) { bulkRequest.add(ancestor); }
                 } catch (NoopException nex) {
-                    bulkRecord.success(record.id, nex.getMessage());
+                    bulkRecord.successWith(record.id, nex.getMessage());
                 } catch (Exception ex) {
-                    bulkRecord.failure(record.id, ex.getMessage());
+                    bulkRecord.failureWith(record.id, ex.getMessage());
                 }
             }
             return bulkRequest;

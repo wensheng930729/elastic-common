@@ -128,17 +128,18 @@ public final class Indexer {
         }
     }
 
-    private static boolean checkResponse(BulkResponse responses, IgnoreErrors ignore, BiConsumer<String, String> successHandler,
-                                         BiConsumer<String, String> failureHandler) {
-        boolean noErrors = true;
+    private static boolean checkResponse(BulkResponse responses, IgnoreErrors ignore, BiConsumer<Integer, String> successHandler,
+                                         BiConsumer<Integer, String> failureHandler) {
+        boolean noErrors = true; int index = 0;
         for (BulkItemResponse response : responses) {
             if (response.isFailed()) {
                 String failureMessage = response.getFailureMessage();
                 if (!ignore.ignoreFailure(failureMessage)) {
-                    noErrors = false; failureHandler.accept(response.getId(), failureMessage);
+                    noErrors = false; failureHandler.accept(index, failureMessage);
                 }
             }
-            else { successHandler.accept(response.getId(), response.getResponse().getResult().getLowercase()); }
+            else { successHandler.accept(index, response.getResponse().getResult().getLowercase()); }
+            index++;
         }
         return noErrors;
     }

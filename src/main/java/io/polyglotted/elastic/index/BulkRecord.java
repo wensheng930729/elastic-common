@@ -42,9 +42,13 @@ public final class BulkRecord {
 
     public int size() { return records.size(); }
 
-    void success(String id, String result) { if (notification != null) { notification.keyAction(id, result); } }
+    void success(int index, String result) { if (notification != null) { successWith(notification.idOf(index), result); } }
 
-    void failure(String id, String result) { failures.put(id, result); }
+    void successWith(String id, String result) { if (notification != null) { notification.keyAction(id, result); } }
+
+    void failure(int index, String result) { failureWith(notification != null ? notification.idOf(index) : String.valueOf(index), result); }
+
+    void failureWith(String id, String result) { failures.put(id, result); }
 
     public static Builder bulkBuilder(String repo, String model, long timestamp, String user) {
         return new Builder(requireNonNull(repo), requireNonNull(model), timestamp, requireNonNull(user));
