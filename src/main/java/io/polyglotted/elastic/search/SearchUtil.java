@@ -1,5 +1,6 @@
 package io.polyglotted.elastic.search;
 
+import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.util.ListBuilder.ImmutableListBuilder;
 import io.polyglotted.elastic.client.ElasticClient;
@@ -17,6 +18,7 @@ import java.util.List;
 
 import static io.polyglotted.common.model.MapResult.simpleResult;
 import static io.polyglotted.common.util.ListBuilder.immutableListBuilder;
+import static io.polyglotted.common.util.StrUtil.notNullOrEmpty;
 import static io.polyglotted.elastic.search.AggsConverter.detectAgg;
 import static io.polyglotted.elastic.search.AggsFlattener.flattenAggs;
 import static io.polyglotted.elastic.search.QueryMaker.DEFAULT_KEEP_ALIVE;
@@ -32,14 +34,16 @@ abstract class SearchUtil {
         return responseBuilder;
     }
 
-    static SearchResponse performScroll(ElasticClient client, SearchResponse response) {
-        return client.searchScroll(new SearchScrollRequest(response.getScrollId()).scroll(DEFAULT_KEEP_ALIVE));
+    static SearchResponse performScroll(ElasticClient client, AuthHeader auth, SearchResponse response) {
+        return client.searchScroll(auth, new SearchScrollRequest(response.getScrollId()).scroll(DEFAULT_KEEP_ALIVE));
     }
 
-    static void clearScroll(ElasticClient client, SearchResponse response) {
-        ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
-        clearScrollRequest.addScrollId(response.getScrollId());
-        client.clearScroll(clearScrollRequest);
+    static void performClearScroll(ElasticClient client, AuthHeader auth, String scrollId) {
+        if (notNullOrEmpty(scrollId)) {
+            ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
+            clearScrollRequest.addScrollId(scrollId);
+            client.clearScroll(auth, clearScrollRequest);
+        }
     }
 
     static ResponseHeader headerFrom(SearchResponse response) {

@@ -40,7 +40,7 @@ public abstract class Finder {
 
     public static List<DocResult> findAllBy(ElasticClient client, AuthHeader auth, String repo, Expression expr, int size, FetchSourceContext ctx) {
         SearchRequest searchRequest = filterToRequest(repo, expr, ctx, immutableList(), size);
-        SearchResponse response = auth == null ? client.search(searchRequest) : client.search(auth, searchRequest);
+        SearchResponse response = client.search(auth, searchRequest);
         return DocResultBuilder.buildFrom(response, NONE);
     }
 
@@ -60,7 +60,7 @@ public abstract class Finder {
 
     public static DocResult findBy(ElasticClient client, AuthHeader auth, String repo, Expression expr, FetchSourceContext context) {
         SearchRequest searchRequest = filterToRequest(repo, expr, context, immutableList(), 1);
-        SearchResponse response = auth == null ? client.search(searchRequest) : client.search(auth, searchRequest);
+        SearchResponse response = client.search(auth, searchRequest);
         return getReturnedHits(response) > 0 ? DocResultBuilder.buildFrom(response, NONE).get(0) : null;
     }
 

@@ -27,10 +27,10 @@ import static io.polyglotted.elastic.search.Finder.findById;
 import static io.polyglotted.elastic.search.QueryMaker.aggregationToRequest;
 import static io.polyglotted.elastic.search.QueryMaker.scrollRequest;
 import static io.polyglotted.elastic.search.SearchUtil.buildAggs;
-import static io.polyglotted.elastic.search.SearchUtil.clearScroll;
 import static io.polyglotted.elastic.search.SearchUtil.getReturnedHits;
 import static io.polyglotted.elastic.search.SearchUtil.getTotalHits;
 import static io.polyglotted.elastic.search.SearchUtil.headerFrom;
+import static io.polyglotted.elastic.search.SearchUtil.performClearScroll;
 import static io.polyglotted.elastic.search.SearchUtil.performScroll;
 import static io.polyglotted.elastic.search.SearchUtil.responseBuilder;
 import static org.elasticsearch.common.xcontent.XContentType.JSON;
@@ -93,7 +93,7 @@ public final class Searcher {
     }
 
     public <T> QueryResponse searchBy(AuthHeader auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {
-        return responseBuilder(auth == null ? client.search(request) : client.search(auth, request), resultBuilder, verbose).build();
+        return responseBuilder(client.search(auth, request), resultBuilder, verbose).build();
     }
 
     public <T> QueryResponse scroll(String scrollId, TimeValue scrollTime, ResponseBuilder<T> resultBuilder, Verbose verbose) {
@@ -102,7 +102,7 @@ public final class Searcher {
 
     public <T> QueryResponse scroll(AuthHeader auth, String scrollId, TimeValue scrollTime, ResponseBuilder<T> resultBuilder, Verbose verbose) {
         SearchScrollRequest request = scrollRequest(scrollId, scrollTime);
-        return responseBuilder(auth == null ? client.searchScroll(request) : client.searchScroll(auth, request), resultBuilder, verbose).build();
+        return responseBuilder(client.searchScroll(auth, request), resultBuilder, verbose).build();
     }
 
     public <T> String searchNative(SearchRequest request, ResponseBuilder<T> resultBuilder, boolean flattenAgg, Verbose verbose) {
@@ -112,7 +112,7 @@ public final class Searcher {
     @SneakyThrows
     public <T> String searchNative(AuthHeader auth, SearchRequest request, ResponseBuilder<T> resultBuilder, boolean flattenAgg, Verbose verbose) {
         XContentBuilder result = XContentFactory.jsonBuilder().startObject();
-        SearchResponse response = auth == null ? client.search(request) : client.search(auth, request);
+        SearchResponse response = client.search(auth, request);
         headerFrom(response, result);
         if (getReturnedHits(response) > 0) {
             List<T> values = resultBuilder.buildFrom(response, verbose);
@@ -127,13 +127,16 @@ public final class Searcher {
 
     public <T> boolean simpleScroll(AuthHeader auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose, ScrollWalker<T> walker) {
         boolean errored = false;
-        SearchResponse response = auth == null ? client.search(request) : client.search(auth, request);
+        SearchResponse response = client.search(auth, request);
         log.info("performing scroll on " + getTotalHits(response) + " items");
         while (getReturnedHits(response) > 0) {
+
             errored = walker.walk(resultBuilder.buildFrom(response, verbose));
-            if (errored) { clearScroll(client, response); break; }
-            response = performScroll(client, response);
+            if (errored) { performClearScroll(client, auth, response.getScrollId()); break; }
+            response = performScroll(client, auth, response);
         }
         return errored;
     }
+
+    public void clearScroll(AuthHeader auth, String scrollId) { performClearScroll(client, auth, scrollId);}
 }
