@@ -56,6 +56,7 @@ import static io.polyglotted.common.util.MapBuilder.immutableMapBuilder;
 import static io.polyglotted.common.util.MapRetriever.asMap;
 import static io.polyglotted.common.util.MapRetriever.mapVal;
 import static io.polyglotted.common.util.MapRetriever.reqdStr;
+import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.common.util.StrUtil.notNullOrEmpty;
 import static io.polyglotted.common.util.ThreadUtil.safeSleep;
 import static io.polyglotted.elastic.client.ElasticException.checkState;
@@ -90,7 +91,7 @@ public class ElasticRestClient implements ElasticClient {
 
     @Override public boolean indexExists(AuthHeader auth, String repo) {
         try {
-            return internalClient.getLowLevelClient().performRequest("HEAD", "/" + repo, auth.headers())
+            return internalClient.getLowLevelClient().performRequest("HEAD", "/" + repo, headers(auth))
                 .getStatusLine().getStatusCode() == SC_OK;
         } catch (Exception ioe) { throw throwEx("indexExists failed", ioe); }
     }
@@ -107,7 +108,7 @@ public class ElasticRestClient implements ElasticClient {
 
     @Override public String createIndex(AuthHeader auth, CreateIndexRequest request) {
         try {
-            CreateIndexResponse response = internalClient.indices().create(request, auth.headers());
+            CreateIndexResponse response = internalClient.indices().create(request, headers(auth));
             checkState(response.isAcknowledged() && response.isShardsAcknowledged(), "unable to create index");
             return request.index();
         } catch (Exception e) { throw throwEx("createIndex failed", e); }
@@ -115,7 +116,7 @@ public class ElasticRestClient implements ElasticClient {
 
     @Override public void dropIndex(AuthHeader auth, String index) {
         try {
-            DeleteIndexResponse response = internalClient.indices().delete(new DeleteIndexRequest(index), auth.headers());
+            DeleteIndexResponse response = internalClient.indices().delete(new DeleteIndexRequest(index), headers(auth));
             checkState(response.isAcknowledged(), "unable to drop index");
         } catch (Exception ioe) { throw throwEx("dropIndex failed", ioe); }
     }
@@ -142,39 +143,39 @@ public class ElasticRestClient implements ElasticClient {
     @Override public void deletePipeline(AuthHeader auth, String id) { simpleDelete(auth, "/_ingest/pipeline/" + id, "deletePipeline"); }
 
     @Override public IndexResponse index(AuthHeader auth, IndexRequest request) {
-        try { return internalClient.index(request, auth.headers()); } catch (IOException ioe) { throw throwEx("index failed", ioe); }
+        try { return internalClient.index(request, headers(auth)); } catch (IOException ioe) { throw throwEx("index failed", ioe); }
     }
 
     @Override public DeleteResponse delete(AuthHeader auth, DeleteRequest request) {
-        try { return internalClient.delete(request, auth.headers()); } catch (IOException ioe) { throw throwEx("delete failed", ioe); }
+        try { return internalClient.delete(request, headers(auth)); } catch (IOException ioe) { throw throwEx("delete failed", ioe); }
     }
 
     @Override public BulkResponse bulk(AuthHeader auth, BulkRequest request) {
-        try { return internalClient.bulk(request, auth.headers()); } catch (IOException ioe) { throw throwEx("bulk failed", ioe); }
+        try { return internalClient.bulk(request, headers(auth)); } catch (IOException ioe) { throw throwEx("bulk failed", ioe); }
     }
 
     @Override public void bulkAsync(AuthHeader auth, BulkRequest request, ActionListener<BulkResponse> listener) {
-        try { internalClient.bulkAsync(request, listener, auth.headers()); } catch (Exception ioe) { throw throwEx("bulkAsync failed", ioe); }
+        try { internalClient.bulkAsync(request, listener, headers(auth)); } catch (Exception ioe) { throw throwEx("bulkAsync failed", ioe); }
     }
 
     @Override public boolean exists(AuthHeader auth, GetRequest request) {
-        try { return internalClient.exists(request, auth.headers()); } catch (IOException ioe) { throw throwEx("exists failed", ioe); }
+        try { return internalClient.exists(request, headers(auth)); } catch (IOException ioe) { throw throwEx("exists failed", ioe); }
     }
 
     @Override public MultiGetResponse multiGet(AuthHeader auth, MultiGetRequest request) {
-        try { return internalClient.multiGet(request, auth.headers()); } catch (IOException ioe) { throw throwEx("multiGet failed", ioe); }
+        try { return internalClient.multiGet(request, headers(auth)); } catch (IOException ioe) { throw throwEx("multiGet failed", ioe); }
     }
 
     @Override public SearchResponse search(AuthHeader auth, SearchRequest request) {
-        try { return internalClient.search(request, auth.headers()); } catch (IOException ioe) { throw throwEx("search failed", ioe); }
+        try { return internalClient.search(request, headers(auth)); } catch (IOException ioe) { throw throwEx("search failed", ioe); }
     }
 
     @Override public SearchResponse searchScroll(AuthHeader auth, SearchScrollRequest request) {
-        try { return internalClient.searchScroll(request, auth.headers()); } catch (IOException ioe) { throw throwEx("searchScroll failed", ioe); }
+        try { return internalClient.searchScroll(request, headers(auth)); } catch (IOException ioe) { throw throwEx("searchScroll failed", ioe); }
     }
 
     @Override public ClearScrollResponse clearScroll(AuthHeader auth, ClearScrollRequest request) {
-        try { return internalClient.clearScroll(request, auth.headers()); } catch (IOException ioe) { throw throwEx("clearScroll failed", ioe); }
+        try { return internalClient.clearScroll(request, headers(auth)); } catch (IOException ioe) { throw throwEx("clearScroll failed", ioe); }
     }
 
     @Override public MapResult xpackPut(AuthHeader auth, XPackApi api, String id, String body) {
@@ -193,7 +194,7 @@ public class ElasticRestClient implements ElasticClient {
 
     @Override public void xpackDelete(AuthHeader auth, XPackApi api, String id, String body) {
         try {
-            performCliRequest(DELETE, api.endpointWith(id), emptyMap(), new StringEntity(body, APPLICATION_JSON), auth.headers());
+            performCliRequest(DELETE, api.endpointWith(id), emptyMap(), new StringEntity(body, APPLICATION_JSON), headers(auth));
         } catch (Exception ioe) { throw throwEx(api.name().toLowerCase() + "Delete failed", ioe); }
     }
 
@@ -211,7 +212,7 @@ public class ElasticRestClient implements ElasticClient {
 
     private String simplePut(AuthHeader auth, HttpReqType reqType, String endpoint, String body, String methodName) {
         try {
-            return performCliRequest(reqType, endpoint, emptyMap(), new StringEntity(body, APPLICATION_JSON), auth.headers());
+            return performCliRequest(reqType, endpoint, emptyMap(), new StringEntity(body, APPLICATION_JSON), headers(auth));
         } catch (Exception ioe) { throw throwEx(methodName + " failed", ioe); }
     }
 
@@ -222,7 +223,7 @@ public class ElasticRestClient implements ElasticClient {
     }
 
     private String performCliRequest(AuthHeader auth, HttpReqType method, String endpoint) throws IOException {
-        return performCliRequest(method, endpoint, emptyMap(), null, auth.headers());
+        return performCliRequest(method, endpoint, emptyMap(), null, headers(auth));
     }
 
     private String performCliRequest(HttpReqType method, String endpoint, Map<String, String> params,
@@ -232,4 +233,6 @@ public class ElasticRestClient implements ElasticClient {
         checkState(statusCode >= SC_OK && statusCode < SC_MULTIPLE_CHOICES, response.getStatusLine().getReasonPhrase());
         return EntityUtils.toString(response.getEntity());
     }
+    
+    private Header[] headers(AuthHeader authHeader) { return nonNull(authHeader, bootstrapAuth).headers(); }
 }
