@@ -1,0 +1,31 @@
+{
+  "index_patterns": [
+    "tpl*"
+  ],
+  "settings": {
+    "number_of_shards": 1
+  },
+  "mappings": {
+    "_doc": {
+      "properties": {
+        "hostName": {
+          "type": "keyword"
+        },
+        "createdAt": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "aliases": {
+    "templAlias": {},
+    "templAlias2": {
+      "filter": {
+        "term": {
+          "user": "kimchy"
+        }
+      }
+    },
+    "{index}-alias": {}
+  }
+}

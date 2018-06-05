@@ -2,12 +2,23 @@ package io.polyglotted.elastic.test;
 
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.elastic.client.ElasticClient;
+import io.polyglotted.elastic.index.Indexer;
+import io.polyglotted.elastic.search.Searcher;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.junit.Test;
 
+import static io.polyglotted.common.model.MapResult.simpleResult;
+import static io.polyglotted.common.util.BaseSerializer.deserialize;
+import static io.polyglotted.common.util.MapRetriever.deepRetrieve;
 import static io.polyglotted.common.util.ResourceUtil.readResource;
+import static io.polyglotted.elastic.common.Verbose.NONE;
+import static io.polyglotted.elastic.index.IndexRecord.createRecord;
+import static io.polyglotted.elastic.search.QueryMaker.copyFrom;
+import static io.polyglotted.elastic.search.ResultBuilder.SourceBuilder;
+import static io.polyglotted.elastic.test.ElasticTestUtil.ES_AUTH;
 import static io.polyglotted.elastic.test.ElasticTestUtil.testElasticClient;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -18,6 +29,7 @@ public class ClientIntegTest {
         checkClusterHealth();
         checkCreateDeleteIndex();
         checkPipelineLifecycle();
+        checkTemplateLifecycle();
     }
 
     private static void checkClusterHealth() throws Exception {
@@ -52,6 +64,25 @@ public class ClientIntegTest {
             assertThat(client.pipelineExists(pipeline), is(true));
             client.deletePipeline(pipeline);
             assertThat(client.pipelineExists(pipeline), is(false));
+        }
+    }
+
+    private void checkTemplateLifecycle() {
+        String template = "mytempl";
+        try (ElasticClient client = testElasticClient()) {
+            assertThat(client.templateExists(template), is(false));
+            client.putTemplate(template, readResource(ClientIntegTest.class, "template-source.json"));
+            assertThat(client.templateExists(template), is(true));
+
+            try {
+                new Indexer(client).bulkSave(ES_AUTH, createRecord("tpl-2018", "Host", "bobcat",
+                    simpleResult("hostName", "Bobcat", "createdAt", 10)).userTs("Tester", 10000L).build());
+                MapResult mapResult = deserialize(new Searcher(client).searchNative(ES_AUTH, copyFrom("tpl-2018",
+                    "{\"size\":10}".getBytes(UTF_8), null, NONE), SourceBuilder, false, NONE));
+                assertThat(deepRetrieve(mapResult, "header.totalHits"), is(1));
+            } finally { client.dropIndex("tpl-2018"); }
+            client.deleteTemplate(template);
+            assertThat(client.templateExists(template), is(false));
         }
     }
 }

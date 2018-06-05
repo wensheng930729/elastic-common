@@ -142,6 +142,12 @@ public class ElasticRestClient implements ElasticClient {
 
     @Override public void deletePipeline(AuthHeader auth, String id) { simpleDelete(auth, "/_ingest/pipeline/" + id, "deletePipeline"); }
 
+    @Override public void putTemplate(AuthHeader auth, String name, String body) { simplePut(auth, PUT, "/_template/" + name, body, "putTemplate"); }
+
+    @Override public boolean templateExists(AuthHeader auth, String name) { return simpleGet(auth, "/_template/" + name, "templateExists") != null; }
+
+    @Override public void deleteTemplate(AuthHeader auth, String name) { simpleDelete(auth, "/_template/" + name, "deleteTemplate"); }
+
     @Override public IndexResponse index(AuthHeader auth, IndexRequest request) {
         try { return internalClient.index(request, headers(auth)); } catch (IOException ioe) { throw throwEx("index failed", ioe); }
     }

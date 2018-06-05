@@ -89,6 +89,18 @@ public interface ElasticClient extends Closeable {
 
     void deletePipeline(AuthHeader auth, String id);
 
+    default void putTemplate(String name, String body) { putTemplate(bootstrapAuth(), name, body); }
+
+    void putTemplate(AuthHeader auth, String name, String body);
+
+    default boolean templateExists(String name) { return templateExists(bootstrapAuth(), name); }
+
+    boolean templateExists(AuthHeader auth, String name);
+
+    default void deleteTemplate(String name) { deleteTemplate(bootstrapAuth(), name); }
+
+    void deleteTemplate(AuthHeader auth, String name);
+
     default IndexResponse index(IndexRequest request) { return index(bootstrapAuth(), request); }
 
     IndexResponse index(AuthHeader auth, IndexRequest request);
