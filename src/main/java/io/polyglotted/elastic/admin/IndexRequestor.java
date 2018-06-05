@@ -1,5 +1,6 @@
 package io.polyglotted.elastic.admin;
 
+import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.util.MapBuilder;
 import io.polyglotted.common.util.TokenUtil;
 import lombok.SneakyThrows;
@@ -13,6 +14,8 @@ import org.elasticsearch.index.query.QueryBuilder;
 import java.util.List;
 import java.util.Map;
 
+import static io.polyglotted.common.util.BaseSerializer.deserialize;
+import static io.polyglotted.common.util.BaseSerializer.serialize;
 import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.common.util.MapRetriever.optStr;
 import static io.polyglotted.common.util.NullUtil.nonNull;
@@ -33,6 +36,8 @@ public abstract class IndexRequestor {
 
     public static String indexName(IndexSetting setting) { return nonNull(optStr(setting.mapResult, "index_name"), TokenUtil::uniqueToken); }
 
+    public static Alias aliasFrom(String name, String filter) { return new Alias(name).filter(FILTER_BUILDERS.get(filter)); }
+
     public static String indexFile(IndexSetting setting, Type type, String alias) { return indexFile(setting, type, alias, immutableList()); }
 
     @SneakyThrows public static String indexFile(IndexSetting setting, Type mapping, String writeAlias, List<Alias> readAliases) {
@@ -47,5 +52,11 @@ public abstract class IndexRequestor {
         return builder.string();
     }
 
-    public static Alias aliasFrom(String name, String filter) { return new Alias(name).filter(FILTER_BUILDERS.get(filter)); }
+    public static String templateFile(IndexSetting setting, Type type, String alias) { return templateFile(setting, type, alias, immutableList()); }
+
+    @SneakyThrows public static String templateFile(IndexSetting setting, Type mapping, String writeAlias, List<Alias> readAliases) {
+        MapResult result = deserialize(indexFile(setting, mapping, null, readAliases));
+        result.put("index_patterns", immutableList(writeAlias));
+        return serialize(result);
+    }
 }
