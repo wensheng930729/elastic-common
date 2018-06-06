@@ -68,7 +68,7 @@ public class ClientIntegTest {
     }
 
     private void checkTemplateLifecycle() {
-        String template = "mytempl";
+        String template = "1234absdffew234";
         try (ElasticClient client = testElasticClient()) {
             assertThat(client.templateExists(template), is(false));
             client.putTemplate(template, readResource(ClientIntegTest.class, "template-source.json"));
