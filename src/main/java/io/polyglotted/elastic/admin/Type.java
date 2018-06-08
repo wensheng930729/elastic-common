@@ -35,7 +35,7 @@ import static java.util.Collections.singleton;
 @ToString(includeFieldNames = false, doNotUseGetters = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Type implements Jsoner {
-    public final String type = "_doc";
+    public final static String TYPE_DOC = "_doc";
     public final boolean strict;
     public final boolean enabled;
     public final boolean enableSource;

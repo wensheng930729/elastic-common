@@ -5,6 +5,7 @@ import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.model.MapResult.ImmutableResult;
 import io.polyglotted.common.util.HttpRequestBuilder.HttpReqType;
 import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
+import io.polyglotted.elastic.admin.Type;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +60,7 @@ import static io.polyglotted.common.util.MapRetriever.reqdStr;
 import static io.polyglotted.common.util.NullUtil.nonNull;
 import static io.polyglotted.common.util.StrUtil.notNullOrEmpty;
 import static io.polyglotted.common.util.ThreadUtil.safeSleep;
+import static io.polyglotted.elastic.admin.TypeSerializer.serializeMapping;
 import static io.polyglotted.elastic.client.ElasticException.checkState;
 import static io.polyglotted.elastic.client.ElasticException.throwEx;
 import static java.util.Collections.emptyMap;
@@ -128,6 +130,12 @@ public class ElasticRestClient implements ElasticClient {
     }
 
     @Override public String getSettings(AuthHeader auth, String repo) { return simpleGet(auth, "/" + repo + "/_settings", "getSettings"); }
+
+    @Override public MapResult putMapping(AuthHeader auth, String index, Type update) {
+        try {
+            return deserialize(simplePut(auth, PUT, "/" + index + "/_mapping/_doc", serializeMapping(update), "putMapping"));
+        } catch (Exception ioe) { throw throwEx("putMapping failed", ioe); }
+    }
 
     @Override public ImmutableResult getMapping(AuthHeader auth, String repo) {
         try {

@@ -63,6 +63,10 @@ public class AdminIntegTest {
 
                 String serMapping = serialize(client.getMapping(index));
                 assertThat(serMapping, serMapping, is(MESSAGES.get("completeMapping")));
+
+                assertThat(serialize(client.putMapping(index, updateTypeMapping().build())), is("{\"acknowledged\":true}"));
+                String newMapping = serialize(client.getMapping(index));
+                assertThat(newMapping, newMapping, is(MESSAGES.get("newMapping")));
             } finally { client.dropIndex(index); }
         }
     }
@@ -112,4 +116,6 @@ public class AdminIntegTest {
             .field(objectField("objectField").mapping(keywordField("inner2")))
             .field(objectField("objectFieldEmpty"));
     }
+
+    static Type.Builder updateTypeMapping() { return completeTypeMapping().field(keywordField("newestField")); }
 }

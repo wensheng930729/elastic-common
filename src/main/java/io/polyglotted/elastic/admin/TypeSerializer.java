@@ -22,6 +22,7 @@ import static io.polyglotted.elastic.admin.Field.textField;
 import static io.polyglotted.elastic.admin.FieldType.DATE;
 import static io.polyglotted.elastic.admin.FieldType.JOIN;
 import static io.polyglotted.elastic.admin.FieldType.OBJECT;
+import static io.polyglotted.elastic.admin.Type.TYPE_DOC;
 import static io.polyglotted.elastic.common.MetaFields.ALL_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.ANCESTOR_FIELD;
 import static io.polyglotted.elastic.common.MetaFields.APPROVAL_ROLES_FIELD;
@@ -44,10 +45,14 @@ import static io.polyglotted.elastic.common.MetaFields.USER_FIELD;
 @SuppressWarnings("WeakerAccess")
 public abstract class TypeSerializer {
 
-    @SneakyThrows public static String serializeType(Type type) { return writeType(type, XContentFactory.jsonBuilder()).string(); }
+    @SneakyThrows public static String serializeMapping(Type type) { return writeType(type, XContentFactory.jsonBuilder()).string(); }
+
+    @SneakyThrows public static String serializeType(Type type) {
+        return writeType(type, XContentFactory.jsonBuilder().startObject().field(TYPE_DOC)).endObject().string();
+    }
 
     private static XContentBuilder writeType(Type type, XContentBuilder gen) throws IOException {
-        gen.startObject().field(type.type).startObject();
+        gen.startObject();
         if (type.strict) gen.field("dynamic", "strict");
         if (!type.enabled) { gen.field("enabled", false); }
         else {
@@ -59,7 +64,7 @@ public abstract class TypeSerializer {
                 writeFields("properties", uniqueIndex(typeValues(type), Field::field), gen);
             }
         }
-        return gen.endObject().endObject();
+        return gen.endObject();
     }
 
     private static Set<Field> typeValues(Type type) {

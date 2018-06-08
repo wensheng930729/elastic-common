@@ -3,6 +3,7 @@ package io.polyglotted.elastic.client;
 import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.model.MapResult.ImmutableResult;
+import io.polyglotted.elastic.admin.Type;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -72,6 +73,10 @@ public interface ElasticClient extends Closeable {
     default String getSettings(String repo) { return getSettings(bootstrapAuth(), repo); }
 
     String getSettings(AuthHeader auth, String repo);
+
+    default MapResult putMapping(String index, Type update) { return putMapping(bootstrapAuth(), index, update); }
+
+    MapResult putMapping(AuthHeader auth, String index, Type update);
 
     default ImmutableResult getMapping(String repo) { return getMapping(bootstrapAuth(), repo); }
 

@@ -19,6 +19,7 @@ import static io.polyglotted.common.util.BaseSerializer.serialize;
 import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.common.util.MapRetriever.optStr;
 import static io.polyglotted.common.util.NullUtil.nonNull;
+import static io.polyglotted.elastic.admin.Type.TYPE_DOC;
 import static io.polyglotted.elastic.search.ExprConverter.buildFilter;
 import static io.polyglotted.elastic.search.Expressions.allIndex;
 import static io.polyglotted.elastic.search.Expressions.approvalRejected;
@@ -42,7 +43,7 @@ public abstract class IndexRequestor {
 
     @SneakyThrows public static String indexFile(IndexSetting setting, Type mapping, String writeAlias, List<Alias> readAliases) {
         CreateIndexRequest request = createIndexRequest(indexName(setting))
-            .updateAllTypes(true).settings(setting.toJson(), JSON).mapping(mapping.type, mapping.toJson(), JSON);
+            .updateAllTypes(true).settings(setting.toJson(), JSON).mapping(TYPE_DOC, mapping.toJson(), JSON);
         if (writeAlias != null) { request.alias(new Alias(writeAlias)); }
         for (Alias alias : readAliases) { request.alias(alias); }
 
