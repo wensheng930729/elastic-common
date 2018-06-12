@@ -53,19 +53,19 @@ public final class Indexer {
         return client.index(new IndexRequest(repo, "_doc", key).source(immutableMap())).getVersion();
     }
 
-    public boolean bulkSave(AuthHeader auth, BulkRecord bulkRecord) {
+    public boolean bulkSave(AuthHeader auth, BulkRecord bulkRecord, Validator validator) {
         try {
-            BulkRequest bulkRequest = bulkRecord.validator.validateAll(client, auth, bulkRecord, new BulkRequest().setRefreshPolicy(IMMEDIATE));
+            BulkRequest bulkRequest = validator.validateAll(client, auth, bulkRecord, new BulkRequest().setRefreshPolicy(IMMEDIATE));
             if (bulkRequest.numberOfActions() <= 0) { return true; }
             BulkResponse responses = client.bulk(auth, bulkRequest);
             return checkResponse(responses, bulkRecord.ignoreErrors, bulkRecord::success, bulkRecord::failure);
         } catch (RuntimeException ex) { throw logError(ex); }
     }
 
-    public boolean strictSave(AuthHeader auth, BulkRecord bulkRecord) {
+    public boolean strictSave(AuthHeader auth, BulkRecord bulkRecord, Validator validator) {
         lockTheIndexOrFail(bulkRecord.repo, bulkRecord.model);
         try {
-            return bulkSave(auth, bulkRecord);
+            return bulkSave(auth, bulkRecord, validator);
         } finally { unlockIndex(bulkRecord.repo, bulkRecord.model); }
     }
 

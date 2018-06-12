@@ -110,7 +110,7 @@ public class ApprovalIntegTest {
             BulkRecord bulkRecord = BulkRecord.bulkBuilder(REPO, MODEL, T1, Tester).hasApproval(true).objects(immutableList(
                 simpleResult("&id", "aqua", "name", "Aqua"), simpleResult("&id", "beige", "name", "Beige"),
                 simpleResult("&id", "cherry", "name", "Cherry"))).build();
-            assertThat(indexer.strictSave(ES_AUTH, bulkRecord), is(true));
+            assertThat(indexer.strictSave(ES_AUTH, bulkRecord, bulkRecord.validator), is(true));
             checkStatusObjects(searcher, bool().liveIndex().build(), 0);
             checkStatusObjects(searcher, bool().pendingApproval().build(), 3);
 

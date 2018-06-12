@@ -62,7 +62,7 @@ public interface Validator {
             return checkRecordWithDoc(record, existing);
         }
 
-        private IndexRequest checkRecordWithDoc(IndexRecord record, DocResult existing) {
+        protected IndexRequest checkRecordWithDoc(IndexRecord record, DocResult existing) {
             if (isIdempotent(record, existing)) { throw new NoopException(existing.source); }
             validateCurrent(record, existing == null ? null : existing.source);
             postValidate(record);

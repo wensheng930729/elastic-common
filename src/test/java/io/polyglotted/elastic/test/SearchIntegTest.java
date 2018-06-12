@@ -64,7 +64,7 @@ public class SearchIntegTest {
         String agex = client.createIndex(new CreateIndexRequest(uniqueToken()).source(MESSAGES.get("agex.source"), JSON));
         try {
             BulkRecord bulkRecord = bulkBuilder("agex", "Trade", currentTimeMillis(), "tester").objects(buildTradesJson()).build();
-            boolean result = indexer.bulkSave(ES_AUTH, bulkRecord);
+            boolean result = indexer.bulkSave(ES_AUTH, bulkRecord, bulkRecord.validator);
             assertThat(result, is(true)); assertThat(serialize(bulkRecord.failures), serialize(bulkRecord.failures), is("{}"));
 
             int expectedHits;
