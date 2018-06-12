@@ -5,9 +5,14 @@ import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.util.ListBuilder.ImmutableListBuilder;
 import io.polyglotted.elastic.client.ElasticClient;
 import io.polyglotted.elastic.common.Verbose;
+import lombok.SneakyThrows;
+import org.apache.http.util.EntityUtils;
+import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.action.search.ClearScrollRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregations;
@@ -15,15 +20,22 @@ import org.elasticsearch.search.aggregations.Aggregations;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import static io.polyglotted.common.model.MapResult.simpleResult;
+import static io.polyglotted.common.util.BaseSerializer.deserialize;
 import static io.polyglotted.common.util.ListBuilder.immutableListBuilder;
+import static io.polyglotted.common.util.MapRetriever.MAP_CLASS;
+import static io.polyglotted.common.util.MapRetriever.reqdStr;
+import static io.polyglotted.common.util.ReflectionUtil.safeInvoke;
 import static io.polyglotted.common.util.StrUtil.notNullOrEmpty;
 import static io.polyglotted.elastic.search.AggsConverter.detectAgg;
 import static io.polyglotted.elastic.search.AggsFlattener.flattenAggs;
 import static io.polyglotted.elastic.search.QueryMaker.DEFAULT_KEEP_ALIVE;
 import static java.util.Objects.requireNonNull;
+import static org.elasticsearch.ElasticsearchException.getExceptionName;
 import static org.elasticsearch.common.xcontent.ToXContent.EMPTY_PARAMS;
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 abstract class SearchUtil {
 
@@ -50,9 +62,10 @@ abstract class SearchUtil {
         return new ResponseHeader(response.getTook().millis(), getTotalHits(response), getReturnedHits(response), response.getScrollId());
     }
 
-    static void headerFrom(SearchResponse response, XContentBuilder builder) throws IOException {
+    static XContentBuilder headerFrom(SearchResponse response, XContentBuilder builder) throws IOException {
         builder.startObject("header").field("tookInMillis", response.getTook().millis()).field("totalHits", getTotalHits(response))
-            .field("returnedHits", getReturnedHits(response)).field("scrollId", response.getScrollId()).endObject();
+            .field("returnedHits", getReturnedHits(response));
+        return response.getScrollId() != null ? builder.field("scrollId", response.getScrollId()).endObject() : builder.endObject();
     }
 
     static int getReturnedHits(SearchResponse response) { return response.getHits().getHits().length; }
@@ -95,5 +108,60 @@ abstract class SearchUtil {
 
     private static XContentBuilder performInternal(XContentBuilder result, Aggregations aggregations) throws IOException {
         aggregations.toXContent(result, EMPTY_PARAMS); return result;
+    }
+
+    @SneakyThrows static SearcherException failureException(Exception ex) {
+        return new SearcherException(failureContent(jsonBuilder().startObject(), ex).endObject().string());
+    }
+
+    static XContentBuilder failureContent(XContentBuilder builder, Exception ex) throws Exception {
+        if (ex == null) { return builder.field("error", "unknown"); }
+
+        ElasticsearchException[] rootCauses = localGuessRootCauses(ex);
+        builder.startObject("error");
+        builder.startArray("root_cause");
+        for (ElasticsearchException rootCause : rootCauses) {
+            builder.startObject().field("type", (String) safeInvoke(rootCause, "getExceptionName")).field("reason", rootCause.getMessage()).endObject();
+        }
+        return builder.endArray().field("type", getExceptionName(ex)).field("reason", ex.getMessage()).endObject();
+    }
+
+    private static ElasticsearchException[] localGuessRootCauses(Throwable t) {
+        Throwable ex = ExceptionsHelper.unwrapCause(t);
+        if (ex instanceof ElasticsearchException) {
+            ElasticsearchException esx = (ElasticsearchException) ex;
+            Throwable[] suppressed = esx.getSuppressed();
+            return (suppressed.length > 0) ? buildSuppressExes(suppressed[0]) : esx.guessRootCauses();
+        }
+        return newElasticsearchExes(t);
+    }
+
+    private static ElasticsearchException[] buildSuppressExes(Throwable suppressed) {
+
+        return suppressed instanceof ElasticsearchException ? new ElasticsearchException[]{(ElasticsearchException) suppressed} :
+            (suppressed instanceof ResponseException ? unwrapRespEx((ResponseException) suppressed) : newElasticsearchExes(suppressed));
+    }
+
+    @SneakyThrows private static ElasticsearchException[] unwrapRespEx(ResponseException rex) {
+        String message = EntityUtils.toString(rex.getResponse().getEntity());
+        List<Map<String, Object>> rootCauses = deserialize(message).deepCollect("error.root_cause", MAP_CLASS);
+        if (!rootCauses.isEmpty()) {
+            ElasticsearchException[] result = new ElasticsearchException[rootCauses.size()]; int index = 0;
+            for (Map<String, Object> rootCause : rootCauses) {
+                result[index++] = newElasticsearchEx(reqdStr(rootCause, "type"), reqdStr(rootCause, "reason"), null);
+            }
+            return result;
+        }
+        else { return new ElasticsearchException[]{new ElasticsearchException(message, rex)}; }
+    }
+
+    private static ElasticsearchException[] newElasticsearchExes(Throwable t) {
+        return new ElasticsearchException[]{newElasticsearchEx(getExceptionName(t), t.getMessage(), t)};
+    }
+
+    private static ElasticsearchException newElasticsearchEx(String name, String message, Throwable t) {
+        return new ElasticsearchException(message, t) {
+            @Override protected String getExceptionName() { return name; }
+        };
     }
 }

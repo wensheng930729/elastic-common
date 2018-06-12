@@ -6,16 +6,19 @@ import io.polyglotted.elastic.common.Verbose;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.ExceptionsHelper;
+import org.elasticsearch.action.search.MultiSearchRequest;
+import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
+import java.io.IOException;
 import java.util.List;
 
 import static io.polyglotted.common.util.BaseSerializer.MAPPER;
@@ -27,12 +30,15 @@ import static io.polyglotted.elastic.search.Finder.findById;
 import static io.polyglotted.elastic.search.QueryMaker.aggregationToRequest;
 import static io.polyglotted.elastic.search.QueryMaker.scrollRequest;
 import static io.polyglotted.elastic.search.SearchUtil.buildAggs;
+import static io.polyglotted.elastic.search.SearchUtil.failureContent;
+import static io.polyglotted.elastic.search.SearchUtil.failureException;
 import static io.polyglotted.elastic.search.SearchUtil.getReturnedHits;
 import static io.polyglotted.elastic.search.SearchUtil.getTotalHits;
 import static io.polyglotted.elastic.search.SearchUtil.headerFrom;
 import static io.polyglotted.elastic.search.SearchUtil.performClearScroll;
 import static io.polyglotted.elastic.search.SearchUtil.performScroll;
 import static io.polyglotted.elastic.search.SearchUtil.responseBuilder;
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import static org.elasticsearch.common.xcontent.XContentType.JSON;
 import static org.elasticsearch.search.fetch.subphase.FetchSourceContext.FETCH_SOURCE;
 
@@ -85,7 +91,9 @@ public final class Searcher {
     }
 
     public Aggregation aggregate(String repo, AggregationBuilder builder) {
-        return buildAggs(client.search(aggregationToRequest(repo, builder))).get(0);
+        try {
+            return buildAggs(client.search(aggregationToRequest(repo, builder))).get(0);
+        } catch (Exception ex) { throw failureException(ex); }
     }
 
     public <T> QueryResponse searchBy(SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {
@@ -93,7 +101,9 @@ public final class Searcher {
     }
 
     public <T> QueryResponse searchBy(AuthHeader auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose) {
-        return responseBuilder(client.search(auth, request), resultBuilder, verbose).build();
+        try {
+            return responseBuilder(client.search(auth, request), resultBuilder, verbose).build();
+        } catch (Exception ex) { throw failureException(ex); }
     }
 
     public <T> QueryResponse scroll(String scrollId, TimeValue scrollTime, ResponseBuilder<T> resultBuilder, Verbose verbose) {
@@ -101,8 +111,10 @@ public final class Searcher {
     }
 
     public <T> QueryResponse scroll(AuthHeader auth, String scrollId, TimeValue scrollTime, ResponseBuilder<T> resultBuilder, Verbose verbose) {
-        SearchScrollRequest request = scrollRequest(scrollId, scrollTime);
-        return responseBuilder(client.searchScroll(auth, request), resultBuilder, verbose).build();
+        try {
+            SearchScrollRequest request = scrollRequest(scrollId, scrollTime);
+            return responseBuilder(client.searchScroll(auth, request), resultBuilder, verbose).build();
+        } catch (Exception ex) { throw failureException(ex); }
     }
 
     public <T> String searchNative(SearchRequest request, ResponseBuilder<T> resultBuilder, boolean flattenAgg, Verbose verbose) {
@@ -111,14 +123,38 @@ public final class Searcher {
 
     @SneakyThrows
     public <T> String searchNative(AuthHeader auth, SearchRequest request, ResponseBuilder<T> resultBuilder, boolean flattenAgg, Verbose verbose) {
-        XContentBuilder result = XContentFactory.jsonBuilder().startObject();
-        SearchResponse response = client.search(auth, request);
-        headerFrom(response, result);
+        try {
+            XContentBuilder result = jsonBuilder().startObject();
+            return handleResponse(client.search(request), result, resultBuilder, true, flattenAgg, verbose).endObject().string();
+        } catch (Exception ex) { throw failureException(ex); }
+    }
+
+    @SneakyThrows public <T> String multiSearch(MultiSearchRequest request, ResponseBuilder<T> resultBuilder,
+                                                boolean addHeader, boolean flattenAgg, Verbose verbose) {
+        XContentBuilder result = jsonBuilder().startObject().startArray("responses");
+        MultiSearchResponse multiResponse = client.multiSearch(request);
+        for (MultiSearchResponse.Item item : multiResponse) {
+            result.startObject();
+            if (item.isFailure()) {
+                failureContent(result, item.getFailure()).field("status", ExceptionsHelper.status(item.getFailure()).name().toLowerCase());
+            }
+            else {
+                handleResponse(item.getResponse(), result, resultBuilder, addHeader, flattenAgg, verbose);
+                result.field("status", item.getResponse().status().name().toLowerCase());
+            }
+            result.endObject();
+        }
+        return result.endArray().endObject().string();
+    }
+
+    private <T> XContentBuilder handleResponse(SearchResponse response, XContentBuilder result, ResponseBuilder<T> resultBuilder,
+                                               boolean addHeader, boolean flattenAgg, Verbose verbose) throws IOException {
+        if (addHeader) { headerFrom(response, result); }
         if (getReturnedHits(response) > 0) {
             List<T> values = resultBuilder.buildFrom(response, verbose);
             result.rawField("results", new BytesArray(MAPPER.writeValueAsBytes(values)), JSON);
         }
-        return buildAggs(response, flattenAgg, result).endObject().string();
+        return buildAggs(response, flattenAgg, result);
     }
 
     public <T> boolean simpleScroll(SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose, ScrollWalker<T> walker) {
@@ -126,16 +162,18 @@ public final class Searcher {
     }
 
     public <T> boolean simpleScroll(AuthHeader auth, SearchRequest request, ResponseBuilder<T> resultBuilder, Verbose verbose, ScrollWalker<T> walker) {
-        boolean errored = false;
-        SearchResponse response = client.search(auth, request);
-        log.info("performing scroll on " + getTotalHits(response) + " items");
-        while (getReturnedHits(response) > 0) {
+        try {
+            boolean errored = false;
+            SearchResponse response = client.search(auth, request);
+            log.info("performing scroll on " + getTotalHits(response) + " items");
+            while (getReturnedHits(response) > 0) {
 
-            errored = walker.walk(resultBuilder.buildFrom(response, verbose));
-            if (errored) { performClearScroll(client, auth, response.getScrollId()); break; }
-            response = performScroll(client, auth, response);
-        }
-        return errored;
+                errored = walker.walk(resultBuilder.buildFrom(response, verbose));
+                if (errored) { performClearScroll(client, auth, response.getScrollId()); break; }
+                response = performScroll(client, auth, response);
+            }
+            return errored;
+        } catch (Exception ex) { throw failureException(ex); }
     }
 
     public void clearScroll(AuthHeader auth, String scrollId) { performClearScroll(client, auth, scrollId);}

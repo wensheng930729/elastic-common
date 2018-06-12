@@ -43,6 +43,7 @@ public interface Validator {
             Map<String, DocResult> docs = findAll(client, auth, bulkRecord);
             for (IndexRecord record : bulkRecord.records) {
                 try {
+                    preValidate(client, record);
                     IndexRequest ancestor = checkRecordWithDoc(record, docs.get(record.keyString()));
                     bulkRequest.add(record.request());
                     if (ancestor != null) { bulkRequest.add(ancestor); }

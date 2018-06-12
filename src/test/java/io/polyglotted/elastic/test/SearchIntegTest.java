@@ -2,12 +2,15 @@ package io.polyglotted.elastic.test;
 
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.elastic.client.ElasticClient;
+import io.polyglotted.elastic.client.ElasticException;
 import io.polyglotted.elastic.common.Verbose;
 import io.polyglotted.elastic.index.BulkRecord;
 import io.polyglotted.elastic.index.Indexer;
-import io.polyglotted.elastic.search.Searcher;
 import io.polyglotted.elastic.search.QueryResponse;
+import io.polyglotted.elastic.search.Searcher;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.search.MultiSearchRequest;
+import org.hamcrest.MatcherAssert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +43,7 @@ import static io.polyglotted.elastic.test.ElasticTestUtil.ES_AUTH;
 import static io.polyglotted.elastic.test.ElasticTestUtil.testElasticClient;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.elasticsearch.action.support.IndicesOptions.lenientExpandOpen;
 import static org.elasticsearch.common.xcontent.XContentType.JSON;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -71,6 +75,8 @@ public class SearchIntegTest {
             }
             simpleSearchAndScroll();
             simpleScrollFail();
+            multiSearch();
+            failedSearchHandle();
 
         } finally { client.dropIndex(agex); }
     }
@@ -109,6 +115,24 @@ public class SearchIntegTest {
             query.getBytes(UTF_8), null, verb), SourceBuilder, flatten, verb));
         assertThat(deepRetrieve(mapResult, "header.totalHits"), is(totalHits));
         return serialize(mapResult.get(resultKey));
+    }
+
+    private void failedSearchHandle() {
+        try {
+            String query = MESSAGES.get("failed.query");
+            searcher.searchNative(ES_AUTH, copyFrom("agex", query.getBytes(UTF_8), NONE), SourceBuilder, false, NONE);
+        } catch (ElasticException ex) { assertThat(ex.getMessage(), ex.getMessage(), is(MESSAGES.get("failed.out"))); }
+    }
+
+    private void multiSearch() throws IOException {
+        List<String> queries = immutableList(MESSAGES.get("agg1.query"), MESSAGES.get("agg2.query"), MESSAGES.get("agg3.query"),
+            MESSAGES.get("agg4.query"), MESSAGES.get("agg5.query"), MESSAGES.get("failed.query"));
+        MultiSearchRequest searchRequest = new MultiSearchRequest().indicesOptions(lenientExpandOpen());
+        for (String query : queries) {
+            searchRequest.add(copyFrom("agex", query.getBytes(UTF_8), Verbose.NONE));
+        }
+        String result = searcher.multiSearch(searchRequest, SourceBuilder, false, false, NONE);
+        MatcherAssert.assertThat(result, result, is(MESSAGES.get("multi.response")));
     }
 
     private static List<MapResult> buildTradesJson() {

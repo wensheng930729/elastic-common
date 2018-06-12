@@ -17,6 +17,8 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.ClearScrollRequest;
 import org.elasticsearch.action.search.ClearScrollResponse;
+import org.elasticsearch.action.search.MultiSearchRequest;
+import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
@@ -141,6 +143,10 @@ public interface ElasticClient extends Closeable {
     default ClearScrollResponse clearScroll(ClearScrollRequest request) { return clearScroll(bootstrapAuth(), request); }
 
     ClearScrollResponse clearScroll(AuthHeader auth, ClearScrollRequest request);
+
+    default MultiSearchResponse multiSearch(MultiSearchRequest request) { return multiSearch(bootstrapAuth(), request); }
+
+    MultiSearchResponse multiSearch(AuthHeader auth, MultiSearchRequest request);
 
     default MapResult xpackPut(XPackApi api, String id, String body) { return xpackPut(bootstrapAuth(), api, id, body); }
 
