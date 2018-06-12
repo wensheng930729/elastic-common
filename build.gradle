@@ -20,6 +20,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+
 }
 
 ext {
@@ -42,6 +43,15 @@ dependencies {
     compile "com.vividsolutions:jts:${jtsVersion}"
     compile "net.sf.jopt-simple:jopt-simple:${joptVersion}"
     compile "org.locationtech.spatial4j:spatial4j:${spatial4jVersion}"
+    compile("org.elasticsearch:elasticsearch-cli:${elasticSearchVersion}") {
+        exclude group: "org.apache.logging.log4j", module: "log4j-api"
+        exclude group: "org.apache.logging.log4j", module: "log4j-core"
+        exclude group: "net.sf.jopt-simple", module: "jopt-simple"
+    }
+    compile("org.elasticsearch:elasticsearch-core:${elasticSearchVersion}") {
+        exclude group: "org.apache.logging.log4j", module: "log4j-api"
+        exclude group: "org.apache.logging.log4j", module: "log4j-core"
+    }
     compile("org.elasticsearch:elasticsearch:${elasticSearchVersion}") {
         exclude group: "joda-time", module: "joda-time"
         exclude group: "org.apache.logging.log4j", module: "log4j-api"
@@ -52,6 +62,76 @@ dependencies {
         exclude group: "net.sf.jopt-simple", module: "jopt-simple"
         exclude group: "org.yaml", module: "snakeyaml"
         exclude group: "org.hdrhistogram", module: "HdrHistogram"
+        exclude group: "org.elasticsearch", module: "elasticsearch-cli"
+        exclude group: "org.elasticsearch", module: "elasticsearch-core"
+    }
+    compile("org.elasticsearch.plugin:aggs-matrix-stats-client:${elasticSearchVersion}") {
+        exclude group: "org.apache.logging.log4j", module: "log4j-api"
+        exclude group: "org.apache.logging.log4j", module: "log4j-core"
+        exclude group: "org.elasticsearch", module: "elasticsearch"
+        exclude group: "org.elasticsearch", module: "jna"
+        exclude group: "com.vividsolutions", module: "jts"
+        exclude group: "org.locationtech.spatial4j", module: "spatial4j"
+    }
+    compile("org.elasticsearch.plugin:lang-mustache-client:${elasticSearchVersion}") {
+        exclude group: "org.apache.logging.log4j", module: "log4j-api"
+        exclude group: "org.apache.logging.log4j", module: "log4j-core"
+        exclude group: "org.elasticsearch", module: "elasticsearch"
+        exclude group: "org.elasticsearch", module: "jna"
+        exclude group: "com.vividsolutions", module: "jts"
+        exclude group: "org.locationtech.spatial4j", module: "spatial4j"
+    }
+    compile("org.elasticsearch.plugin:parent-join-client:${elasticSearchVersion}") {
+        exclude group: "org.apache.logging.log4j", module: "log4j-api"
+        exclude group: "org.apache.logging.log4j", module: "log4j-core"
+        exclude group: "org.elasticsearch", module: "elasticsearch"
+        exclude group: "org.elasticsearch", module: "jna"
+        exclude group: "com.vividsolutions", module: "jts"
+        exclude group: "org.locationtech.spatial4j", module: "spatial4j"
+    }
+    compile("org.elasticsearch.plugin:percolator-client:${elasticSearchVersion}") {
+        exclude group: "org.apache.logging.log4j", module: "log4j-api"
+        exclude group: "org.apache.logging.log4j", module: "log4j-core"
+        exclude group: "org.elasticsearch", module: "elasticsearch"
+        exclude group: "org.elasticsearch", module: "jna"
+        exclude group: "com.vividsolutions", module: "jts"
+        exclude group: "org.locationtech.spatial4j", module: "spatial4j"
+    }
+    compile("org.elasticsearch.plugin:rank-eval-client:${elasticSearchVersion}") {
+        exclude group: "org.apache.logging.log4j", module: "log4j-api"
+        exclude group: "org.apache.logging.log4j", module: "log4j-core"
+        exclude group: "org.elasticsearch", module: "elasticsearch"
+        exclude group: "org.elasticsearch", module: "jna"
+        exclude group: "com.vividsolutions", module: "jts"
+        exclude group: "org.locationtech.spatial4j", module: "spatial4j"
+    }
+    compile("org.elasticsearch.plugin:reindex-client:${elasticSearchVersion}") {
+        exclude group: "org.apache.logging.log4j", module: "log4j-api"
+        exclude group: "org.apache.logging.log4j", module: "log4j-core"
+        exclude group: "org.elasticsearch", module: "elasticsearch"
+        exclude group: "org.elasticsearch", module: "jna"
+        exclude group: "com.vividsolutions", module: "jts"
+        exclude group: "org.locationtech.spatial4j", module: "spatial4j"
+        exclude group: "org.elasticsearch.client", module: "elasticsearch-rest-client"
+    }
+    compile("org.elasticsearch.plugin:transport-netty4-client:${elasticSearchVersion}") {
+        exclude group: "org.apache.logging.log4j", module: "log4j-api"
+        exclude group: "org.apache.logging.log4j", module: "log4j-core"
+        exclude group: "org.elasticsearch", module: "elasticsearch"
+        exclude group: "org.elasticsearch", module: "jna"
+        exclude group: "com.vividsolutions", module: "jts"
+        exclude group: "org.locationtech.spatial4j", module: "spatial4j"
+    }
+    compile("org.elasticsearch.client:transport:${elasticSearchVersion}") {
+        exclude group: "org.apache.logging.log4j", module: "log4j-api"
+        exclude group: "org.apache.logging.log4j", module: "log4j-core"
+        exclude group: "org.elasticsearch", module: "elasticsearch"
+        exclude group: "org.elasticsearch.plugin", module: "lang-mustache-client"
+        exclude group: "org.elasticsearch.plugin", module: "parent-join-client"
+        exclude group: "org.elasticsearch.plugin", module: "percolator-client"
+        exclude group: "org.elasticsearch.plugin", module: "rank-eval-client"
+        exclude group: "org.elasticsearch.plugin", module: "reindex-client"
+        exclude group: "org.elasticsearch.plugin", module: "transport-netty4-client"
     }
     compile("org.elasticsearch.client:elasticsearch-rest-client:${elasticSearchVersion}") {
         exclude group: "commons-codec", module: "commons-codec"
@@ -65,10 +145,13 @@ dependencies {
         exclude group: "org.apache.logging.log4j", module: "log4j-api"
         exclude group: "org.apache.logging.log4j", module: "log4j-core"
         exclude group: "org.elasticsearch", module: "elasticsearch"
-        exclude group: "org.elasticsearch.client", module: "elasticsearch-rest-client"
         exclude group: "org.elasticsearch", module: "jna"
-        exclude group: "org.locationtech.spatial4j", module: "spatial4j"
         exclude group: "com.vividsolutions", module: "jts"
+        exclude group: "org.locationtech.spatial4j", module: "spatial4j"
+        exclude group: "org.elasticsearch.client", module: "elasticsearch-rest-client"
+        exclude group: "org.elasticsearch.plugin", module: "aggs-matrix-stats-client"
+        exclude group: "org.elasticsearch.plugin", module: "parent-join-client"
+        exclude group: "org.elasticsearch.plugin", module: "rank-eval-client"
     }
     compile("org.elasticsearch.client:elasticsearch-rest-client-sniffer:${elasticSearchVersion}") {
         exclude group: "commons-codec", module: "commons-codec"
