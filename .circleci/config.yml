@@ -9,7 +9,7 @@ jobs:
           password: $DOCKER_PASS
         environment:
           network.host: "0.0.0.0"
-          network.publish_host: "$(ping -c 1 `hostname` | grep '64 bytes' | awk '{print $4}' | rev | cut -c 2- | rev)"
+          network.publish_host: "`ifconfig eth0 | grep 'inet addr' | sed -e 's/:/ /' | awk '{print $3}'`"
           ELASTIC_PASSWORD: SteelEye
     working_directory: ~/elastic-common
     environment:
