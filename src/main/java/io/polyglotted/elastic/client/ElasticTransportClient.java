@@ -4,7 +4,6 @@ import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.model.MapResult.ImmutableResult;
 import io.polyglotted.elastic.admin.Type;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -63,7 +62,7 @@ import static org.elasticsearch.common.xcontent.ToXContent.EMPTY_PARAMS;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import static org.elasticsearch.common.xcontent.XContentType.JSON;
 
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE) @Accessors(fluent = true)
+@RequiredArgsConstructor @Accessors(fluent = true)
 public class ElasticTransportClient implements ElasticClient {
     private final Client internalClient;
     @NonNull @Getter private final AuthHeader bootstrapAuth;
