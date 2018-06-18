@@ -117,7 +117,7 @@ public final class Field implements Comparable<Field> {
 
         public FieldBuilder disabled() { this.args.put("enabled", false); return this; }
 
-        public FieldBuilder disableOrDynamic(boolean disable) { return disable ? disabled() : dynamic("true"); }
+        public FieldBuilder disableOrDynamic(Boolean disable) { if (disable != null) { return disable ? disabled() : dynamic("true"); } return this; }
 
         public FieldBuilder extra(String name, Object value) { if (value != null) { this.args.put(name, value); } return this; }
 
