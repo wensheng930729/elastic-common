@@ -1,12 +1,15 @@
 package io.polyglotted.elastic.admin;
 
+import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 import java.util.EnumSet;
+import java.util.Map;
 
 import static io.polyglotted.common.util.Assertions.checkBool;
 import static io.polyglotted.common.util.Assertions.checkContains;
+import static io.polyglotted.common.util.MapBuilder.immutableMapBuilder;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public enum FieldType {
@@ -36,6 +39,15 @@ public enum FieldType {
 
     private static final EnumSet<FieldType> SIMPLE_FIELDS = EnumSet.of(BINARY, BOOLEAN, DATE, GEO_POINT, GEO_SHAPE, IP,
         DOUBLE, FLOAT, HALF_FLOAT, SCALED_FLOAT, BYTE, SHORT, INTEGER, LONG, KEYWORD);
+    private final static Map<String, FieldType> TYPES;
+
+    static {
+        ImmutableMapBuilder<String, FieldType> builder = immutableMapBuilder();
+        for (FieldType type : values()) { builder.put(type.name(), type).put(type.name().toLowerCase(), type); }
+        TYPES = builder.build();
+    }
+
+    @SuppressWarnings("unused") public static FieldType fieldType(String value) { return TYPES.get(value); }
 
     FieldType simpleField() { return checkContains(SIMPLE_FIELDS, this, name() + " not a simple type"); }
 
