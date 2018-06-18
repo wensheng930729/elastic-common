@@ -5,7 +5,7 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 
 group = 'io.polyglotted'
-version = '6.2.4.4'
+version = '6.2.4.5'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
@@ -25,7 +25,7 @@ repositories {
 
 ext {
     elasticSearchVersion = '6.2.4'
-    awsCommonVersion = '1.11.333'
+    awsCommonVersion = '1.11.349'
     hamcrestVersion = '1.3'
     hdrHistoVersion = '2.1.10'
     joptVersion = '5.0.2'
@@ -35,7 +35,7 @@ ext {
     log4jVersion = '2.10.0'
     lombokVersion = '1.16.20'
     spatial4jVersion = '0.6'
-    utilsCommonVersion='1.0.24'
+    utilsCommonVersion='1.0.26'
 }
 dependencies {
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
