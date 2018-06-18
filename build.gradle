@@ -25,6 +25,7 @@ repositories {
 
 ext {
     elasticSearchVersion = '6.2.4'
+    awsCommonVersion = '1.11.333'
     hamcrestVersion = '1.3'
     hdrHistoVersion = '2.1.10'
     joptVersion = '5.0.2'
@@ -39,6 +40,7 @@ ext {
 dependencies {
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     compileOnly "io.polyglotted:utils-common:${utilsCommonVersion}"
+    compileOnly "io.polyglotted:aws-common:${awsCommonVersion}"
 
     compile "com.vividsolutions:jts:${jtsVersion}"
     compile "net.sf.jopt-simple:jopt-simple:${joptVersion}"
