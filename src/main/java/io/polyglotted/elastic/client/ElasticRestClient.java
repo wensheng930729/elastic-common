@@ -6,9 +6,7 @@ import io.polyglotted.common.model.MapResult.ImmutableResult;
 import io.polyglotted.common.util.HttpRequestBuilder.HttpReqType;
 import io.polyglotted.common.util.MapBuilder.ImmutableMapBuilder;
 import io.polyglotted.elastic.admin.Type;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.apache.http.ConnectionClosedException;
@@ -39,14 +37,18 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
+import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.sniff.ElasticsearchHostsSniffer;
+import org.elasticsearch.client.sniff.Sniffer;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.util.BaseSerializer.deserialize;
@@ -70,14 +72,19 @@ import static org.apache.http.HttpStatus.SC_MULTIPLE_CHOICES;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE) @Accessors(fluent = true)
+@Accessors(fluent = true)
 public class ElasticRestClient implements ElasticClient {
     private final RestHighLevelClient internalClient;
+    private final Sniffer sniffer;
     @Nullable @Getter private final AuthHeader bootstrapAuth;
 
-    ElasticRestClient(RestClientBuilder builder, AuthHeader bootstrapAuth) { this(new RestHighLevelClient(builder), bootstrapAuth); }
+    ElasticRestClient(RestClientBuilder builder, AuthHeader bootstrapAuth) {
+        this.internalClient = new RestHighLevelClient(builder);
+        this.sniffer = buildSniffer(internalClient.getLowLevelClient());
+        this.bootstrapAuth = bootstrapAuth;
+    }
 
-    @Override @SneakyThrows public void close() { internalClient.close(); }
+    @Override @SneakyThrows public void close() { sniffer.close(); internalClient.close(); }
 
     @SuppressWarnings("ALL")
     @Override public ElasticClient waitForStatus(AuthHeader auth, String status) {
@@ -253,6 +260,11 @@ public class ElasticRestClient implements ElasticClient {
         checkState(statusCode >= SC_OK && statusCode < SC_MULTIPLE_CHOICES, response.getStatusLine().getReasonPhrase());
         return EntityUtils.toString(response.getEntity());
     }
-    
+
     private Header[] headers(AuthHeader authHeader) { return nonNull(authHeader, bootstrapAuth).headers(); }
+
+    private static Sniffer buildSniffer(RestClient lowLevelClient) {
+        return Sniffer.builder(lowLevelClient).setHostsSniffer(new ElasticsearchHostsSniffer(lowLevelClient,
+            TimeUnit.SECONDS.toMillis(5), ElasticsearchHostsSniffer.Scheme.HTTPS)).build();
+    }
 }
