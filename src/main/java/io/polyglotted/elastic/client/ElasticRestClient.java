@@ -37,10 +37,8 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
-import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.sniff.ElasticsearchHostsSniffer;
 import org.elasticsearch.client.sniff.Sniffer;
 
 import javax.annotation.Nullable;
@@ -48,7 +46,6 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static io.polyglotted.common.model.MapResult.immutableResult;
 import static io.polyglotted.common.util.BaseSerializer.deserialize;
@@ -67,6 +64,7 @@ import static io.polyglotted.common.util.ThreadUtil.safeSleep;
 import static io.polyglotted.elastic.admin.TypeSerializer.serializeMapping;
 import static io.polyglotted.elastic.client.ElasticException.checkState;
 import static io.polyglotted.elastic.client.ElasticException.throwEx;
+import static io.polyglotted.elastic.discovery.InternalHostsSniffer.buildSniffer;
 import static java.util.Collections.emptyMap;
 import static org.apache.http.HttpStatus.SC_MULTIPLE_CHOICES;
 import static org.apache.http.HttpStatus.SC_OK;
@@ -78,9 +76,9 @@ public class ElasticRestClient implements ElasticClient {
     private final Sniffer sniffer;
     @Nullable @Getter private final AuthHeader bootstrapAuth;
 
-    ElasticRestClient(RestClientBuilder builder, @Nullable AuthHeader bootstrapAuth) {
+    ElasticRestClient(RestClientBuilder builder, ElasticSettings settings, @Nullable AuthHeader bootstrapAuth) {
         this.internalClient = new RestHighLevelClient(builder);
-        this.sniffer = buildSniffer(internalClient.getLowLevelClient());
+        this.sniffer = buildSniffer(internalClient.getLowLevelClient(), settings, bootstrapAuth);
         this.bootstrapAuth = bootstrapAuth;
     }
 
@@ -262,9 +260,4 @@ public class ElasticRestClient implements ElasticClient {
     }
 
     private Header[] headers(AuthHeader authHeader) { return nonNull(authHeader, bootstrapAuth).headers(); }
-
-    private static Sniffer buildSniffer(RestClient lowLevelClient) {
-        return Sniffer.builder(lowLevelClient).setHostsSniffer(new ElasticsearchHostsSniffer(lowLevelClient,
-            TimeUnit.SECONDS.toMillis(5), ElasticsearchHostsSniffer.Scheme.HTTPS)).build();
-    }
 }

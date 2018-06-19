@@ -28,18 +28,14 @@ import static java.util.Objects.requireNonNull;
 public class HighLevelConnector {
 
     @SneakyThrows public static ElasticClient highLevelClient(ElasticSettings settings) {
-        RestClientBuilder restClientBuilder = RestClient.builder(buildHosts(settings)).setMaxRetryTimeoutMillis(settings.retryTimeoutMillis);
-        restClientBuilder.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
-            .setConnectTimeout(settings.connectTimeoutMillis).setSocketTimeout(settings.socketTimeoutMillis));
-        if (settings.insecure) {
-            restClientBuilder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder
-                .setSSLContext(insecureSslContext(settings.host, settings.port)).setSSLHostnameVerifier(new NoopHostnameVerifier()));
-        }
-        else {
-            restClientBuilder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder
-                .setSSLContext(predeterminedContext()).setSSLHostnameVerifier(new NoopHostnameVerifier()));
-        }
-        return new ElasticRestClient(restClientBuilder, settings.bootstrapAuth());
+        RestClientBuilder restClientBuilder = RestClient.builder(buildHosts(settings))
+            .setMaxRetryTimeoutMillis(settings.retryTimeoutMillis)
+            .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
+                .setConnectTimeout(settings.connectTimeoutMillis).setSocketTimeout(settings.socketTimeoutMillis))
+            .setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setSSLHostnameVerifier(new NoopHostnameVerifier())
+                .setSSLContext(settings.insecure ? insecureSslContext(settings.host, settings.port) : predeterminedContext()));
+
+        return new ElasticRestClient(restClientBuilder, settings, settings.bootstrapAuth());
     }
 
     @SneakyThrows private static SSLContext predeterminedContext() {
@@ -51,10 +47,9 @@ public class HighLevelConnector {
     @SuppressWarnings("StaticPseudoFunctionalStyleMethod") private static HttpHost[] buildHosts(ElasticSettings settings) throws IOException {
         List<String> hosts = immutableList();
         if ("ec2".equals(System.getProperty("es.discovery.zen.hosts_provider", ""))) {
-            hosts = UnicastHostsProvider.fetchEc2Addresses(buildEsSettings());
-            log.info("received unicast hosts from ec2 discovery: " + hosts);
+            hosts = UnicastHostsProvider.fetchEc2Addresses(buildEsSettings()); log.info("received unicast hosts from ec2 discovery: " + hosts);
         }
-        if (hosts.isEmpty()) { hosts = commaSplit(settings.host); }
+        if (hosts.isEmpty()) { hosts = commaSplit(settings.host); log.info("received default hosts: " + hosts); }
         return transform(hosts, node -> new HttpHost(requireNonNull(node), settings.port, settings.scheme)).toArray(HttpHost.class);
     }
 
