@@ -2,6 +2,7 @@ package io.polyglotted.elastic.client;
 
 import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.common.model.MapResult;
+import io.polyglotted.common.util.ListBuilder.SimpleListBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
@@ -17,11 +18,10 @@ import java.util.Map;
 
 import static io.polyglotted.common.util.BaseSerializer.deserialize;
 import static io.polyglotted.common.util.CollUtil.transformList;
-import static io.polyglotted.common.util.ListBuilder.simpleList;
+import static io.polyglotted.common.util.ListBuilder.simpleListBuilder;
 import static io.polyglotted.common.util.MapRetriever.MAP_CLASS;
-import static io.polyglotted.common.util.MapRetriever.deepCollect;
-import static io.polyglotted.common.util.StrUtil.safePrefix;
 import static java.util.Collections.emptyMap;
+import static java.util.Objects.requireNonNull;
 import static org.apache.http.HttpStatus.SC_MULTIPLE_CHOICES;
 import static org.apache.http.HttpStatus.SC_OK;
 
@@ -37,11 +37,11 @@ public final class InternalHostsSniffer implements HostsSniffer {
 
     @Override public List<HttpHost> sniffHosts() throws IOException {
         MapResult result = deserialize(performCliRequest());
-        List<String> addresses = simpleList();
+        SimpleListBuilder<String> addresses = simpleListBuilder();
         for (Map.Entry<String, Object> entry : result.mapVal("nodes").entrySet()) {
-            addresses.addAll(deepCollect(MAP_CLASS.cast(entry.getValue()), "http.bound_address", String.class));
+            addresses.add((String) MAP_CLASS.cast(entry.getValue()).get("ip"));
         }
-        return transformList(addresses, node -> new HttpHost(safePrefix(node, ":"), settings.getPort(), settings.getScheme()));
+        return transformList(addresses.build(), node -> new HttpHost(requireNonNull(node), settings.getPort(), settings.getScheme()));
     }
 
     private String performCliRequest() throws IOException {
