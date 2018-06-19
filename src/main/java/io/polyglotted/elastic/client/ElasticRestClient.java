@@ -64,7 +64,7 @@ import static io.polyglotted.common.util.ThreadUtil.safeSleep;
 import static io.polyglotted.elastic.admin.TypeSerializer.serializeMapping;
 import static io.polyglotted.elastic.client.ElasticException.checkState;
 import static io.polyglotted.elastic.client.ElasticException.throwEx;
-import static io.polyglotted.elastic.discovery.InternalHostsSniffer.buildSniffer;
+import static io.polyglotted.elastic.client.InternalHostsSniffer.buildSniffer;
 import static java.util.Collections.emptyMap;
 import static org.apache.http.HttpStatus.SC_MULTIPLE_CHOICES;
 import static org.apache.http.HttpStatus.SC_OK;

@@ -1,8 +1,7 @@
-package io.polyglotted.elastic.discovery;
+package io.polyglotted.elastic.client;
 
 import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.common.model.MapResult;
-import io.polyglotted.elastic.client.ElasticSettings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
@@ -32,14 +31,14 @@ public final class InternalHostsSniffer implements HostsSniffer {
     private final ElasticSettings settings;
     private final AuthHeader bootstrapAuth;
 
-    public static Sniffer buildSniffer(RestClient lowLevelClient, ElasticSettings settings, AuthHeader authHeader) {
+    static Sniffer buildSniffer(RestClient lowLevelClient, ElasticSettings settings, AuthHeader authHeader) {
         return Sniffer.builder(lowLevelClient).setHostsSniffer(new InternalHostsSniffer(lowLevelClient, settings, authHeader)).build();
     }
 
     @Override public List<HttpHost> sniffHosts() throws IOException {
         MapResult result = deserialize(performCliRequest());
         List<String> addresses = simpleList();
-        for(Map.Entry<String, Object> entry : result.mapVal("nodes").entrySet()) {
+        for (Map.Entry<String, Object> entry : result.mapVal("nodes").entrySet()) {
             addresses.addAll(deepCollect(MAP_CLASS.cast(entry.getValue()), "http.bound_address", String.class));
         }
         return transformList(addresses, node -> new HttpHost(safePrefix(node, ":"), settings.getPort(), settings.getScheme()));
@@ -49,8 +48,10 @@ public final class InternalHostsSniffer implements HostsSniffer {
         try {
             Response response = lowLevelClient.performRequest("GET", "/_nodes/http", emptyMap(), null, bootstrapAuth.headers());
             int statusCode = response.getStatusLine().getStatusCode();
-            if (statusCode >= SC_OK && statusCode < SC_MULTIPLE_CHOICES) { log.warn("sniff failed: " + response.getStatusLine().getReasonPhrase()); }
-            return EntityUtils.toString(response.getEntity());
-        } catch (Exception ex) { log.error("sniff error", ex); return "{}"; }
+            if (statusCode >= SC_OK && statusCode < SC_MULTIPLE_CHOICES) { return EntityUtils.toString(response.getEntity()); }
+            log.warn("sniff failed: " + response.getStatusLine().getReasonPhrase());
+
+        } catch (Exception ex) { log.error("sniff error", ex); }
+        return "{}";
     }
 }
