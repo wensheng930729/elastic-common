@@ -78,7 +78,7 @@ public class ElasticRestClient implements ElasticClient {
     private final Sniffer sniffer;
     @Nullable @Getter private final AuthHeader bootstrapAuth;
 
-    ElasticRestClient(RestClientBuilder builder, AuthHeader bootstrapAuth) {
+    ElasticRestClient(RestClientBuilder builder, @Nullable AuthHeader bootstrapAuth) {
         this.internalClient = new RestHighLevelClient(builder);
         this.sniffer = buildSniffer(internalClient.getLowLevelClient());
         this.bootstrapAuth = bootstrapAuth;

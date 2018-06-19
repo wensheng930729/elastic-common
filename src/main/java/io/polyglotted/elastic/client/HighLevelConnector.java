@@ -2,6 +2,7 @@ package io.polyglotted.elastic.client;
 
 import io.polyglotted.elastic.discovery.UnicastHostsProvider;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
@@ -19,9 +20,11 @@ import java.util.Map;
 import static io.polyglotted.common.util.CollUtil.transform;
 import static io.polyglotted.common.util.CommaUtil.commaSplit;
 import static io.polyglotted.common.util.InsecureSslFactory.insecureSslContext;
+import static io.polyglotted.common.util.ListBuilder.immutableList;
 import static io.polyglotted.common.util.ResourceUtil.urlStream;
 import static java.util.Objects.requireNonNull;
 
+@Slf4j
 public class HighLevelConnector {
 
     @SneakyThrows public static ElasticClient highLevelClient(ElasticSettings settings) {
@@ -46,8 +49,12 @@ public class HighLevelConnector {
     }
 
     @SuppressWarnings("StaticPseudoFunctionalStyleMethod") private static HttpHost[] buildHosts(ElasticSettings settings) throws IOException {
-        List<String> hosts = "ec2".equals(System.getProperty("es.discovery.zen.hosts_provider", "")) ?
-            UnicastHostsProvider.fetchEc2Addresses(buildEsSettings()) : commaSplit(settings.host);
+        List<String> hosts = immutableList();
+        if ("ec2".equals(System.getProperty("es.discovery.zen.hosts_provider", ""))) {
+            hosts = UnicastHostsProvider.fetchEc2Addresses(buildEsSettings());
+            log.info("received unicast hosts from ec2 discovery: " + hosts);
+        }
+        if (hosts.isEmpty()) { hosts = commaSplit(settings.host); }
         return transform(hosts, node -> new HttpHost(requireNonNull(node), settings.port, settings.scheme)).toArray(HttpHost.class);
     }
 
