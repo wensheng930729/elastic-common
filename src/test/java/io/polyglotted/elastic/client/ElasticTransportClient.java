@@ -3,7 +3,6 @@ package io.polyglotted.elastic.client;
 import io.polyglotted.common.model.AuthHeader;
 import io.polyglotted.common.model.MapResult;
 import io.polyglotted.common.model.MapResult.ImmutableResult;
-import io.polyglotted.elastic.admin.Type;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -156,9 +155,9 @@ public class ElasticTransportClient implements ElasticClient {
         } catch (Exception ex) { throw throwEx("getMeta failed", ex); }
     }
 
-    @Override public MapResult putMapping(AuthHeader auth, String index, Type update) {
+    @Override public MapResult putMapping(AuthHeader auth, String index, String mappingJson) {
         try {
-            PutMappingRequest request = putMappingRequest(index).source(update.toJson(), JSON).updateAllTypes(true);
+            PutMappingRequest request = putMappingRequest(index).source(mappingJson, JSON).updateAllTypes(true);
             PutMappingResponse response = client(auth).admin().indices().putMapping(request).actionGet();
             return immutableResult("acknowledged", response.isAcknowledged());
         } catch (Exception ex) { throw throwEx("putMapping failed", ex); }

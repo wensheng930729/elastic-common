@@ -27,6 +27,7 @@ import org.elasticsearch.common.xcontent.XContentType;
 import java.io.Closeable;
 
 import static io.polyglotted.common.util.TokenUtil.uniqueToken;
+import static io.polyglotted.elastic.admin.TypeSerializer.serializeMapping;
 
 @SuppressWarnings("unused")
 public interface ElasticClient extends Closeable {
@@ -78,7 +79,11 @@ public interface ElasticClient extends Closeable {
 
     default MapResult putMapping(String index, Type update) { return putMapping(bootstrapAuth(), index, update); }
 
-    MapResult putMapping(AuthHeader auth, String index, Type update);
+    default MapResult putMapping(AuthHeader auth, String index, Type update) { return putMapping(auth, index, serializeMapping(update)); }
+
+    default MapResult putMapping(String index, String mappingJson) { return putMapping(bootstrapAuth(), index, mappingJson); }
+
+    MapResult putMapping(AuthHeader auth, String index, String mappingJson);
 
     default ImmutableResult getMapping(String repo) { return getMapping(bootstrapAuth(), repo); }
 

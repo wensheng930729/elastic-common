@@ -64,7 +64,7 @@ public class AdminIntegTest {
                 String serMapping = serialize(client.getMapping(index));
                 assertThat(serMapping, serMapping, is(MESSAGES.get("completeMapping")));
 
-                assertThat(serialize(client.putMapping(index, updateTypeMapping().build())), is("{\"acknowledged\":true}"));
+                assertThat(serialize(client.putMapping("MyBigIndex", updateTypeMapping().build())), is("{\"acknowledged\":true}"));
                 String newMapping = serialize(client.getMapping(index));
                 assertThat(newMapping, newMapping, is(MESSAGES.get("newMapping")));
             } finally { client.dropIndex(index); }
