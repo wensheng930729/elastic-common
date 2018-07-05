@@ -50,7 +50,7 @@ public class AdminIntegTest {
     private static final Map<String, String> MESSAGES = readResourceAsMap(AdminIntegTest.class, "admin-integ.txt");
 
     @Test
-    public void createIndexSuccess() throws Exception {
+    public void createIndexSuccess() {
         try (ElasticClient client = testElasticClient()) {
             IndexSetting setting = settingBuilder(5, 1).all(immutableResult("mapping.total_fields.limit", 5000)).build();
             String index = client.createIndex(indexFile(setting, completeTypeMapping().build(), "MyBigIndex"));
@@ -72,7 +72,7 @@ public class AdminIntegTest {
     }
 
     @Test
-    public void parentChildIndexSuccess() throws Exception {
+    public void parentChildIndexSuccess() {
         try (ElasticClient client = testElasticClient()) {
             String index = client.createIndex(indexFile(IndexSetting.with(2, 0), parentChildTypeMapping().build(), "ParChilIndex"));
             try {

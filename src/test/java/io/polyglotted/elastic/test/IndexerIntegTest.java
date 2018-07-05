@@ -60,7 +60,7 @@ public class IndexerIntegTest {
     @After public void close() { client.close(); }
 
     @Test
-    public void strictSaveLifeCycle() throws Exception {
+    public void strictSaveLifeCycle() {
         String index2 = client.createIndex(indexFile(with(3, 0), typeBuilder().build(), REPO));
         try {
             MapResult user = simpleResult("name", "shankar", "age", 25, "title", "programmer");

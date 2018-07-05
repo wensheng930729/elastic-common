@@ -20,14 +20,14 @@ public class IndexRequestorTest extends IndexRequestor {
     private static final Map<String, String> MESSAGES = readResourceAsMap(IndexRequestorTest.class, "index-requestor.txt");
 
     @Test
-    public void indexFileSuccess() throws Exception {
+    public void indexFileSuccess() {
         IndexSetting setting = settingBuilder(5, 1).all(immutableResult("mapping.total_fields.limit", 5000)).build();
         String actual = indexFile(setting, completeTypeMapping().build(), "MyBigIndex");
         assertThat(actual, actual, is(MESSAGES.get("indexFile")));
     }
 
     @Test
-    public void templateFileSuccess() throws Exception {
+    public void templateFileSuccess() {
         IndexSetting setting = settingBuilder(5, 1).all(immutableResult("mapping.total_fields.limit", 5000)).build();
         String actual = templateFile(setting, completeTypeMapping().build(), "bigindex-*");
         assertThat(actual, actual, is(MESSAGES.get("templateFile")));

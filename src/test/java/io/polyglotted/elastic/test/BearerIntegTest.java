@@ -36,7 +36,7 @@ public class BearerIntegTest {
     }
 
     @Test
-    public void testBearerAuth() throws Exception {
+    public void testBearerAuth() {
         assertThat(client.clusterHealth(bearerToken(testToken())), is(notNullValue()));
 
         client.xpackPut(USER, "jacknich", MESSAGES.get("user.put"));

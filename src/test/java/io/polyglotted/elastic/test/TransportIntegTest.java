@@ -8,7 +8,7 @@ import static io.polyglotted.elastic.test.ElasticTestUtil.testTransportClient;
 
 public class TransportIntegTest {
     @Test
-    public void transportSuccess() throws Exception {
+    public void transportSuccess() {
         try (ElasticClient client = testTransportClient()) {
             assertHealth(client.clusterHealth());
         }

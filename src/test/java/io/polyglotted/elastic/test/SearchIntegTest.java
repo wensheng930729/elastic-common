@@ -15,7 +15,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -81,17 +80,17 @@ public class SearchIntegTest {
         } finally { client.dropIndex(agex); }
     }
 
-    private void simpleAgg(String query, int hits, String result) throws Exception {
+    private void simpleAgg(String query, int hits, String result) {
         String aggregations = searchNative(query, false, NONE, hits, "aggregations");
         assertThat(aggregations, aggregations, is(result));
     }
 
-    private void flattenAgg(String query, int hits, String result) throws Exception {
+    private void flattenAgg(String query, int hits, String result) {
         String flattened = searchNative(query, true, NONE, hits, "flattened");
         assertThat(flattened, flattened, is(result));
     }
 
-    private void simpleSearchAndScroll() throws Exception {
+    private void simpleSearchAndScroll() {
         String textResponse = searchNative(MESSAGES.get("text.query"), false, ID, 5, "results");
         assertThat(textResponse, textResponse, is(MESSAGES.get("text.response")));
 
@@ -110,7 +109,7 @@ public class SearchIntegTest {
         searcher.simpleScroll(filterToScroller("agex", null, 100), NullBuilder, NONE, (r) -> true);
     }
 
-    private String searchNative(String query, boolean flatten, Verbose verb, int totalHits, String resultKey) throws IOException {
+    private String searchNative(String query, boolean flatten, Verbose verb, int totalHits, String resultKey) {
         MapResult mapResult = deserialize(searcher.searchNative(ES_AUTH, copyFrom("agex",
             query.getBytes(UTF_8), null, verb), SourceBuilder, flatten, verb));
         assertThat(deepRetrieve(mapResult, "header.totalHits"), is(totalHits));
@@ -124,7 +123,7 @@ public class SearchIntegTest {
         } catch (ElasticException ex) { assertThat(ex.getMessage(), ex.getMessage(), is(MESSAGES.get("failed.out"))); }
     }
 
-    private void multiSearch() throws IOException {
+    private void multiSearch() {
         List<String> queries = immutableList(MESSAGES.get("agg1.query"), MESSAGES.get("agg2.query"), MESSAGES.get("agg3.query"),
             MESSAGES.get("agg4.query"), MESSAGES.get("agg5.query"), MESSAGES.get("failed.query"));
         MultiSearchRequest searchRequest = new MultiSearchRequest().indicesOptions(lenientExpandOpen());

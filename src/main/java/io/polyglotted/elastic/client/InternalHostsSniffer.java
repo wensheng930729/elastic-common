@@ -12,7 +12,6 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.sniff.HostsSniffer;
 import org.elasticsearch.client.sniff.Sniffer;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +34,7 @@ public final class InternalHostsSniffer implements HostsSniffer {
         return Sniffer.builder(lowLevelClient).setHostsSniffer(new InternalHostsSniffer(lowLevelClient, settings, authHeader)).build();
     }
 
-    @Override public List<HttpHost> sniffHosts() throws IOException {
+    @Override public List<HttpHost> sniffHosts() {
         MapResult result = deserialize(performCliRequest());
         SimpleListBuilder<String> addresses = simpleListBuilder();
         for (Map.Entry<String, Object> entry : result.mapVal("nodes").entrySet()) {
@@ -44,7 +43,7 @@ public final class InternalHostsSniffer implements HostsSniffer {
         return transformList(addresses.build(), node -> new HttpHost(requireNonNull(node), settings.getPort(), settings.getScheme()));
     }
 
-    private String performCliRequest() throws IOException {
+    private String performCliRequest() {
         try {
             Response response = lowLevelClient.performRequest("GET", "/_nodes/http", emptyMap(), null, bootstrapAuth.headers());
             int statusCode = response.getStatusLine().getStatusCode();

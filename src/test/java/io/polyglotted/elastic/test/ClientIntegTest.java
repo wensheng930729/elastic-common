@@ -25,14 +25,14 @@ import static org.junit.Assert.assertThat;
 
 public class ClientIntegTest {
     @Test
-    public void testHighLevelClient() throws Exception {
+    public void testHighLevelClient() {
         checkClusterHealth();
         checkCreateDeleteIndex();
         checkPipelineLifecycle();
         checkTemplateLifecycle();
     }
 
-    private static void checkClusterHealth() throws Exception {
+    private static void checkClusterHealth() {
         try (ElasticClient client = testElasticClient()) {
             assertHealth(client.clusterHealth());
         }
@@ -44,7 +44,7 @@ public class ClientIntegTest {
             "number_of_pending_tasks", "number_of_in_flight_fetch", "task_max_waiting_in_queue_millis", "active_shards_percent_as_number"));
     }
 
-    private static void checkCreateDeleteIndex() throws Exception {
+    private static void checkCreateDeleteIndex() {
         String index = "customer";
         try (ElasticClient client = testElasticClient()) {
             assertThat(client.indexExists(index), is(false));
@@ -56,7 +56,7 @@ public class ClientIntegTest {
         }
     }
 
-    private void checkPipelineLifecycle() throws Exception {
+    private void checkPipelineLifecycle() {
         String pipeline = "mypipe";
         try (ElasticClient client = testElasticClient()) {
             assertThat(client.pipelineExists(pipeline), is(false));

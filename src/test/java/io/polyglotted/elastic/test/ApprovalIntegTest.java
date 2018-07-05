@@ -68,7 +68,7 @@ public class ApprovalIntegTest {
     @After public void close() { client.close(); }
 
     @Test
-    public void approvalLifeCycle() throws Exception {
+    public void approvalLifeCycle() {
         String index2 = client.createIndex(indexFile(with(3, 0), typeBuilder().build(), REPO));
         try {
             indexer.strictSave(ES_AUTH, createRecord(REPO, approvalModel(MODEL), "neon", simpleResult("name", "Neon"))
@@ -104,7 +104,7 @@ public class ApprovalIntegTest {
     }
 
     @Test
-    public void approvalRejectDiscard() throws Exception {
+    public void approvalRejectDiscard() {
         String index2 = client.createIndex(indexFile(with(3, 0), typeBuilder().build(), REPO));
         try {
             BulkRecord bulkRecord = BulkRecord.bulkBuilder(REPO, MODEL, T1, Tester).hasApproval(true).objects(immutableList(

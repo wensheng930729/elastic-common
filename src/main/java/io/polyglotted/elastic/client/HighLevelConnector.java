@@ -10,7 +10,6 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 
 import javax.net.ssl.SSLContext;
-import java.io.IOException;
 import java.security.KeyStore;
 import java.util.List;
 
@@ -40,7 +39,7 @@ public class HighLevelConnector {
         return SSLContexts.custom().loadTrustMaterial(keyStore, new TrustSelfSignedStrategy()).build();
     }
 
-    @SuppressWarnings("StaticPseudoFunctionalStyleMethod") private static HttpHost[] buildHosts(ElasticSettings settings) throws IOException {
+    @SuppressWarnings("StaticPseudoFunctionalStyleMethod") private static HttpHost[] buildHosts(ElasticSettings settings) {
         List<String> hosts = commaSplit(settings.host); log.info("received default hosts: " + hosts);
         return transform(hosts, node -> new HttpHost(requireNonNull(node), settings.port, settings.scheme)).toArray(HttpHost.class);
     }
