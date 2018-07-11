@@ -45,38 +45,68 @@ public abstract class MetaFields {
     public static final String USER_FIELD = "&user";
 
     public static final List<String> ALL_FIELDS = immutableList(ANCESTOR_FIELD, APPROVAL_ROLES_FIELD, ATTRIBUTE_FIELD,
-        COMMENT_FIELD, EXPIRY_FIELD, ID_FIELD, KEY_FIELD, LINEAGE_KEY_FIELD, LINK_FIELD, MODEL_FIELD, PARENT_FIELD,
-        REALM_FIELD, STATUS_FIELD, TASK_ID_FIELD, TRAITFQN_FIELD, TIMESTAMP_FIELD, UPDATER_FIELD, USER_FIELD);
+            COMMENT_FIELD, EXPIRY_FIELD, ID_FIELD, KEY_FIELD, LINEAGE_KEY_FIELD, LINK_FIELD, MODEL_FIELD, PARENT_FIELD,
+            REALM_FIELD, STATUS_FIELD, TASK_ID_FIELD, TRAITFQN_FIELD, TIMESTAMP_FIELD, UPDATER_FIELD, USER_FIELD);
 
-    public static void addMeta(Object item, String field, Object value) { addMetaField(mapValue(item), field, value); }
+    public static void addMeta(Object item, String field, Object value) {
+        addMetaField(mapValue(item), field, value);
+    }
 
-    public static void addMetaField(MapResult mapValue, String field, Object value) { mapValue.put(field, value); }
+    public static void addMetaField(MapResult mapValue, String field, Object value) {
+        mapValue.put(field, value);
+    }
 
-    public static void removeMeta(Object item, String field) { mapValue(item).remove(field); }
+    public static void removeMeta(Object item, String field) {
+        mapValue(item).remove(field);
+    }
 
-    public static <T> T reqdMeta(Object object, String field) { return reqdValue(mapValue(object), field); }
+    public static <T> T reqdMeta(Object object, String field) {
+        return reqdValue(mapValue(object), field);
+    }
 
-    public static boolean isMeta(String field) { return field.indexOf('&') == 0; }
+    public static boolean isMeta(String field) {
+        return field.indexOf('&') == 0;
+    }
 
-    public static boolean isNotMeta(String field) { return field.indexOf('&') != 0; }
+    public static boolean isNotMeta(String field) {
+        return field.indexOf('&') != 0;
+    }
 
-    public static String model(Object object) { return reqdMeta(object, MODEL_FIELD); }
+    public static String model(Object object) {
+        return reqdMeta(object, MODEL_FIELD);
+    }
 
-    public static String reqdId(Object object) { return reqdMeta(object, ID_FIELD); }
+    public static String reqdId(Object object) {
+        return reqdMeta(object, ID_FIELD);
+    }
 
-    public static String reqdKey(Object object) { return reqdMeta(object, KEY_FIELD); }
+    public static String reqdKey(Object object) {
+        return reqdMeta(object, KEY_FIELD);
+    }
 
-    public static String id(Object object) { return optValue(mapValue(object), ID_FIELD); }
+    public static String id(Object object) {
+        return optValue(mapValue(object), ID_FIELD);
+    }
 
-    public static String parent(Object object) { return optValue(mapValue(object), PARENT_FIELD); }
+    public static String parent(Object object) {
+        return optValue(mapValue(object), PARENT_FIELD);
+    }
 
-    public static long timestamp(Object object) { return longStrVal(mapValue(object), TIMESTAMP_FIELD, -3); }
+    public static long timestamp(Object object) {
+        return longStrVal(mapValue(object), TIMESTAMP_FIELD, -3);
+    }
 
-    public static Long tstamp(Object object) { return longStrVal(mapValue(object), TIMESTAMP_FIELD); }
+    public static Long tstamp(Object object) {
+        return longStrVal(mapValue(object), TIMESTAMP_FIELD);
+    }
 
-    public static String keyString(MapResult map) { return urnOf(model(map), id(map)); }
+    public static String keyString(MapResult map) {
+        return urnOf(model(map), id(map));
+    }
 
-    public static DocStatus status(MapResult map) { return fromStatus(map.get(STATUS_FIELD).toString()); }
+    public static DocStatus status(MapResult map) {
+        return fromStatus(map.get(STATUS_FIELD).toString());
+    }
 
     public static ImmutableMapBuilder<String, Object> readKey(MapResult map) {
         ImmutableMapBuilder<String, Object> builder = immutableMapBuilder();
@@ -88,7 +118,9 @@ public abstract class MetaFields {
         return builder;
     }
 
-    public static MapResult readHeader(MapResult map) { return readHeader(map, true); }
+    public static MapResult readHeader(MapResult map) {
+        return readHeader(map, true);
+    }
 
     public static MapResult readHeader(MapResult map, boolean mandatory) {
         ImmutableMapBuilder<String, Object> builder = immutableResultBuilder();
@@ -102,7 +134,9 @@ public abstract class MetaFields {
         putVal(map, mandatory ? checkContains(map, MODEL_FIELD) : MODEL_FIELD, builder);
         putVal(map, PARENT_FIELD, builder);
         putVal(map, REALM_FIELD, builder);
-        if (map.containsKey(STATUS_FIELD)) { builder.put(STATUS_FIELD, status(map));}
+        if (map.containsKey(STATUS_FIELD)) {
+            builder.put(STATUS_FIELD, status(map));
+        }
         putVal(map, TRAITFQN_FIELD, builder);
         putTs(map, mandatory ? checkContains(map, TIMESTAMP_FIELD) : TIMESTAMP_FIELD, builder);
         putVal(map, UPDATER_FIELD, builder);
@@ -121,3 +155,4 @@ public abstract class MetaFields {
     private static MapResult mapValue(Object item) {
         return (item instanceof MapResult) ? (MapResult) item : nonNull(safeFieldValue(item, "_meta"), simpleResult());
     }
+}
