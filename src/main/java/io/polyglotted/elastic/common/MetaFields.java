@@ -23,27 +23,30 @@ public abstract class MetaFields {
     public static final String ALL_FIELD = "&all";
     public static final String ANCESTOR_FIELD = "&ancestor";
     public static final String APPROVAL_ROLES_FIELD = "&approvalRoles";
+    public static final String ATTRIBUTE_FIELD = "&attribute";
     public static final String AUTO_COMPLETE_FIELD = "&autoComplete";
     public static final String COMMENT_FIELD = "&comment";
     public static final String EXPIRY_FIELD = "&expiry";
     public static final String HIGHLTGHT_FIELD = "&highlight";
     public static final String ID_FIELD = "&id";
     public static final String KEY_FIELD = "&key";
+    public static final String LINEAGE_KEY_FIELD = "&lineageKey";
     public static final String LINK_FIELD = "&link";
     public static final String MODEL_FIELD = "&model";
     public static final String PARENT_FIELD = "&parent";
     public static final String REALM_FIELD = "&realm";
     public static final String RESULT_FIELD = "&result";
     public static final String STATUS_FIELD = "&status";
+    public static final String TASK_ID_FIELD = "&taskId";
     public static final String TIMESTAMP_FIELD = "&timestamp";
     public static final String TRAITFQN_FIELD = "&traitFqn";
     public static final String UNIQUE_FIELD = "&uniqueProps";
     public static final String UPDATER_FIELD = "&updater";
     public static final String USER_FIELD = "&user";
 
-    public static final List<String> ALL_FIELDS = immutableList(ANCESTOR_FIELD, APPROVAL_ROLES_FIELD, COMMENT_FIELD,
-        EXPIRY_FIELD, ID_FIELD, KEY_FIELD, LINK_FIELD, MODEL_FIELD, PARENT_FIELD, REALM_FIELD, STATUS_FIELD,
-        TRAITFQN_FIELD, TIMESTAMP_FIELD, UPDATER_FIELD, USER_FIELD);
+    public static final List<String> ALL_FIELDS = immutableList(ANCESTOR_FIELD, APPROVAL_ROLES_FIELD, ATTRIBUTE_FIELD,
+        COMMENT_FIELD, EXPIRY_FIELD, ID_FIELD, KEY_FIELD, LINEAGE_KEY_FIELD, LINK_FIELD, MODEL_FIELD, PARENT_FIELD,
+        REALM_FIELD, STATUS_FIELD, TASK_ID_FIELD, TRAITFQN_FIELD, TIMESTAMP_FIELD, UPDATER_FIELD, USER_FIELD);
 
     public static void addMeta(Object item, String field, Object value) { addMetaField(mapValue(item), field, value); }
 
@@ -118,4 +121,3 @@ public abstract class MetaFields {
     private static MapResult mapValue(Object item) {
         return (item instanceof MapResult) ? (MapResult) item : nonNull(safeFieldValue(item, "_meta"), simpleResult());
     }
-}
