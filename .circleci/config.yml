@@ -28,7 +28,7 @@ jobs:
           - v1-dependencies-
       - run:
           name: Gradle Check
-          command: ./gradlew check
+          command: ./gradlew -PprojVersion=latest check
       - save_cache:
           paths:
             - ~/.gradle
