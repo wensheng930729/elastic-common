@@ -5,7 +5,7 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 
 group = 'io.polyglotted'
-version = project.hasProperty('projVersion') ? project.projVersion : 'unspecified'
+version = project.projVersion
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 

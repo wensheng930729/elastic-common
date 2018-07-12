@@ -63,7 +63,7 @@ jobs:
       - run:
           name: Gradle Deploy
           command: |
-            ./gradlew -PprojVersion=${CIRCLE_TAG:1} uploadArchives
+            ./gradlew uploadArchives
 
 workflows:
   version: 2
