@@ -1,6 +1,8 @@
 package io.polyglotted.elastic.common;
 
 import io.polyglotted.common.model.MapResult;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
 import java.util.List;
@@ -24,6 +26,7 @@ import static io.polyglotted.elastic.common.MetaFields.reqdKey;
 import static org.elasticsearch.common.Strings.EMPTY_ARRAY;
 
 @SuppressWarnings("unused")
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public enum Verbose {
     NONE(immutableList()) {
         @Override public <T> T buildFrom(MapResult source, T result) { return result; }
@@ -34,7 +37,7 @@ public enum Verbose {
     KEY(immutableList(KEY_FIELD)) {
         @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, immutableResult(KEY_FIELD, reqdKey(source))); }
     },
-    MINIMAL(immutableList(LINK_FIELD, MODEL_FIELD, PARENT_FIELD, ID_FIELD, TIMESTAMP_FIELD)) {
+    MINIMAL(immutableList(LINK_FIELD, MODEL_FIELD, PARENT_FIELD, ID_FIELD, TIMESTAMP_FIELD, KEY_FIELD)) {
         @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, readKey(source).result()); }
     },
     PARENT(immutableList(PARENT_FIELD)) {
@@ -45,17 +48,14 @@ public enum Verbose {
             return addHeader(result, immutableResult(ID_FIELD, reqdId(source), KEY_FIELD, reqdKey(source)));
         }
     },
-    META(ALL_FIELDS) {
+    META(ALL_FIELDS.toArray(new String[ALL_FIELDS.size()]), new FetchSourceContext(true, EMPTY_ARRAY, EMPTY_ARRAY)) {
         @Override public <T> T buildFrom(MapResult source, T result) { return addHeader(result, readHeader(source)); }
     };
 
     public final String[] fields;
     public final FetchSourceContext fetchContext;
 
-    Verbose(List<String> fields) {
-        this.fields = fields.toArray(new String[0]);
-        this.fetchContext = new FetchSourceContext(true, EMPTY_ARRAY, excludeFromAll(fields));
-    }
+    Verbose(List<String> fields) { this(fields.toArray(new String[0]), new FetchSourceContext(true, EMPTY_ARRAY, excludeFromAll(fields))); }
 
     public abstract <T> T buildFrom(MapResult source, T result);
 
