@@ -12,6 +12,12 @@ import static io.polyglotted.common.model.MapResult.simpleResult;
 import static io.polyglotted.common.util.BaseSerializer.deserialize;
 import static io.polyglotted.common.util.MapRetriever.deepRetrieve;
 import static io.polyglotted.common.util.ResourceUtil.readResource;
+import static io.polyglotted.elastic.admin.Field.keywordField;
+import static io.polyglotted.elastic.admin.Field.simpleField;
+import static io.polyglotted.elastic.admin.FieldType.INTEGER;
+import static io.polyglotted.elastic.admin.IndexRequestor.templateFile;
+import static io.polyglotted.elastic.admin.IndexSetting.with;
+import static io.polyglotted.elastic.admin.Type.typeBuilder;
 import static io.polyglotted.elastic.common.Verbose.NONE;
 import static io.polyglotted.elastic.index.IndexRecord.createRecord;
 import static io.polyglotted.elastic.search.QueryMaker.copyFrom;
@@ -71,8 +77,10 @@ public class ClientIntegTest {
         String template = "1234absdffew234";
         try (ElasticClient client = testElasticClient()) {
             assertThat(client.templateExists(template), is(false));
-            client.putTemplate(template, readResource(ClientIntegTest.class, "template-source.json"));
+            client.putTemplate(template, templateFile(with(1, 0), typeBuilder().strict().field(keywordField("hostName")).build(), "tpl-*"));
             assertThat(client.templateExists(template), is(true));
+            client.putTemplate(template, templateFile(with(1, 0), typeBuilder().strict().field(keywordField("hostName"))
+                .field(simpleField("createdAt", INTEGER)).build(), "tpl-*"));
 
             try {
                 new Indexer(client).bulkSave(ES_AUTH, createRecord("tpl-2018", "Host", "bobcat",
